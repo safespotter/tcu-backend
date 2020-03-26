@@ -38,15 +38,6 @@ module.exports = function (app, passport, config) {
     /****************** ACCESS MANAGER ********************/
     app.post('/login', AccMan.basicLogin);
 
-    app.get(`${fbPath}/login`, fbReqAuth);
-    app.get(`${igPath}/login`, igReqAuth);
-    app.get(`${fbPath}/login/success`, fbAuth, FbM.fb_login_success);
-
-    app.get(`${gaPath}/login`, gaOnlyReqAuth);
-    app.get(`${ytPath}/login`, ytOnlyReqAuth);
-    app.get(`${gaPath}${ytPath}/login`, bothGaYtReqAuth);
-    app.get(`${gaPath}/login/success`, gaAuth, GaM.ga_login_success);
-
     /****************** CRUD USERS ********************/
     app.post(`${amPath}/create/`, AccMan.createUser);
     app.get(`${amPath}/getFromId/`, reqAuth, AccMan.roleAuth(all), AccMan.getUserById);

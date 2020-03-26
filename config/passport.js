@@ -1,7 +1,5 @@
 const jwt      = require('./passport/jwt');
 const basic    = require('./passport/basic');
-const google   = require('./passport/google');
-const facebook = require('./passport/facebook');
 
 const Users = require('../models/index').Users;
 

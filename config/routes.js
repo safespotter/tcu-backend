@@ -62,12 +62,6 @@ module.exports = function (app, passport, config) {
     app.put(`${keysPath}/update/`, reqAuth, AccMan.roleAuth(all), TokenManager.update);
     app.delete(`${keysPath}/delete/`, reqAuth, AccMan.roleAuth(all), TokenManager.deleteKey);
 
-    // Validity
-    app.get(`${keysPath}/checkIfExists/:type`, reqAuth, AccMan.roleAuth(all), TokenManager.checkExistence);
-    app.get(`${keysPath}/isPermissionGranted/:type`, reqAuth, AccMan.roleAuth(all), TokenManager.permissionGranted);
-    app.get(`${keysPath}/isFbTokenValid`, reqAuth, AccMan.roleAuth(all), TokenManager.checkFbTokenValidity);
-    app.delete(`${keysPath}/revokePermissions/:type`, reqAuth, AccMan.roleAuth(all), TokenManager.revokePermissions);
-
     /****************** CRUD DASHBOARD ********************/
     app.get(`${dashPath}/getAllUserDashboards/`, reqAuth, AccMan.roleAuth(all), DashMan.readUserDashboards);
     app.get(`${dashPath}/getDashboardByType/:type`, reqAuth, AccMan.roleAuth(all), DashMan.getDashboardByType);

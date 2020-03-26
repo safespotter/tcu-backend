@@ -5,7 +5,7 @@
  */
 
 let app = require('../app').app;
-let debug = require('debug')('doutdes-core:server');
+let debug = require('debug')('tcu-backend:server');
 let https = require('https');
 let http = require('http');
 let fs = require('fs');

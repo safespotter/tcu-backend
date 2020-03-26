@@ -26,6 +26,4 @@ module.exports = function (passport) {
     // strategies
     passport.use(basic);
     passport.use('jwt', jwt);
-    passport.use('google', google);
-    passport.use('facebook', facebook);
 };

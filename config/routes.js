@@ -15,7 +15,7 @@ const ErrorHandler = require('../engine/error-handler');
 
 module.exports = function (app, passport, config) {
 
-    const site_URL = (config['site_URL'].includes('localhost') ? 'http://localhost:4200' : 'https://www.doutdes-cluster.it/beta') + '/#/preferences/api-keys?err=true';
+    const site_URL = (config['site_URL'].includes('localhost') ? 'http://localhost:4200' : '') + '/#/preferences/api-keys?err=true';
 
     /* PATHs */
     const amPath   = '/users';
@@ -24,63 +24,8 @@ module.exports = function (app, passport, config) {
     const calPath  = '/calendar';
     const messPath = '/message';
 
-    const gaPath = '/ga';
-    const igPath = '/ig';
-    const ytPath = '/yt';
-    const fbPath = '/fb';
-    const fbmPath = '/fbm';
-    const mongoPath = '/mongo';
     /* AUTH */
     const reqAuth = passport.authenticate('jwt', {session: false});
-
-    const fbReqAuth = (req, res, next) => {
-        passport.authenticate('facebook', {
-            scope: ['manage_pages', 'read_insights', 'ads_read'],
-            state: req.query.user_id,
-        })(req, res, next)
-    };
-    const igReqAuth = (req, res, next) => {
-        passport.authenticate('facebook', {
-            scope: ['manage_pages', 'read_insights', 'ads_read', 'instagram_basic', 'instagram_manage_insights'],
-            state: req.query.user_id,
-        })(req, res, next)
-    };
-    const fbAuth = passport.authenticate('facebook', {failureRedirect: site_URL});
-
-    const gaOnlyReqAuth = (req, res, next) => {
-        passport.authenticate('google', {
-            scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/analytics.readonly',
-            accessType: 'offline',
-            prompt: 'consent',
-            state: req.query.user_id,
-        })(req, res, next)
-    };
-    const ytOnlyReqAuth = (req, res, next) => {
-        console.log(req);
-        passport.authenticate('google', {
-            scope: 'https://www.googleapis.com/auth/userinfo.email ' +
-                'https://www.googleapis.com/auth/youtube.readonly ' +
-                'https://www.googleapis.com/auth/yt-analytics-monetary.readonly ' +
-                'https://www.googleapis.com/auth/yt-analytics.readonly',
-            accessType: 'offline',
-            prompt: 'consent',
-            state: req.query.user_id,
-        })(req, res, next)
-    };
-    const bothGaYtReqAuth = (req, res, next) => {
-        passport.authenticate('google', {
-            scope: 'https://www.googleapis.com/auth/userinfo.email ' +
-                'https://www.googleapis.com/auth/analytics.readonly ' +
-                'https://www.googleapis.com/auth/youtube.readonly ' +
-                'https://www.googleapis.com/auth/yt-analytics-monetary.readonly ' +
-                'https://www.googleapis.com/auth/yt-analytics.readonly',
-            accessType: 'offline',
-            prompt: 'consent',
-            state: req.query.user_id,
-        })(req, res, next)
-    };
-
-    const gaAuth = passport.authenticate('google', {failureRedirect: site_URL});
 
     const admin = '0';
     const user = '1';
@@ -153,56 +98,6 @@ module.exports = function (app, passport, config) {
     app.delete(`${messPath}/deleteMessageForUser/:message_id`, reqAuth, AccMan.roleAuth(all), MessMan.deleteMessageForUser);
     app.delete(`${messPath}/deleteMessageByID`, reqAuth, AccMan.roleAuth(admin), MessMan.deleteMessageByID);
 
-    /****************** FACEBOOK MANAGER ********************/
-    app.get(`${fbPath}/updatePages`, reqAuth, AccMan.roleAuth(all), FbM.updatePages);
-    app.get(`${fbPath}/pages`, reqAuth, AccMan.roleAuth(all), FbM.fb_getPages);
-    app.get(`${fbPath}/getScopes`, reqAuth, AccMan.roleAuth(all), FbM.fb_getScopes);
-    app.get(`${fbPath}/storeAllData/:key*?`, FbM.fb_storeAllData);
-
-    app.get(`${fbPath}/data`, reqAuth, AccMan.roleAuth(all), FbM.fb_getData);
-    app.get(`${fbPath}/posts`, reqAuth, AccMan.roleAuth(all), FbM.fb_getPost);
-
-    /****************** FACEBOOK MARKETING MANAGER ********************/
-    app.get(`${fbmPath}/pages`, reqAuth, AccMan.roleAuth(all), FbMM.fbm_getPages);
-
-    app.get(`${fbmPath}/adslist`, FbMM.getAdsList);
-
-    app.get(`${fbmPath}/data`, reqAuth, AccMan.roleAuth(all), FbMM.getData);
-
-    app.get(`${fbmPath}/:act_id/:level/breakdowns/:group`, reqAuth, AccMan.roleAuth(all), FbMM.getData);
-    app.get(`${fbmPath}/:act_id/:level/:id*?`, reqAuth, AccMan.roleAuth(all),FbMM.getData);
-
-    /****************** GOOGLE MANAGER ********************/
-    /** Data response is always an array of arrays as follows:
-     * 0 - data
-     * data.length - 1 - other values
-     **/
-    app.get(`${gaPath}/data`, reqAuth, AccMan.roleAuth(all), GaM.ga_getData);
-    app.get(`${gaPath}/getScopes/`, reqAuth, AccMan.roleAuth(all), GaM.ga_getScopes);
-    app.get(`${gaPath}/getViewList`, reqAuth, AccMan.roleAuth(all), GaM.ga_viewList);
-    app.get(`${gaPath}/storeAllData/:key*?`, GaM.ga_storeAllData);
-
-    /****************** INSTAGRAM DASHBOARD ********************/
-    app.get(`${igPath}/pages`, reqAuth, AccMan.roleAuth(all), IgM.ig_getPages);
-    app.get(`${igPath}/updatePages`, reqAuth, AccMan.roleAuth(all), IgM.updatePages);
-    app.get(`${igPath}/businessInfo`, reqAuth, AccMan.roleAuth(all), IgM.ig_getBusinessInfo);
-
-    app.get(`${igPath}/storeAllData/:key*?`, IgM.ig_storeAllData);
-    app.get(`${igPath}/storeAllDataDaily/:key*?`, IgM.ig_storeAllDataDaily);
-
-    app.get(`${igPath}/data`, reqAuth, AccMan.roleAuth(all), IgM.ig_getData);
-    app.get(`${igPath}/media`, reqAuth, AccMan.roleAuth(all), IgM.ig_getData);  //todo includes stories check
-
-    /****************** INSTAGRAM MEDIA MANAGER ********************/
-    app.get(`${igPath}/:page_id/media/:n*?`, reqAuth, AccMan.roleAuth(all), IgM.ig_getMedia);
-    app.get(`${igPath}/:page_id/videos/:n*?`, reqAuth, AccMan.roleAuth(all), IgM.ig_getVideos);
-    app.get(`${igPath}/:page_id/images/:n*?`, reqAuth, AccMan.roleAuth(all), IgM.ig_getImages);
-    app.get(`${igPath}/:page_id/stories/:n*?`, reqAuth, AccMan.roleAuth(all), IgM.ig_getStories);
-
-    /****************** YOUTUBE MANAGER ********************/
-    app.get(`${ytPath}/data`, reqAuth, AccMan.roleAuth(all), YtM.yt_getData);
-    app.get(`${ytPath}/channels`, reqAuth, AccMan.roleAuth(all), YtM.yt_getChannels);
-    app.get(`${ytPath}/storeAllData/:key*?`, YtM.yt_storeAllData);
 
     /****************** CALENDAR MANAGER ******************/
     app.get(`${calPath}/getEvents`, reqAuth, AccMan.roleAuth(all), CalMan.getEvents);
@@ -210,12 +105,6 @@ module.exports = function (app, passport, config) {
     app.put(`${calPath}/updateEvent`, reqAuth, AccMan.roleAuth(all), CalMan.getEvents);
     app.delete(`${calPath}/deleteEvent`, reqAuth, AccMan.roleAuth(all), CalMan.deleteEvent);
 
-    /****************** LOOGGER MENAGER ********************/
-    app.post(`${mongoPath}`, reqAuth, MtM.userLogManager);
-    // app.get(`${mongoPath}/userid/:id`, function(req,res) {
-    //     res.send('miao')
-    // });
-    app.get(`${mongoPath}/userid/:id`, MtM.createCsv);
     /****************** ERROR HANDLER ********************/
     app.use(ErrorHandler.fun404);
 

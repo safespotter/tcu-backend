@@ -1,0 +1,19 @@
+{
+  "name": "tcu-backend",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "test": "nodemon ./bin/www",
+    "start": "node ./bin/www"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.9.6",
+    "mysql2": "^2.1.0",
+    "passport": "^0.4.1"
+  }
+}

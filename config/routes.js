@@ -4,13 +4,6 @@ const DashMan = require('../engine/dashboard-manager');
 const CalMan = require('../engine/calendar-manager');
 const MessMan = require('../engine/message-manager');
 
-const FbM = require('../engine/analytics/facebook-manager');
-const FbMM = require('../engine/analytics/facebook-marketing-manager');
-const IgM = require('../engine/analytics/instagram-manager');
-const GaM = require('../engine/analytics/google-manager');
-const YtM = require('../engine/analytics/youtube-manager');
-const MtM = require('../engine/mongo-manager');
-
 const ErrorHandler = require('../engine/error-handler');
 
 module.exports = function (app, passport, config) {

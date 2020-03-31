@@ -1,6 +1,5 @@
 const jwt      = require('./passport/jwt');
 const basic    = require('./passport/basic');
-
 const Users = require('../models/index').Users;
 
 module.exports = function (passport) {

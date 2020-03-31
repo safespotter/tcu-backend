@@ -40,11 +40,16 @@ module.exports = function (app, passport, config) {
     app.get(`${amPath}/verifyEmail`, AccMan.verifyEmail);
 
     /****************** TOKENS ********************/
-    // CRUD
+    // // CRUD
     // app.post(`${keysPath}/insert/`, reqAuth, AccMan.roleAuth(all), TokenManager.insertKey);
     // app.get(`${keysPath}/getAll/`, reqAuth, AccMan.roleAuth(all), TokenManager.readAllKeysById);
     // app.put(`${keysPath}/update/`, reqAuth, AccMan.roleAuth(all), TokenManager.update);
     // app.delete(`${keysPath}/delete/`, reqAuth, AccMan.roleAuth(all), TokenManager.deleteKey);
+    //
+    // // Validity
+    // app.get(`${keysPath}/checkIfExists/:type`, reqAuth, AccMan.roleAuth(all), TokenManager.checkExistence);
+    // app.get(`${keysPath}/isPermissionGranted/:type`, reqAuth, AccMan.roleAuth(all), TokenManager.permissionGranted);
+    // app.delete(`${keysPath}/revokePermissions/:type`, reqAuth, AccMan.roleAuth(all), TokenManager.revokePermissions);
 
     /****************** CRUD DASHBOARD ********************/
     app.get(`${dashPath}/getAllUserDashboards/`, reqAuth, AccMan.roleAuth(all), DashMan.readUserDashboards);

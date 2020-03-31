@@ -140,7 +140,7 @@ const createUser = async (req, res) => {
 };
 
 const getUserById = (req, res) => {
-    User.findById(req.user.id)
+    User.findByPk(req.user.id)
         .then(user => {
             return res.status(HttpStatus.OK).send(user);
         })
@@ -160,15 +160,8 @@ const updateUser = (req, res) => {
     Model.Users.update({
         username: user.username,
         email: user.email,
-        company_name: user.company_name,
-        vat_number: user.vat_number,
         first_name: user.first_name,
         last_name: user.last_name,
-        birth_place: user.birth_place,
-        birth_date: new Date(user.birth_date),
-        fiscal_code: user.fiscal_code,
-        address: user.address,
-        province: user.province,
         city: user.city,
         zip: user.zip,
         lang: user.lang,
@@ -369,10 +362,9 @@ const roleAuth = function (roles) {
     return async (req, res, next) => {
         let user = req.user;
         let userFound;
-
         try {
-            userFound = await User.findById(user.id);
-
+            // userFound = await User.findById(user.id);
+            userFound = await User.findByPk(user.id)
             if (roles.indexOf(userFound.user_type) > -1) {
                 return next();
             }

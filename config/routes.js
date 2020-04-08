@@ -37,7 +37,7 @@ module.exports = function (app, passport, config) {
     app.put(`${amPath}/update/`, reqAuth, AccMan.roleAuth(all), AccMan.updateUser);
     app.delete(`${amPath}/delete/`, reqAuth, AccMan.roleAuth([admin]), AccMan.deleteUser);
 
-    app.get(`${amPath}/verifyEmail`, AccMan.verifyEmail);
+    // app.get(`${amPath}/verifyEmail`, AccMan.verifyEmail);
 
     /****************** TOKENS ********************/
     // // CRUD

@@ -5,12 +5,25 @@ const mongoose = require('mongoose');
 const app = express();
 const passport = require('passport');
 
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
+
 /** Configuration load according to the environment**/
 const env = process.env.NODE_ENV || 'development';
 const config = require('./config/config')[env];
 
+io.on('connection', (socket) => {
+    console.log('a user connected');
+    socket.on('disconnect', () => {
+        console.log('user disconnected');
+    });
+});
+http.listen(3000, () => {
+    console.log('listening on *:3000');
+});
+
 /** Export of app, passport and the right configuration **/
-module.exports = { app, passport, config };
+module.exports = { app, passport, config, http, io };
 
 /** Configuration of express, routes and passport **/
 require('./config/passport')(passport);

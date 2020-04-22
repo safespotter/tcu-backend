@@ -88,6 +88,110 @@ module.exports = function (app, passport, config) {
     app.put(`${calPath}/updateEvent`, reqAuth, AccMan.roleAuth(all), CalMan.getEvents);
     app.delete(`${calPath}/deleteEvent`, reqAuth, AccMan.roleAuth(all), CalMan.deleteEvent);
 
+    /****************** SOCKET IO ******************/
+
+    const socket = require("socket.io");
+
+    const server = app.listen(3000, () => {
+        console.log('started in 3000')
+    });
+
+    const io = socket(server);
+
+    var Charts = require('../models/mongo/chart');
+    var SafeSpotter = require('../models/mongo/mongo-safeSpotter')
+    var socketMap = [];
+
+    io.on('connection',(socket)=>{
+        console.log("Client Connected");
+        socketMap.push(socket);
+        dataUpdate();
+    });
+
+    app.post('/chart/create', function (req, res) {
+        (async () => {
+            try {
+                console.log("Calling for chart Create");
+                console.log(req.body);
+                // dati su mongo
+                let chart = new Charts(req.body);
+                await chart.save();
+                //dati su mongo
+                dataUpdate(); //richiamo l'emissione
+                res.json("Charts  Successfully Created"); //parse
+            } catch (err) {
+                console.log(err);
+                res.status(400).send(err);
+            }
+        })();
+    });
+
+    app.post('/SafeSpotter/create', function (req, res) {
+        (async () => {
+            try {
+                console.log("Calling for chart Create");
+                console.log(req.body);
+                // dati su mongo
+                if((await SafeSpotter.find({id: req.body.id })).length != 0   ) {
+                     console.log('ci sono')
+                    await SafeSpotter.updateOne({id: req.body.id},
+                        {street: req.body.street,
+                            ip: req.body.ip,
+                            critical_issues: req.body.critical_issues})
+
+                }else{
+                    console.log('entro qui')
+                    let safeSpotter = new SafeSpotter(req.body)
+                    await safeSpotter.save();
+                }
+                //dati su mongo
+                dataUpdate(); //richiamo l'emissione
+                res.json("Charts  Successfully Created"); //parse
+            } catch (err) {
+                console.log(err);
+                //res.status(400).send(err);
+            }
+        })();
+    });
+
+    // async function dataUpdate(){
+    //     console.log('Socket Emmit');
+    //     var charts = await Charts.find({});
+    //     for(let socketMapObj of socketMap){
+    //         if(charts.length > 0){
+    //             socketMapObj.emit('dataUpdate',[
+    //                 charts[0].january,
+    //                 charts[0].february,
+    //                 charts[0].march,
+    //                 charts[0].april,
+    //                 charts[0].may,
+    //                 charts[0].june,
+    //                 charts[0].july,
+    //                 charts[0].august,
+    //
+    //             ]);
+    //         }
+    //     }
+    //
+    //
+    // }
+
+    async function dataUpdate(){
+        console.log('Socket Emmit');
+        var charts = await Charts.find({});
+        var safespotter = await SafeSpotter.find({});
+        for(let socketMapObj of socketMap){
+            if(charts.length > 0){
+                socketMapObj.emit('dataUpdate',[
+                    safespotter
+
+                ]);
+            }
+        }
+
+
+    }
+
     /****************** ERROR HANDLER ********************/
     app.use(ErrorHandler.fun404);
 

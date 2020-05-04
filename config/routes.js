@@ -52,35 +52,35 @@ module.exports = function (app, passport, config) {
     // app.delete(`${keysPath}/revokePermissions/:type`, reqAuth, AccMan.roleAuth(all), TokenManager.revokePermissions);
 
     /****************** CRUD DASHBOARD ********************/
-    app.get(`${dashPath}/getAllUserDashboards/`, reqAuth, AccMan.roleAuth(all), DashMan.readUserDashboards);
-    app.get(`${dashPath}/getDashboardByType/:type`, reqAuth, AccMan.roleAuth(all), DashMan.getDashboardByType);
-    app.get(`${dashPath}/getDashboardByID/:id`, reqAuth, AccMan.roleAuth(all), DashMan.getDashboardByID);
-    app.get(`${dashPath}/getChart/:dashboard_id/:chart_id`, reqAuth, AccMan.roleAuth(all), DashMan.readChart);
-    app.get(`${dashPath}/getChartsByFormat/:format`, reqAuth, AccMan.roleAuth(all), DashMan.getByFormat);
-    app.get(`${dashPath}/getChartsNotAddedByDashboard/:dashboard_id/`, reqAuth, AccMan.roleAuth(all), DashMan.readNotAddedByDashboard);
-    app.get(`${dashPath}/getChartsNotAddedByDashboardAndType/:dashboard_id/:type`, reqAuth, AccMan.roleAuth(all), DashMan.readNotAddedByDashboardAndType);
-
-    app.put(`${dashPath}/updateChartInDashboard`, reqAuth, AccMan.roleAuth(all), DashMan.updateChartInDashboard);
-    app.put(`${dashPath}/updateChartsInDashboard`, reqAuth, AccMan.roleAuth(all), DashMan.updateChartsInDashboard);
-    app.put(`${dashPath}/updateProof`, DashMan.updateArray);
-
-    app.post(`${dashPath}/createDashboard`, reqAuth, AccMan.roleAuth(all), DashMan.createDashboard);
-    app.post(`${dashPath}/addChartToDashboard`, reqAuth, AccMan.roleAuth(all), DashMan.addChartToDashboard);
-
-    app.delete(`${dashPath}/removeChartFromDashboard`, reqAuth, AccMan.roleAuth(all), DashMan.removeChartFromDashboard);
-    app.delete(`${dashPath}/clearDashboard`, reqAuth, AccMan.roleAuth(all), DashMan.clearAllDashboard);
-    app.delete(`${dashPath}/deleteUserDashboard`, reqAuth, AccMan.roleAuth(all), DashMan.deleteUserDashboard);
-    app.delete(`${dashPath}/deleteDashboard`, reqAuth, AccMan.roleAuth(all), DashMan.deleteDashboard);
+    // app.get(`${dashPath}/getAllUserDashboards/`, reqAuth, AccMan.roleAuth(all), DashMan.readUserDashboards);
+    // app.get(`${dashPath}/getDashboardByType/:type`, reqAuth, AccMan.roleAuth(all), DashMan.getDashboardByType);
+    // app.get(`${dashPath}/getDashboardByID/:id`, reqAuth, AccMan.roleAuth(all), DashMan.getDashboardByID);
+    // app.get(`${dashPath}/getChart/:dashboard_id/:chart_id`, reqAuth, AccMan.roleAuth(all), DashMan.readChart);
+    // app.get(`${dashPath}/getChartsByFormat/:format`, reqAuth, AccMan.roleAuth(all), DashMan.getByFormat);
+    // app.get(`${dashPath}/getChartsNotAddedByDashboard/:dashboard_id/`, reqAuth, AccMan.roleAuth(all), DashMan.readNotAddedByDashboard);
+    // app.get(`${dashPath}/getChartsNotAddedByDashboardAndType/:dashboard_id/:type`, reqAuth, AccMan.roleAuth(all), DashMan.readNotAddedByDashboardAndType);
+    //
+    // app.put(`${dashPath}/updateChartInDashboard`, reqAuth, AccMan.roleAuth(all), DashMan.updateChartInDashboard);
+    // app.put(`${dashPath}/updateChartsInDashboard`, reqAuth, AccMan.roleAuth(all), DashMan.updateChartsInDashboard);
+    // app.put(`${dashPath}/updateProof`, DashMan.updateArray);
+    //
+    // app.post(`${dashPath}/createDashboard`, reqAuth, AccMan.roleAuth(all), DashMan.createDashboard);
+    // app.post(`${dashPath}/addChartToDashboard`, reqAuth, AccMan.roleAuth(all), DashMan.addChartToDashboard);
+    //
+    // app.delete(`${dashPath}/removeChartFromDashboard`, reqAuth, AccMan.roleAuth(all), DashMan.removeChartFromDashboard);
+    // app.delete(`${dashPath}/clearDashboard`, reqAuth, AccMan.roleAuth(all), DashMan.clearAllDashboard);
+    // app.delete(`${dashPath}/deleteUserDashboard`, reqAuth, AccMan.roleAuth(all), DashMan.deleteUserDashboard);
+    // app.delete(`${dashPath}/deleteDashboard`, reqAuth, AccMan.roleAuth(all), DashMan.deleteDashboard);
 
     /****************** CRUD MESSAGES ********************/
-    app.post(`${messPath}/createMessage`, reqAuth, AccMan.roleAuth(admin), MessMan.createMessage);
-    app.get(`${messPath}/getMessageByID/:message_id`, reqAuth, AccMan.roleAuth(all), MessMan.readMessageByID);
-    app.get(`${messPath}/getMessagesForUser`, reqAuth, AccMan.roleAuth(all), MessMan.getMessagesForUser);
-    app.post(`${messPath}/sendMessageToUser`, reqAuth, AccMan.roleAuth(admin), MessMan.sendMessageToUser);
-    app.put(`${messPath}/setMessageRead`, reqAuth, AccMan.roleAuth(all), MessMan.setMessageRead);
-    app.delete(`${messPath}/deleteMessageForUser/:message_id`, reqAuth, AccMan.roleAuth(all), MessMan.deleteMessageForUser);
-    app.delete(`${messPath}/deleteMessageByID`, reqAuth, AccMan.roleAuth(admin), MessMan.deleteMessageByID);
-
+    // app.post(`${messPath}/createMessage`, reqAuth, AccMan.roleAuth(admin), MessMan.createMessage);
+    // app.get(`${messPath}/getMessageByID/:message_id`, reqAuth, AccMan.roleAuth(all), MessMan.readMessageByID);
+    // app.get(`${messPath}/getMessagesForUser`, reqAuth, AccMan.roleAuth(all), MessMan.getMessagesForUser);
+    // app.post(`${messPath}/sendMessageToUser`, reqAuth, AccMan.roleAuth(admin), MessMan.sendMessageToUser);
+    // app.put(`${messPath}/setMessageRead`, reqAuth, AccMan.roleAuth(all), MessMan.setMessageRead);
+    // app.delete(`${messPath}/deleteMessageForUser/:message_id`, reqAuth, AccMan.roleAuth(all), MessMan.deleteMessageForUser);
+    // app.delete(`${messPath}/deleteMessageByID`, reqAuth, AccMan.roleAuth(admin), MessMan.deleteMessageByID);
+    //
 
     /****************** CALENDAR MANAGER ******************/
     app.get(`${calPath}/getEvents`, reqAuth, AccMan.roleAuth(all), CalMan.getEvents);
@@ -138,7 +138,6 @@ module.exports = function (app, passport, config) {
                         {street: req.body.street,
                             ip: req.body.ip,
                             critical_issues: req.body.critical_issues})
-
                 }else{
                     console.log('entro qui')
                     let safeSpotter = new SafeSpotter(req.body)

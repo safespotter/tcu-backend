@@ -19,6 +19,7 @@
     "http-errors": "^1.7.3",
     "http-server": "^0.12.1",
     "http-status-codes": "^1.4.0",
+    "jsmpeg": "^1.0.0",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.15",
     "mongoose": "^5.9.6",

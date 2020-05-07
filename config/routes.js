@@ -127,13 +127,14 @@ module.exports = function (app, passport, config) {
     });
 
     app.post('/SafeSpotter/create', function (req, res) {
+        let tmp_critical;
+        let id;
         (async () => {
             try {
-                console.log("Calling for chart Create");
-                console.log(req.body);
-                // dati su mongo
+                //dati mongo
                 if((await SafeSpotter.find({id: req.body.id })).length != 0   ) {
-                     console.log('ci sono')
+                    tmp_critical = await SafeSpotter.find({id: req.body.id });
+                    tmp_critical[0].critical_issues != req.body.critical_issues ? id = req.body.id : id = -1;
                     await SafeSpotter.updateOne({id: req.body.id},
                         {street: req.body.street,
                             ip: req.body.ip,
@@ -143,9 +144,8 @@ module.exports = function (app, passport, config) {
                     let safeSpotter = new SafeSpotter(req.body)
                     await safeSpotter.save();
                 }
-                //dati su mongo
-                dataUpdate(); //richiamo l'emissione
-                res.json("Charts  Successfully Created"); //parse
+
+                dataUpdate(id); //richiamo l'emissione
             } catch (err) {
                 console.log(err);
                 //res.status(400).send(err);
@@ -175,16 +175,14 @@ module.exports = function (app, passport, config) {
     //
     // }
 
-    async function dataUpdate(){
+    async function dataUpdate(num){
         console.log('Socket Emmit');
         var charts = await Charts.find({});
         var safespotter = await SafeSpotter.find({});
         for(let socketMapObj of socketMap){
             if(charts.length > 0){
                 socketMapObj.emit('dataUpdate',[
-                    safespotter
-
-                ]);
+                    safespotter, num]);
             }
         }
 

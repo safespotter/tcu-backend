@@ -9,23 +9,22 @@ const passport = require('passport');
 const env = process.env.NODE_ENV || 'development';
 const config = require('./config/config')[env];
 /** Configuration Socket.io **/
-const socket = require("socket.io");
-
-const server = app.listen(3000, () => {
-    console.log('started in 3000')
-});
-const io = socket(server);
+// const socket = require("socket.io");
+//
+// const server = app.listen(3000, () => {
+//     console.log('started in 3000')
+// });
+// const io = socket(server);
 /** Configuration RTSP STREAM VIDEO **/
 
 const Stream = require('node-rtsp-stream')
-module.exports = {app, passport, config, Stream, io};
+module.exports = {app, passport, config, Stream};
 
 /** Configuration of express, routes and passport **/
 require('./config/passport')(passport);
 require('./config/express')(app, passport);
 require('./config/routes')(app, passport, config);
 require('./config/ipCamera')(Stream);
-require('./engine/SocketEmit')(app, io);
 
 
 

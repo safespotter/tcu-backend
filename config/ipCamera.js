@@ -11,7 +11,7 @@ module.exports = function (Stream) {
 
     streamTwo = new Stream({
         name: 'name2',
-        streamUrl: 'rtsp://192.168.1.75:5554/camera',
+        streamUrl: 'rtsp://192.168.1.189:5554/camera',
         wsPort: 9998,
         ffmpegOptions: { // options ffmpeg flags
             '-stats': '', // an option with no neccessary value uses a blank string

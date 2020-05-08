@@ -19,8 +19,10 @@ module.exports = function (app, io) {
                 let chart = new Charts(req.body);
                 await chart.save();
                 //dati su mongo
+                console.log('arrivo qui?')
                 dataUpdate(); //richiamo l'emissione
                 res.json("Charts  Successfully Created"); //parse
+                console.log('boom')
             } catch (err) {
                 console.log(err);
                 res.status(400).send(err);
@@ -28,10 +30,8 @@ module.exports = function (app, io) {
         })();
     });
 
-    app.post('/SafeSpotter/create', function (req, res) {
+    async function getData (res){
         let tmp_critical;
-        let id;
-        (async () => {
             try {
                 //dati mongo
                 if((await SafeSpotter.find({id: req.body.id })).length != 0   ) {
@@ -61,7 +61,9 @@ module.exports = function (app, io) {
         var charts = await Charts.find({});
         var safespotter = await SafeSpotter.find({});
         for(let socketMapObj of socketMap){
-            if(charts.length > 0){
+            console.log('arrivo qui?')
+            if(safespotter.length > 0){
+                console.log('miao')
                 socketMapObj.emit('dataUpdate',[
                     safespotter, num]);
             }
@@ -69,7 +71,6 @@ module.exports = function (app, io) {
 
 
     }
-
 
 
 

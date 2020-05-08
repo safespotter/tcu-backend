@@ -8,55 +8,25 @@ const passport = require('passport');
 /** Configuration load according to the environment**/
 const env = process.env.NODE_ENV || 'development';
 const config = require('./config/config')[env];
+/** Configuration Socket.io **/
+const socket = require("socket.io");
 
+const server = app.listen(3000, () => {
+    console.log('started in 3000')
+});
+const io = socket(server);
+/** Configuration RTSP STREAM VIDEO **/
 
-Stream = require('node-rtsp-stream')
-stream = new Stream({
-    name: 'name1',
-    streamUrl: 'rtsp://192.168.1.75:5554/camera',
-    wsPort: 9999,
-    ffmpegOptions: { // options ffmpeg flags
-        '-stats': '', // an option with no neccessary value uses a blank string
-        '-r': 30 // options with required values specify the value after the key
-    }
-})
-Stream = require('node-rtsp-stream')
-stream = new Stream({
-    name: 'name2',
-    streamUrl: 'rtsp://192.168.1.75:5554/camera',
-    wsPort: 9998,
-    ffmpegOptions: { // options ffmpeg flags
-        '-stats': '', // an option with no neccessary value uses a blank string
-        '-r': 30 // options with required values specify the value after the key
-    }
-})
-
-// const onvif = require('node-onvif');
-// const fs = require('fs');
-//
-// // Create an OnvifDevice object
-// let device = new onvif.OnvifDevice({
-//     xaddr: 'http://192.168.1.75:8080/onvif/device_service',
-//     user : 'admin',
-//     pass : 'admin'
-// });
-//
-// // Initialize the OnvifDevice object
-// device.init().then(() => {
-//     // Get the UDP stream URL
-//     let url = device.getUdpStreamUrl();
-//     console.log(url);
-// }).catch((error) => {
-//     console.error(error);
-// });
-
-
-module.exports = {app, passport, config};
+const Stream = require('node-rtsp-stream')
+module.exports = {app, passport, config, Stream, io};
 
 /** Configuration of express, routes and passport **/
 require('./config/passport')(passport);
 require('./config/express')(app, passport);
 require('./config/routes')(app, passport, config);
+require('./config/ipCamera')(Stream);
+require('./engine/SocketEmit')(app, io);
+
 
 
 /* Connection to Mongo */

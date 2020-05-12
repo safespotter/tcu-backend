@@ -1,78 +1,71 @@
-module.exports = function (app, io) {
+'use strict';
+const express = require('express');
 
-    var Charts = require('../models/mongo/chart');
+const app = express();
+const server = app.listen(3000, () => {
+    console.log('started in 3000')
+});
+
+
+    const socket = require("socket.io");
+    const io = socket(server);
+
     var SafeSpotter = require('../models/mongo/mongo-safeSpotter')
     var socketMap = [];
 
-    io.on('connection',(socket)=>{
+    io.on('connection', (socket) => {
         console.log("Client Connected");
         socketMap.push(socket);
         dataUpdate();
     });
 
-    app.post('/chart/create', function (req, res) {
-        (async () => {
-            try {
-                console.log("Calling for chart Create");
-                console.log(req.body);
-                // dati su mongo
-                let chart = new Charts(req.body);
-                await chart.save();
-                //dati su mongo
-                console.log('arrivo qui?')
-                dataUpdate(); //richiamo l'emissione
-                res.json("Charts  Successfully Created"); //parse
-                console.log('boom')
-            } catch (err) {
-                console.log(err);
-                res.status(400).send(err);
-            }
-        })();
-    });
+    async function getData(req) {
 
-    async function getData (res){
+
         let tmp_critical;
-            try {
-                //dati mongo
-                if((await SafeSpotter.find({id: req.body.id })).length != 0   ) {
-                    tmp_critical = await SafeSpotter.find({id: req.body.id });
-                    tmp_critical[0].critical_issues != req.body.critical_issues ? id = req.body.id : id = -1;
-                    await SafeSpotter.updateOne({id: req.body.id},
-                        {street: req.body.street,
-                            ip: req.body.ip,
-                            critical_issues: req.body.critical_issues})
-                }else{
-                    console.log('entro qui')
-                    let safeSpotter = new SafeSpotter(req.body)
-                    await safeSpotter.save();
-                }
+        let allert;
+        let id;
+        try {
 
-                dataUpdate(id); //richiamo l'emissione
-            } catch (err) {
-                console.log(err);
-                //res.status(400).send(err);
+            if ((await SafeSpotter.find({id: req.body.id})).length != 0 && req.body.critical_issues >= 0 && req.body.critical_issues <= 5) {
+                tmp_critical = await SafeSpotter.find({id: req.body.id});
+                tmp_critical[0].critical_issues != req.body.critical_issues ? id = req.body.id : id = -1;
+                req.body.critical_issues == 5 ? allert = 1 : allert = 0;
+
+                await SafeSpotter.updateOne({id: req.body.id},
+                    {
+                        street: req.body.street,
+                        ip: req.body.ip,
+                        critical_issues: req.body.critical_issues,
+                        date: new Date()
+                    })
+            } else {
+                console.log('entro qui')
+                let safeSpotter = new SafeSpotter(req.body)
+                await safeSpotter.save();
             }
-        })();
-    });
+
+            //dati su mongo
+            dataUpdate(id, allert); //richiamo l'emissione
+            res.json("Charts  Successfully Created"); //parse
+        } catch (err) {
+            console.log(err);
+            //res.status(400).send(err);
+        }
+    }
 
 
-    async function dataUpdate(num){
+    async function dataUpdate(num, allert) {
         console.log('Socket Emmit');
-        var charts = await Charts.find({});
-        var safespotter = await SafeSpotter.find({});
-        for(let socketMapObj of socketMap){
-            console.log('arrivo qui?')
-            if(safespotter.length > 0){
-                console.log('miao')
-                socketMapObj.emit('dataUpdate',[
-                    safespotter, num]);
+        var safespotter = await SafeSpotter.find().sort({date: -1});
+        for (let socketMapObj of socketMap) {
+            if (safespotter.length > 0) {
+                socketMapObj.emit('dataUpdate', [
+                    safespotter, num, allert]);
             }
         }
 
 
     }
 
-
-
-
-}
+    module.exports = {getData}

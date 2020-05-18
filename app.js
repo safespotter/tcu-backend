@@ -17,9 +17,7 @@ const config = require('./config/config')[env];
 // const io = socket(server);
 /** Configuration RTSP STREAM VIDEO **/
 
-
 const Stream = require('node-rtsp-stream')
-
 module.exports = {app, passport, config, Stream};
 
 /** Configuration of express, routes and passport **/

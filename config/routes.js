@@ -1,7 +1,7 @@
 const AccMan = require('../engine/access-manager');
 const DashMan = require('../engine/dashboard-manager');
 const CalMan = require('../engine/calendar-manager');
-
+const SafMan = require('../engine/safespotter-manager');
 const ErrorHandler = require('../engine/error-handler');
 
 module.exports = function (app, passport, config) {
@@ -14,6 +14,8 @@ module.exports = function (app, passport, config) {
     const dashPath = '/dashboards';
     const calPath  = '/calendar';
     const messPath = '/message';
+    const safePath = '/safePath';
+
 
     /* AUTH */
     const reqAuth = passport.authenticate('jwt', {session: false});
@@ -42,6 +44,8 @@ module.exports = function (app, passport, config) {
     app.put(`${calPath}/updateEvent`, reqAuth, AccMan.roleAuth(all), CalMan.getEvents);
     app.delete(`${calPath}/deleteEvent`, reqAuth, AccMan.roleAuth(all), CalMan.deleteEvent);
 
+    /****************** SAFESPOTTER MANAGER ********************/
+    app.get(`${safePath}/getData`,  reqAuth, AccMan.roleAuth(all),   SafMan.returnList)
     /****************** SOCKET IO ******************/
 
     const socket = require("socket.io");
@@ -52,7 +56,6 @@ module.exports = function (app, passport, config) {
 
     const io = socket(server);
 
-    var Charts = require('../models/mongo/chart');
     var SafeSpotter = require('../models/mongo/mongo-safeSpotter')
     var socketMap = [];
 
@@ -63,46 +66,41 @@ module.exports = function (app, passport, config) {
     });
 
     app.post('/SafeSpotter/create', function (req, res) {
-        let tmp_critical;
-        let allert;
-        let id;
+    let tmp_critical;
+    let allert;
+    let id;
+    (async () => {
+        try {
+            console.log("Calling for chart Create");
 
-        (async () => {
-            try {
-                console.log("Calling for chart Create");
-                console.log(req.body);
-                // dati su mongo
+            if((await SafeSpotter.find({id: req.body.id })).length != 0  &&  req.body.critical_issues  >= 0 && req.body.critical_issues <=5 ) {
+                tmp_critical = await SafeSpotter.find({id: req.body.id });
+                tmp_critical[0].critical_issues != req.body.critical_issues ? id = req.body.id : id = -1;
+                req.body.critical_issues  == 5 ? allert = 1 : allert = 0;
 
-                if((await SafeSpotter.find({id: req.body.id })).length != 0  &&  req.body.critical_issues  >= 0 && req.body.critical_issues <=5 ) {
-                    tmp_critical = await SafeSpotter.find({id: req.body.id });
-                    tmp_critical[0].critical_issues != req.body.critical_issues ? id = req.body.id : id = -1;
-                    req.body.critical_issues  == 5 ? allert = 1 : allert = 0;
-
-                    await SafeSpotter.updateOne({id: req.body.id},
-                        {street: req.body.street,
-                            ip: req.body.ip,
-                            critical_issues: req.body.critical_issues,
-                            date: new Date()})
-                }else{
-                    console.log('entro qui')
-                    let safeSpotter = new SafeSpotter(req.body)
-                    await safeSpotter.save();
-                }
-
-                //dati su mongo
-                dataUpdate(id, allert); //richiamo l'emissione
-                res.json("Charts  Successfully Created"); //parse
-            } catch (err) {
-                console.log(err);
-                //res.status(400).send(err);
+                await SafeSpotter.updateOne({id: req.body.id},
+                    {street: req.body.street,
+                        ip: req.body.ip,
+                        critical_issues: req.body.critical_issues,
+                        date: new Date()})
+            }else{
+                let safeSpotter = new SafeSpotter(req.body)
+                await safeSpotter.save();
             }
-        })();
-    });
+
+            //dati su mongo
+            dataUpdate(id, allert); //richiamo l'emissione
+            res.json("Charts  Successfully Created"); //parse
+        } catch (err) {
+            console.log(err);
+            //res.status(400).send(err);
+        }
+    })();
+});
 
 
     async function dataUpdate(num, allert){
         console.log('Socket Emmit');
-        var charts = await Charts.find({});
         var safespotter = await SafeSpotter.find().sort({date:-1});
         for(let socketMapObj of socketMap){
             if(safespotter.length > 0){

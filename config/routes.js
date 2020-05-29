@@ -57,6 +57,7 @@ module.exports = function (app, passport, config) {
     const io = socket(server);
 
     var SafeSpotter = require('../models/mongo/mongo-safeSpotter')
+    var Notification = require('../models/mongo/mongo-notification')
     var socketMap = [];
 
     io.on('connection',(socket)=>{
@@ -90,6 +91,7 @@ module.exports = function (app, passport, config) {
 
             //dati su mongo
             dataUpdate(id, allert); //richiamo l'emissione
+            notificationEmit();
             res.json("Charts  Successfully Created"); //parse
         } catch (err) {
             console.log(err);
@@ -101,11 +103,27 @@ module.exports = function (app, passport, config) {
 
     async function dataUpdate(num, allert){
         console.log('Socket Emmit');
+        console.log('##################### ci arrivo #####################################')
         var safespotter = await SafeSpotter.find().sort({date:-1});
         for(let socketMapObj of socketMap){
             if(safespotter.length > 0){
                 socketMapObj.emit('dataUpdate',[
                     safespotter, num, allert]);
+            }
+        }
+
+
+    }
+    async function notificationEmit(num, allert){
+        console.log('Socket Emmit');
+        console.log('##################### ci arrivo #####################################')
+        var notification = await Notification.find({checked: true});
+        var count = await Notification.count({checked: true});
+
+        for(let socketMapObj of socketMap){
+            if(notification.length > 0){
+                socketMapObj.emit('notificationEmit',[
+                    notification, count]);
             }
         }
 

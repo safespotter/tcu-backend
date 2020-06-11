@@ -9,10 +9,10 @@ module.exports = function (app, passport, config) {
     const site_URL = (config['site_URL'].includes('localhost') ? 'http://localhost:4200' : '') + '/#/preferences/api-keys?err=true';
 
     /* PATHs */
-    const amPath   = '/users';
+    const amPath = '/users';
     const keysPath = '/keys';
     const dashPath = '/dashboards';
-    const calPath  = '/calendar';
+    const calPath = '/calendar';
     const messPath = '/message';
     const safePath = '/safePath';
 
@@ -45,7 +45,7 @@ module.exports = function (app, passport, config) {
     app.delete(`${calPath}/deleteEvent`, reqAuth, AccMan.roleAuth(all), CalMan.deleteEvent);
 
     /****************** SAFESPOTTER MANAGER ********************/
-    app.get(`${safePath}/getData`,  reqAuth, AccMan.roleAuth(all),   SafMan.returnList)
+    app.get(`${safePath}/getData`, reqAuth, AccMan.roleAuth(all), SafMan.returnList)
     /****************** SOCKET IO ******************/
 
     const socket = require("socket.io");
@@ -60,74 +60,84 @@ module.exports = function (app, passport, config) {
     var Notification = require('../models/mongo/mongo-notification')
     var socketMap = [];
 
-    io.on('connection',(socket)=>{
+    io.on('connection', (socket) => {
         console.log("Client Connected");
         socketMap.push(socket);
         dataUpdate();
     });
 
     app.post('/SafeSpotter/create', function (req, res) {
-    let tmp_critical;
-    let allert;
-    let id;
-    (async () => {
-        try {
-            console.log("Calling for chart Create");
+        let tmp_critical;
+        let allert;
+        let id;
+        (async () => {
+            try {
+                console.log("Calling for chart Create");
 
-            if((await SafeSpotter.find({id: req.body.id })).length != 0  &&  req.body.critical_issues  >= 0 && req.body.critical_issues <=5 ) {
-                tmp_critical = await SafeSpotter.find({id: req.body.id });
-                tmp_critical[0].critical_issues != req.body.critical_issues ? id = req.body.id : id = -1;
-                req.body.critical_issues  == 5 ? allert = 1 : allert = 0;
+                if ((await SafeSpotter.find({id: req.body.id})).length != 0 && req.body.critical_issues >= 0 && req.body.critical_issues <= 5) {
+                    tmp_critical = await SafeSpotter.find({id: req.body.id});
+                    tmp_critical[0].critical_issues != req.body.critical_issues ? id = req.body.id : id = -1;
+                    req.body.critical_issues == 5 ? allert = 1 : allert = 0;
 
-                await SafeSpotter.updateOne({id: req.body.id},
-                    {street: req.body.street,
-                        ip: req.body.ip,
-                        critical_issues: req.body.critical_issues,
-                        date: new Date()})
-            }else{
-                let safeSpotter = new SafeSpotter(req.body)
-                await safeSpotter.save();
+                    await SafeSpotter.updateOne({id: req.body.id},
+                        {
+                            street: req.body.street,
+                            condition: req.body.condition,
+                            critical_issues: req.body.critical_issues,
+                            condition_convert: convertCondition(req.body.critical_issues),
+                            date: new Date()
+                        })
+                } else {
+                    let safeSpotter = new SafeSpotter(req.body)
+                    await safeSpotter.save();
+                }
+
+                if ((await SafeSpotter.find({id: req.body.id})).length != 0 && req.body.critical_issues >= 4 && req.body.critical_issues <= 5) {
+                    let notification = new Notification(req.body)
+                    await notification.save();
+                }
+
+                //dati su mongo
+                dataUpdate(id, allert); //richiamo l'emissione
+                res.json("Charts  Successfully Created"); //parse
+            } catch (err) {
+                console.log(err);
+                //res.status(400).send(err);
             }
-
-            //dati su mongo
-            dataUpdate(id, allert); //richiamo l'emissione
-            notificationEmit();
-            res.json("Charts  Successfully Created"); //parse
-        } catch (err) {
-            console.log(err);
-            //res.status(400).send(err);
-        }
-    })();
-});
+        })();
+    });
 
 
-    async function dataUpdate(num, allert){
+    async function dataUpdate(num, allert) {
         console.log('Socket Emmit');
-        console.log('##################### ci arrivo #####################################')
-        var safespotter = await SafeSpotter.find().sort({date:-1});
-        for(let socketMapObj of socketMap){
-            if(safespotter.length > 0){
-                socketMapObj.emit('dataUpdate',[
-                    safespotter, num, allert]);
+        const safespotter = await SafeSpotter.find().sort({date: -1});
+        const notification = await Notification.find({});
+        const count = await Notification.count({});
+        for (let socketMapObj of socketMap) {
+            if (safespotter.length > 0) {
+                socketMapObj.emit('dataUpdate', [
+                    safespotter, num, allert, notification, count]);
             }
         }
 
 
     }
-    async function notificationEmit(num, allert){
-        console.log('Socket Emmit');
-        console.log('##################### ci arrivo #####################################')
-        var notification = await Notification.find({checked: true});
-        var count = await Notification.count({checked: true});
 
-        for(let socketMapObj of socketMap){
-            if(notification.length > 0){
-                socketMapObj.emit('notificationEmit',[
-                    notification, count]);
-            }
+    function convertCondition(input){
+    switch (parseInt(input)) {
+        case 0:
+            return 'NESSUNA';
+        case 1:
+            return 'BASSA';
+        case 2:
+            return 'DISCRETA';
+        case 3:
+            return 'MODERATA';
+        case 4:
+            return 'ALTA';
+        case 5:
+            return 'MASSIMA';
         }
-
-
     }
 
     /****************** ERROR HANDLER ********************/

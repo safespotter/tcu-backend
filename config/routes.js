@@ -24,9 +24,8 @@ module.exports = function (app, passport, config) {
     const user = '1';
     const editor = '2';
     const analyst = '3';
+    
     const all = [admin, user, editor, analyst];
-
-    // TODO gestire le delete bene: se il risultato restituito dalla query è 0, allora non ha eliminato niente
 
     /****************** ACCESS MANAGER ********************/
     app.post('/login', AccMan.basicLogin);
@@ -65,7 +64,6 @@ module.exports = function (app, passport, config) {
         socketMap.push(socket);
         dataUpdate();
     });
-
     app.post('/SafeSpotter/create', function (req, res) {
         let tmp_critical;
         let allert;
@@ -119,8 +117,6 @@ module.exports = function (app, passport, config) {
                     safespotter, num, allert, notification, count]);
             }
         }
-
-
     }
 
     function convertCondition(input){

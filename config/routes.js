@@ -3,9 +3,16 @@ const DashMan = require('../engine/dashboard-manager');
 const CalMan = require('../engine/calendar-manager');
 const SafMan = require('../engine/safespotter-manager');
 const ErrorHandler = require('../engine/error-handler');
+const cors = require ('cors')
+const bodyParser= require('body-parser')
+const webpush = require('web-push')
+
+
 
 module.exports = function (app, passport, config) {
 
+    const PUBLIC_VAPID ="BFSKwNnTBL_de-3GSMGYFL9iB09a9Xz1EmyT3iRQ8L0WXWEO01_2XORztfHc_F816x4XhI7-SeEekCqwh7M5nv0";
+    const PRIVATE_VAPID ="ak1qICoo4g-An5aOPC3fqw-vAvGcVOjvH7_XS1lGeow";
     const site_URL = (config['site_URL'].includes('localhost') ? 'http://localhost:4200' : '') + '/#/preferences/api-keys?err=true';
 
     /* PATHs */
@@ -57,6 +64,8 @@ module.exports = function (app, passport, config) {
 
     var SafeSpotter = require('../models/mongo/mongo-safeSpotter')
     var Notification = require('../models/mongo/mongo-notification')
+    var Push = require('../models/mongo/mongo-pushNotification')
+
     var socketMap = [];
 
     io.on('connection', (socket) => {
@@ -93,6 +102,7 @@ module.exports = function (app, passport, config) {
                 if ((await SafeSpotter.find({id: req.body.id})).length != 0 && req.body.critical_issues >= 4 && req.body.critical_issues <= 5) {
                     let notification = new Notification(req.body)
                     await notification.save();
+                    pushNotification()
                 }
 
                 //dati su mongo
@@ -135,6 +145,120 @@ module.exports = function (app, passport, config) {
             return 'MASSIMA';
         }
     }
+
+    app.use(cors())
+    app.use(bodyParser.json())
+
+    webpush.setVapidDetails('mailto:you@domain.com', PUBLIC_VAPID, PRIVATE_VAPID)
+
+
+    const fakeDatabase = []
+
+
+    app.post('/subscription', (req, res) => {
+        (async () => {
+            try{
+                if ((await Push.find({keys: req.body.keys})).length != 0){
+
+                    await Push.updateOne({id: req.body.keys}, {
+                        endpoint: req.body.endpoint,
+                        expirationTime: req.body.expirationTime,
+                    })
+                } else {
+                    let push = new Push(req.body)
+                    await push.save();
+                }
+            }catch (e) {
+                console.log(e)
+            }
+        })();
+    });
+
+    async function pushNotification(){
+        const not = await Push.find({});
+        console.log('sono su pushnotification', not)
+
+        for (const el of not){
+            const sub= {
+                     endpoint: el.endpoint,
+                     expirationTime: el.expirationTime,
+                     keys: el.keys
+            }
+            const notificationPayload = {
+                notification: {
+                    title: 'Allerta Rossa',
+                    body: 'This is the body of the notification',
+                    icon: 'assets/icons/icon-512x512.png'
+                }
+            }
+            webpush.sendNotification(sub, JSON.stringify(notificationPayload));
+        }
+        console.log('sono su pushnotification', not)
+
+        const notification = await Push.find({});
+
+    }
+
+    //
+    // app.post('/sendNotification', (req, res) => {
+    //     const notificationPayload = {
+    //         notification: {
+    //             title: 'New Notification',
+    //             body: 'This is the body of the notification',
+    //         },
+    //     }
+    //
+    //     const promises = []
+    //     fakeDatabase.forEach(subscription => {
+    //         promises.push(
+    //             webpush.sendNotification(
+    //                 subscription,
+    //                 JSON.stringify(notificationPayload)
+    //             )
+    //         )
+    //     })
+    //     Promise.all(promises).then(() => res.sendStatus(200))
+    // })
+    // let subscription;
+    // app.post('/subscription', (req, res) => {
+    //     subscription = req.body;
+    //     console.log('########################',subscription, '#############################')
+    //     fakeDatabase.push(subscription);
+    // });
+
+    // app.post('/sendNotification', (req, res) => {
+    //     const notificationPayload = {
+    //         notification: {
+    //             title: 'Allerta Rossa',
+    //             body: 'This is the body of the notification',
+    //             icon: 'assets/icons/icon-512x512.png'
+    //         }
+    //     };
+    //
+    //     const promises = [];
+    //     fakeDatabase.forEach(subscription => {
+    //         promises.push(webpush.sendNotification(subscription, JSON.stringify(notificationPayload)));
+    //     });
+    //     Promise.all(promises).then(() => res.sendStatus(200));
+    // });
+
+    // const sub={
+    //     endpoint: 'https://fcm.googleapis.com/fcm/send/fblmj-1QG8A:APA91bG-qYDEaZlq87rQOWTsji9a-ARnwjFsueWSVTEmzgiX6r9mFhLa4R8VOeSEMWsGGiqXveFh7b7IZYss563NfMNbbi1_yCg5Omh1OIt45wFkULjGmGi6H_H6yg8_w2iQ85e43ItX',
+    //     expirationTime: null,
+    //     keys: {
+    //         p256dh: 'BHFesfiNWHluYPJ4xyJb9KqE439jLTHCCGCVYr7bUD_VZLYmwK1BuITeSM-eOxWcIwBr61yY5qugQstuCmVUWZQ',
+    //         auth: 'pZ_eDaEb_zVGxrxaysnz6A'
+    //     }
+    // }
+    //
+    // const notificationPayload = {
+    //     notification: {
+    //         title: 'Allerta Rossa',
+    //         body: 'This is the body of the notification',
+    //         icon: 'assets/icons/icon-512x512.png'
+    //     }
+    // }
+    // webpush.sendNotification(sub, JSON.stringify(notificationPayload));
 
     /****************** ERROR HANDLER ********************/
     app.use(ErrorHandler.fun404);

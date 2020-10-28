@@ -24,7 +24,7 @@ module.exports = {app, passport, config, Stream};
 require('./config/passport')(passport);
 require('./config/express')(app, passport);
 require('./config/routes')(app, passport, config);
-require('./config/ipCamera')(Stream);
+//require('./config/ipCamera')(Stream);
 
 
 

@@ -3,16 +3,15 @@ const DashMan = require('../engine/dashboard-manager');
 const CalMan = require('../engine/calendar-manager');
 const SafMan = require('../engine/safespotter-manager');
 const ErrorHandler = require('../engine/error-handler');
-const cors = require ('cors')
-const bodyParser= require('body-parser')
-const webpush = require('web-push')
-
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const webpush = require('web-push');
 
 
 module.exports = function (app, passport, config) {
 
-    const PUBLIC_VAPID ="BFSKwNnTBL_de-3GSMGYFL9iB09a9Xz1EmyT3iRQ8L0WXWEO01_2XORztfHc_F816x4XhI7-SeEekCqwh7M5nv0";
-    const PRIVATE_VAPID ="ak1qICoo4g-An5aOPC3fqw-vAvGcVOjvH7_XS1lGeow";
+    const PUBLIC_VAPID = "BFSKwNnTBL_de-3GSMGYFL9iB09a9Xz1EmyT3iRQ8L0WXWEO01_2XORztfHc_F816x4XhI7-SeEekCqwh7M5nv0";
+    const PRIVATE_VAPID = "ak1qICoo4g-An5aOPC3fqw-vAvGcVOjvH7_XS1lGeow";
     const site_URL = (config['site_URL'].includes('localhost') ? 'http://localhost:4200' : '') + '/#/preferences/api-keys?err=true';
 
     /* PATHs */
@@ -31,7 +30,7 @@ module.exports = function (app, passport, config) {
     const user = '1';
     const editor = '2';
     const analyst = '3';
-    
+
     const all = [admin, user, editor, analyst];
 
     /****************** ACCESS MANAGER ********************/
@@ -51,7 +50,9 @@ module.exports = function (app, passport, config) {
     app.delete(`${calPath}/deleteEvent`, reqAuth, AccMan.roleAuth(all), CalMan.deleteEvent);
 
     /****************** SAFESPOTTER MANAGER ********************/
-    app.get(`${safePath}/getData`, reqAuth, AccMan.roleAuth(all), SafMan.returnList)
+    app.get(`${safePath}/getData`, reqAuth, AccMan.roleAuth(all), SafMan.returnList);
+    app.post(`${safePath}/saveDataFromStreetLamp`, SafMan.saveDataFromStreetLamp);
+
     /****************** SOCKET IO ******************/
 
     const socket = require("socket.io");
@@ -62,9 +63,9 @@ module.exports = function (app, passport, config) {
 
     const io = socket(server);
 
-    var SafeSpotter = require('../models/mongo/mongo-safeSpotter')
-    var Notification = require('../models/mongo/mongo-notification')
-    var Push = require('../models/mongo/mongo-pushNotification')
+    var SafeSpotter = require('../models/mongo/mongo-safeSpotter');
+    var Notification = require('../models/mongo/mongo-notification');
+    var Push = require('../models/mongo/mongo-pushNotification');
 
     var socketMap = [];
 
@@ -120,7 +121,7 @@ module.exports = function (app, passport, config) {
         console.log('Socket Emmit');
         const safespotter = await SafeSpotter.find().sort({date: -1});
         const notification = await Notification.find({});
-        const count = await Notification.count({});
+        const count = await Notification.countDocuments({});
         for (let socketMapObj of socketMap) {
             if (safespotter.length > 0) {
                 socketMapObj.emit('dataUpdate', [
@@ -129,20 +130,20 @@ module.exports = function (app, passport, config) {
         }
     }
 
-    function convertCondition(input){
-    switch (parseInt(input)) {
-        case 0:
-            return 'NESSUNA';
-        case 1:
-            return 'BASSA';
-        case 2:
-            return 'DISCRETA';
-        case 3:
-            return 'MODERATA';
-        case 4:
-            return 'ALTA';
-        case 5:
-            return 'MASSIMA';
+    function convertCondition(input) {
+        switch (parseInt(input)) {
+            case 0:
+                return 'NESSUNA';
+            case 1:
+                return 'BASSA';
+            case 2:
+                return 'DISCRETA';
+            case 3:
+                return 'MODERATA';
+            case 4:
+                return 'ALTA';
+            case 5:
+                return 'MASSIMA';
         }
     }
 
@@ -157,8 +158,8 @@ module.exports = function (app, passport, config) {
 
     app.post('/subscription', (req, res) => {
         (async () => {
-            try{
-                if ((await Push.find({keys: req.body.keys})).length != 0){
+            try {
+                if ((await Push.find({keys: req.body.keys})).length != 0) {
 
                     await Push.updateOne({id: req.body.keys}, {
                         endpoint: req.body.endpoint,
@@ -168,21 +169,21 @@ module.exports = function (app, passport, config) {
                     let push = new Push(req.body)
                     await push.save();
                 }
-            }catch (e) {
+            } catch (e) {
                 console.log(e)
             }
         })();
     });
 
-    async function pushNotification(){
+    async function pushNotification() {
         const not = await Push.find({});
         console.log('sono su pushnotification', not)
 
-        for (const el of not){
-            const sub= {
-                     endpoint: el.endpoint,
-                     expirationTime: el.expirationTime,
-                     keys: el.keys
+        for (const el of not) {
+            const sub = {
+                endpoint: el.endpoint,
+                expirationTime: el.expirationTime,
+                keys: el.keys
             }
             const notificationPayload = {
                 notification: {
@@ -198,67 +199,6 @@ module.exports = function (app, passport, config) {
         const notification = await Push.find({});
 
     }
-
-    //
-    // app.post('/sendNotification', (req, res) => {
-    //     const notificationPayload = {
-    //         notification: {
-    //             title: 'New Notification',
-    //             body: 'This is the body of the notification',
-    //         },
-    //     }
-    //
-    //     const promises = []
-    //     fakeDatabase.forEach(subscription => {
-    //         promises.push(
-    //             webpush.sendNotification(
-    //                 subscription,
-    //                 JSON.stringify(notificationPayload)
-    //             )
-    //         )
-    //     })
-    //     Promise.all(promises).then(() => res.sendStatus(200))
-    // })
-    // let subscription;
-    // app.post('/subscription', (req, res) => {
-    //     subscription = req.body;
-    //     console.log('########################',subscription, '#############################')
-    //     fakeDatabase.push(subscription);
-    // });
-
-    // app.post('/sendNotification', (req, res) => {
-    //     const notificationPayload = {
-    //         notification: {
-    //             title: 'Allerta Rossa',
-    //             body: 'This is the body of the notification',
-    //             icon: 'assets/icons/icon-512x512.png'
-    //         }
-    //     };
-    //
-    //     const promises = [];
-    //     fakeDatabase.forEach(subscription => {
-    //         promises.push(webpush.sendNotification(subscription, JSON.stringify(notificationPayload)));
-    //     });
-    //     Promise.all(promises).then(() => res.sendStatus(200));
-    // });
-
-    // const sub={
-    //     endpoint: 'https://fcm.googleapis.com/fcm/send/fblmj-1QG8A:APA91bG-qYDEaZlq87rQOWTsji9a-ARnwjFsueWSVTEmzgiX6r9mFhLa4R8VOeSEMWsGGiqXveFh7b7IZYss563NfMNbbi1_yCg5Omh1OIt45wFkULjGmGi6H_H6yg8_w2iQ85e43ItX',
-    //     expirationTime: null,
-    //     keys: {
-    //         p256dh: 'BHFesfiNWHluYPJ4xyJb9KqE439jLTHCCGCVYr7bUD_VZLYmwK1BuITeSM-eOxWcIwBr61yY5qugQstuCmVUWZQ',
-    //         auth: 'pZ_eDaEb_zVGxrxaysnz6A'
-    //     }
-    // }
-    //
-    // const notificationPayload = {
-    //     notification: {
-    //         title: 'Allerta Rossa',
-    //         body: 'This is the body of the notification',
-    //         icon: 'assets/icons/icon-512x512.png'
-    //     }
-    // }
-    // webpush.sendNotification(sub, JSON.stringify(notificationPayload));
 
     /****************** ERROR HANDLER ********************/
     app.use(ErrorHandler.fun404);

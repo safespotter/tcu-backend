@@ -8,6 +8,7 @@ const passport = require('passport');
 /** Configuration load according to the environment**/
 const env = process.env.NODE_ENV || 'development';
 const config = require('./config/config')[env];
+
 /** Configuration Socket.io **/
 // const socket = require("socket.io");
 //
@@ -15,9 +16,10 @@ const config = require('./config/config')[env];
 //     console.log('started in 3000')
 // });
 // const io = socket(server);
+
 /** Configuration RTSP STREAM VIDEO **/
 
-const Stream = require('node-rtsp-stream')
+const Stream = require('node-rtsp-stream');
 module.exports = {app, passport, config, Stream};
 
 /** Configuration of express, routes and passport **/
@@ -26,11 +28,9 @@ require('./config/express')(app, passport);
 require('./config/routes')(app, passport, config);
 //require('./config/ipCamera')(Stream);
 
-
-
-/* Connection to Mongo */
+/** Connection to Mongo **/
 mongoose.Promise = require('bluebird');
-mongoose.connect('mongodb://localhost/tcu-backend', {  useNewUrlParser: true, promiseLibrary: require('bluebird') })
+mongoose.connect('mongodb://localhost/tcu-backend', {useNewUrlParser: true, promiseLibrary: require('bluebird'), useUnifiedTopology: true})
     .then(() =>  console.log('Engine connected successfully to the mongo database'))
     .catch((err) => console.error(err));
 

@@ -21,36 +21,37 @@ function pathCreator(id, day, datetime) {
     !fs.existsSync("video/" + id) && fs.mkdirSync("video/" + id);
 
     //verifico che esista la cartella relativa al giorno
-    !fs.existsSync("video/" + id + "/" + day ) && fs.mkdirSync("video/" + id + "/" + day);
+    !fs.existsSync("video/" + id + "/" + day) && fs.mkdirSync("video/" + id + "/" + day);
 
     //restituisco il path
     return "./video/" + id + "/" + day + "/" + datetime + ".mp4";
 }
 
 /*metodo che personalizza l'orario in hh_mm_ss*/
-function customTimeDate (date){
-    let custom_date = new Date(date).toTimeString().slice(0,8);
+function customTimeDate(date) {
 
-    custom_date = custom_date.replace( /:/g , "_" );
+    let custom_date = new Date(date).toISOString().slice(11, 19);
+
+    custom_date = custom_date.replace(/:/g, "_");
 
     return custom_date;
 }
 
 /*metodo che personalizza la data in YYYY_MM_DD*/
-function customDayDate (date){
-    let custom_date = new Date(date).toISOString().slice(0,10);
+function customDayDate(date) {
+    let custom_date = new Date(date).toISOString().slice(0, 10);
 
-    custom_date = custom_date.replace( /-/g , "_" );
+    custom_date = custom_date.replace(/-/g, "_");
 
     return custom_date;
 }
 
 /*API che restituisce la lista dei lampioni con relatica criticità*/
-async function returnList(req, res){
+async function returnList(req, res) {
     try {
         const response = await SafespotterManager.find({});
         res.send(response);
-    }catch (e) {
+    } catch (e) {
         console.log(e);
         return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
             name: 'Internal Server Error',
@@ -60,11 +61,12 @@ async function returnList(req, res){
 }
 
 /* API che riceve comunicazioni dai lampioni */
-async function saveDataFromStreetLamp (req, res){
+async function saveDataFromStreetLamp(req, res) {
 
     try {
         //salvo su variabile il contenuto del body
         const data = req.body;
+        let path = "";
 
         // controllo che siano stati passati dei dati
         if (typeof data === "undefined" || _.isEmpty(data)) {
@@ -74,21 +76,22 @@ async function saveDataFromStreetLamp (req, res){
         }
 
         //controllo se i dati ricevuti hanno l'attributo video ed eventualmente lo salvo
-        if (_.has(data,"videoURL")){
+        if (_.has(data, "videoURL")) {
 
             //creo il path di salvataggio
-            const path = pathCreator(data.id.toString(), customDayDate(Date.now()), customTimeDate(Date.now()));
+            path = pathCreator(data.id.toString(), customDayDate(Date.now()), customTimeDate(Date.now()));
 
             //eseguo il download del video a partire dall'url
             download(data["videoURL"], path, () => {
                 console.log('File salvato nella directory ' + path);
-            })
+            });
         }
 
         //salvo su mongodb i dati ricevuti dal lampione (aggiungere altri se necessario)
         await LampStatus.create({
             id: data.id,
-            status: data.status
+            status: data.status,
+            videoURL: path
         });
 
         return res.status(HttpStatus.OK).send({
@@ -96,7 +99,7 @@ async function saveDataFromStreetLamp (req, res){
         });
 
     } catch (error) {
-        console.log (error);
+        console.log(error);
         return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
             error: "something went wrong"
         });
@@ -104,4 +107,6 @@ async function saveDataFromStreetLamp (req, res){
 
 }
 
-module.exports={returnList, saveDataFromStreetLamp};
+
+
+module.exports = {returnList, saveDataFromStreetLamp};

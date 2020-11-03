@@ -5,14 +5,26 @@ const _ = require("lodash");
 const fs = require('fs');
 const request = require('request');
 
-/*Metodo che avvia il download del file video*/
+/**Metodo che avvia il download del file video*/
 const download = (url, path, callback) => {
     request.head(url, (err, res, body) => {
         request(url).pipe(fs.createWriteStream(path)).on('close', callback)
     })
 };
 
-/*Metodo che crea il path*/
+/**Metodo che inizializza lo status del lampione*/
+function initializeLampStatus(model, data) {
+    model.id = data.id;
+    model.status = data.status;
+    return model;
+}
+
+/**Metodo che normalizza il path del video*/
+function getVideoPath(path) {
+    return path.replace(".", "");
+}
+
+/**Metodo che crea il path*/
 function pathCreator(id, day, datetime) {
     //verifico che esista la cartella video
     !fs.existsSync("video") && fs.mkdirSync("video");
@@ -27,7 +39,7 @@ function pathCreator(id, day, datetime) {
     return "./video/" + id + "/" + day + "/" + datetime + ".mp4";
 }
 
-/*metodo che personalizza l'orario in hh_mm_ss*/
+/**metodo che personalizza l'orario in hh_mm_ss*/
 function customTimeDate(date) {
 
     let custom_date = new Date(date).toISOString().slice(11, 19);
@@ -37,7 +49,7 @@ function customTimeDate(date) {
     return custom_date;
 }
 
-/*metodo che personalizza la data in YYYY_MM_DD*/
+/**metodo che personalizza la data in YYYY_MM_DD*/
 function customDayDate(date) {
     let custom_date = new Date(date).toISOString().slice(0, 10);
 
@@ -46,7 +58,7 @@ function customDayDate(date) {
     return custom_date;
 }
 
-/*API che restituisce la lista dei lampioni con relatica criticità*/
+/**API che restituisce la lista dei lampioni con relativa criticità*/
 async function returnList(req, res) {
     try {
         const response = await SafespotterManager.find({});
@@ -60,13 +72,14 @@ async function returnList(req, res) {
     }
 }
 
-/* API che riceve comunicazioni dai lampioni */
+/** API che riceve e salva le comunicazioni dai lampioni */
 async function saveDataFromStreetLamp(req, res) {
 
     try {
         //salvo su variabile il contenuto del body
         const data = req.body;
         let path = "";
+        let doc = new LampStatus;
 
         // controllo che siano stati passati dei dati
         if (typeof data === "undefined" || _.isEmpty(data)) {
@@ -74,6 +87,8 @@ async function saveDataFromStreetLamp(req, res) {
                 error: "no data received"
             })
         }
+
+        doc = initializeLampStatus(doc, data);
 
         //controllo se i dati ricevuti hanno l'attributo video ed eventualmente lo salvo
         if (_.has(data, "videoURL")) {
@@ -85,14 +100,13 @@ async function saveDataFromStreetLamp(req, res) {
             download(data["videoURL"], path, () => {
                 console.log('File salvato nella directory ' + path);
             });
+
+            path = getVideoPath(path);
+            doc.videoURL = path;
         }
 
         //salvo su mongodb i dati ricevuti dal lampione (aggiungere altri se necessario)
-        await LampStatus.create({
-            id: data.id,
-            status: data.status,
-            videoURL: path
-        });
+        await doc.save();
 
         return res.status(HttpStatus.OK).send({
             message: "data saved successfully"
@@ -107,6 +121,28 @@ async function saveDataFromStreetLamp(req, res) {
 
 }
 
+/** API che preleva le informazioni salvate dei lampioni in ordine di data*/
+async function getStreetLampStatus(req, res) {
 
+    try {
 
-module.exports = {returnList, saveDataFromStreetLamp};
+        let data;
+        let id = req.params.id;
+
+        data = await LampStatus.find({
+            'id': id
+        }).sort({"date": "desc"});
+
+        return res.status(HttpStatus.OK).send({
+            data
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "something went wrong"
+        });
+    }
+}
+
+module.exports = {returnList, saveDataFromStreetLamp, getStreetLampStatus};

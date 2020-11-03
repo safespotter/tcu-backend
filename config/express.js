@@ -30,6 +30,7 @@ module.exports = function (app, passport) {
     app.use(express.urlencoded({extended: false}));
     app.use(cookieParser());
     app.use(express.static(config.root + '/public'));
+    app.use(express.static(config.root));
 
     // enabling cors
     app.use(cors());

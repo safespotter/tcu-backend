@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 module.exports = mongoose.model('LampStatus', new mongoose.Schema({
     id: Number,
-    status: String,
+    status: Number,
     date: { type: Date, default: Date.now },
     videoURL: String
 },{

@@ -77,7 +77,7 @@ module.exports = function (app, passport, config) {
     });
     app.post('/SafeSpotter/create', function (req, res) {
         let tmp_critical;
-        let allert;
+        let alert;
         let id;
         (async () => {
             try {
@@ -86,7 +86,7 @@ module.exports = function (app, passport, config) {
                 if ((await SafeSpotter.find({id: req.body.id})).length != 0 && req.body.critical_issues >= 0 && req.body.critical_issues <= 5) {
                     tmp_critical = await SafeSpotter.find({id: req.body.id});
                     tmp_critical[0].critical_issues != req.body.critical_issues ? id = req.body.id : id = -1;
-                    req.body.critical_issues == 5 ? allert = 1 : allert = 0;
+                    req.body.critical_issues == 5 ? alert = 1 : alert = 0;
 
                     await SafeSpotter.updateOne({id: req.body.id},
                         {
@@ -108,7 +108,7 @@ module.exports = function (app, passport, config) {
                 }
 
                 //dati su mongo
-                dataUpdate(id, allert); //richiamo l'emissione
+                dataUpdate(id, alert); //richiamo l'emissione
                 res.json("Charts  Successfully Created"); //parse
             } catch (err) {
                 console.log(err);
@@ -118,7 +118,7 @@ module.exports = function (app, passport, config) {
     });
 
 
-    async function dataUpdate(num, allert) {
+    async function dataUpdate(num, alert) {
         console.log('Socket Emmit');
         const safespotter = await SafeSpotter.find().sort({date: -1});
         const notification = await Notification.find({});
@@ -126,10 +126,11 @@ module.exports = function (app, passport, config) {
         for (let socketMapObj of socketMap) {
             if (safespotter.length > 0) {
                 socketMapObj.emit('dataUpdate', [
-                    safespotter, num, allert, notification, count]);
+                    safespotter, num, alert, notification, count]);
             }
         }
     }
+
 
     function convertCondition(input) {
         switch (parseInt(input)) {

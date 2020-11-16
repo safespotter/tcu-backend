@@ -1,5 +1,7 @@
-var SafespotterManager = require('../models/mongo/mongo-safeSpotter');
-var LampStatus = require('../models/mongo/mongo-lampStatus');
+const SafespotterManager = require('../models/mongo/mongo-safeSpotter');
+const LampStatus = require('../models/mongo/mongo-lampStatus');
+const Notification = require('../models/mongo/mongo-notification');
+const Push = require('../models/mongo/mongo-pushNotification');
 const HttpStatus = require('http-status-codes');
 const _ = require("lodash");
 const fs = require('fs');
@@ -11,6 +13,24 @@ const download = (url, path, callback) => {
         request(url).pipe(fs.createWriteStream(path)).on('close', callback)
     })
 };
+
+/**Funzione che converte in stringa le condizioni di criticità*/
+function convertCondition(input) {
+    switch (parseInt(input)) {
+        case 0:
+            return 'NESSUNA';
+        case 1:
+            return 'BASSA';
+        case 2:
+            return 'DISCRETA';
+        case 3:
+            return 'MODERATA';
+        case 4:
+            return 'ALTA';
+        case 5:
+            return 'MASSIMA';
+    }
+}
 
 /**Metodo che inizializza lo status del lampione*/
 function initializeLampStatus(model, data) {
@@ -58,6 +78,51 @@ function customDayDate(date) {
     return custom_date;
 }
 
+/**funzione che aggiorna le notifiche*/
+async function createNotification(lamp_id, critical_issues) {
+    let tmp_critical;
+    let alert;
+    let id;
+    try {
+        let lamp = await SafespotterManager.find({id: lamp_id});
+        /*controllo che il lampione sia presente nel database e nel caso lo aggiungo*/
+
+        if (lamp.length !== 0 && critical_issues >= 0 && critical_issues <= 5) {
+            tmp_critical = lamp;
+            tmp_critical[0].critical_issues !== critical_issues ? id = lamp_id : id = -1;
+            //se l'allerta è massima viene usato un flag
+            critical_issues === 5 ? alert = 1 : alert = 0;
+
+            await SafespotterManager.updateOne({id: lamp_id},
+                {
+                    critical_issues: critical_issues,
+                    condition_convert: convertCondition(critical_issues),
+                    date: new Date()
+                })
+        } else {
+
+        }
+
+        if ((await SafespotterManager.find({id: lamp_id})).length !== 0 && critical_issues >= 4 && critical_issues <= 5) {
+            console.log ("lamp", lamp);
+            let notification = new Notification;
+            notification.id = lamp_id;
+            notification.critical_issues = critical_issues;
+            notification.street = lamp[0].street;
+            await notification.save();
+            //pushNotification()
+        }
+
+        //dati su mongo
+        //rt.dataUpdate(id, alert); //richiamo l'emissione
+
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+
+
 /**API che restituisce la lista dei lampioni con relativa criticità*/
 async function returnList(req, res) {
     try {
@@ -88,7 +153,15 @@ async function saveDataFromStreetLamp(req, res) {
             })
         }
 
+        //controllo che il valore di status sia sul range 0-5
+        if (data.status < 0 || data.status > 5) {
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "valore di status errato"
+            })
+        }
+
         doc = initializeLampStatus(doc, data);
+        await createNotification(data.id, data.status);
 
         //controllo se i dati ricevuti hanno l'attributo video ed eventualmente lo salvo
         if (_.has(data, "videoURL")) {
@@ -125,7 +198,6 @@ async function saveDataFromStreetLamp(req, res) {
 async function getStreetLampStatus(req, res) {
 
     try {
-
         let data;
         let id = req.params.id;
 

@@ -11,6 +11,8 @@ const https = require('https')
 const auth = require('./auth.json')
 const config = require('./config.json')
 
+const WeatherSnapshot = require('../WeatherSnapshot')
+
 const COORDS = config.coordinates
 const OPTIONS = {
     host: "api.climacell.co",
@@ -22,14 +24,14 @@ const OPTIONS = {
 
 // create a string with the fields for liveWeather to be queried set in config.js
 let fieldsLive = ""
-for ( const [field, value] of Object.entries(config.ClimaCell.Fields.Realtime)) {
-    if (value) { fieldsLive += field + "%2C" }
+for ( const [field, value] of Object.entries(config.ClimaCell.Fields)) {
+    if (value && field !== "precipitation_probability") { fieldsLive += field + "%2C" }
 }
 fieldsLive = fieldsLive.slice(0, -3) //remove trailing '%2C'
 
 // create a string with the fields for futureWeather to be queried set in config.js
 let fieldsFuture = ""
-for ( const [field, value] of Object.entries(config.ClimaCell.Fields.Hourly)) {
+for ( const [field, value] of Object.entries(config.ClimaCell.Fields)) {
     if (value) { fieldsFuture += field + "%2C" }
 }
 fieldsFuture = fieldsFuture.slice(0, -3) //remove trailing '%2C'
@@ -76,4 +78,35 @@ function requestFutureWeather() {
     })
 }
 
-module.exports = {requestLiveWeather, requestFutureWeather}
+function formatData( data ) {
+
+    let formatter = dat => {
+        return new WeatherSnapshot({
+            time: new Date(dat.observation_time.value),
+            latitude: dat.lat,
+            longitude: dat.lon,
+            temperature: dat.temp.value,
+            pressure: dat.baro_pressure.value,
+            humidity: dat.humidity.value,
+            conditions: dat.weather_code.value,
+            precipitationType: dat.precipitation_type.value,
+            precipitationValue: dat.precipitation.value,
+            windDirection: dat.wind_direction.value,
+            windSpeed: dat.wind_speed.value
+        })
+    }
+
+    let formattedData
+    if (data instanceof Array) {
+        formattedData = []
+        for (const item of data) {
+            formattedData.push(formatter(item))
+        }
+    } else {
+        formattedData = formatter(data)
+    }
+
+    return formattedData
+}
+
+module.exports = {requestLiveWeather, requestFutureWeather, formatData}

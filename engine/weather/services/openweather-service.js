@@ -10,6 +10,8 @@ const https = require('https')
 const auth = require('./auth.json')
 const config = require('./config.json')
 
+const WeatherSnapshot = require('../WeatherSnapshot')
+
 const API_KEY = auth.OpenWeather.key
 const BASE_URL = "https://api.openweathermap.org/data/2.5"
 const CITY_ID = config.OpenWeather.cityId
@@ -54,4 +56,50 @@ function requestFutureWeather() {
     })
 }
 
-module.exports = {requestLiveWeather, requestFutureWeather}
+/**
+ * @param data: Object
+ * @returns {WeatherSnapshot}
+ */
+
+function formatData( data ) {
+
+    let formattedData
+
+    if ('hourly' in data) {
+        formattedData = []
+        for (const item of data.hourly) {
+            let tmp = new WeatherSnapshot({
+                time: new Date(item.dt),
+                latitude: data.lat,
+                longitude: data.lon,
+                temperature: item.temp,
+                pressure: item.pressure,
+                humidity: item.humidity,
+                conditions: item.weather[0].main,
+                precipitationType: undefined,
+                precipitationValue: undefined,
+                windDirection: item.wind_deg,
+                windSpeed: item.wind_speed
+            })
+            formattedData.push(tmp)
+        }
+    } else {
+        formattedData = new WeatherSnapshot({
+            time: new Date(data.dt * 1000),
+            latitude: data.coord.lat,
+            longitude: data.coord.lon,
+            temperature: data.main.temp,
+            pressure: data.main.pressure,
+            humidity: data.main.humidity,
+            conditions: data.weather[0].main,
+            precipitationType: undefined,
+            precipitationValue: undefined,
+            windDirection: data.wind.deg,
+            windSpeed: data.wind.speed
+        })
+    }
+
+    return formattedData
+}
+
+module.exports = {requestLiveWeather, requestFutureWeather, formatData}

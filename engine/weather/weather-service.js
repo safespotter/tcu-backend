@@ -37,7 +37,9 @@ setService(Services.OPEN_WEATHER)
  * @returns {Promise<Object>}
  */
 function getLiveWeather() {
-    return selectedService.requestLiveWeather().then(res => parseResponse(res))
+    return selectedService.requestLiveWeather()
+        .then(res => parseResponse(res))
+        .then(data => selectedService.formatData(data))
 }
 
 /**
@@ -48,7 +50,9 @@ function getLiveWeather() {
  * @returns {Promise<Object>}
  */
 function getFutureWeather() {
-    return selectedService.requestFutureWeather().then(res => parseResponse(res))
+    return selectedService.requestFutureWeather()
+        .then(res => parseResponse(res))
+        .then(data => selectedService.formatData(data))
 }
 
 

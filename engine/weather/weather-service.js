@@ -1,8 +1,11 @@
 'use strict'
 
 const ClimaCell = require('./services/climacell-service')
-const OpenWeather = require('./services/climacell-service')
+const OpenWeather = require('./services/openweather-service')
 
+/**
+ * Dictionary of available Services
+ */
 const Services = {
     OPEN_WEATHER: OpenWeather,
     CLIMA_CELL: ClimaCell,
@@ -10,6 +13,13 @@ const Services = {
 
 let selectedService = null
 
+/**
+ * Sets the service to be used to handle the requests
+ * Available services are members of this module's Services
+ * Returned Object is dependant on currently the selected service
+ *
+ * @param service
+ */
 function setService( service ) {
     if (Object.values(Services).includes(service)) {
         selectedService = service
@@ -17,17 +27,38 @@ function setService( service ) {
         throw new Error("Invalid weather service!")
     }
 }
-
 //default initialization
 setService(Services.OPEN_WEATHER)
 
+/**
+ * Gets the current weather using the selectedService
+ * Config in ./services/config.json
+ *
+ * @returns {Promise<Object>}
+ */
 function getLiveWeather() {
     return selectedService.requestLiveWeather().then(res => parseResponse(res))
 }
+
+/**
+ * Gets the weather forecast using the selectedService
+ * Config in ./services/config.json
+ * Returned Object is dependant on currently the selected service
+ *
+ * @returns {Promise<Object>}
+ */
 function getFutureWeather() {
     return selectedService.requestFutureWeather().then(res => parseResponse(res))
 }
 
+
+/**
+ * Resolves an https message
+ * Based on https://nodejs.org/api/http.html#http_http_get_options_callback
+ *
+ * @param res: https.IncomingMessage
+ * @returns {Promise<Object>}
+ */
 function parseResponse(res) {
     return new Promise((resolve, reject) => {
         const {statusCode} = res
@@ -66,13 +97,13 @@ function parseResponse(res) {
                 reject(e)
             }
         })
-    })
+    }).then( data => {return data} ) //needed for await to behave correctly
 }
 
 module.exports = { Services, setService, getLiveWeather, getFutureWeather }
 
-// quick n dirty manual tests
 /*
+// quick n dirty manual tests
 let foo = async () => {
     setService(Services.OPEN_WEATHER)
     console.log("Open Weather Api")
@@ -94,10 +125,5 @@ let foo = async () => {
         console.error(e)
     }
 }
-
 foo().then()
 */
-
-setService(Services.CLIMA_CELL)
-getLiveWeather().then(res => console.log(res)).catch(e => console.error(e))
-getFutureWeather().then(res => console.log(res)).catch(e => console.error(e))

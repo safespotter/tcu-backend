@@ -28,7 +28,7 @@ for ( const [field, value] of Object.entries(config.ClimaCell.Fields.Realtime)) 
 fieldsLive = fieldsLive.slice(0, -3) //remove trailing '%2C'
 
 // create a string with the fields for futureWeather to be queried set in config.js
-let fieldsFuture = "fields="
+let fieldsFuture = ""
 for ( const [field, value] of Object.entries(config.ClimaCell.Fields.Hourly)) {
     if (value) { fieldsFuture += field + "%2C" }
 }
@@ -42,11 +42,13 @@ fieldsFuture = fieldsFuture.slice(0, -3) //remove trailing '%2C'
  * @returns {Promise<https.IncomingMessage>}
  */
 function requestLiveWeather() {
+    let path = `/v3/weather/realtime?lat=${COORDS.latitude}&lon=${COORDS.longitude}&fields=${fieldsLive}&unit_system=si`
+    console.log("get: " + new URL(path, "https://" + OPTIONS.host))
     return new Promise(resolve => {
         https.get(
             {
                 ...OPTIONS,
-                path:`/v3/weather/realtime?fields=${fieldsLive}&unit_system=si`
+                path: path
             },
             res => resolve(res)
         )
@@ -61,11 +63,13 @@ function requestLiveWeather() {
  * @returns {Promise<https.IncomingMessage>}
  */
 function requestFutureWeather() {
+    let path = `/v3/weather/forecast/hourly?lat=${COORDS.latitude}&lon=${COORDS.longitude}&fields=${fieldsFuture}&start_time=now&unit_system=si`
+    console.log("get: " + new URL(path, "https://" + OPTIONS.host))
     return new Promise(resolve => {
         https.get(
             {
                 ...OPTIONS,
-                path:`/v3/weather/forecast/hourly?lat=${COORDS.latitude}&lon=${COORDS.longitude}&fields=${fieldsFuture}&start_time=now&unit_system=si`
+                path: path
             },
             res => resolve(res)
         )

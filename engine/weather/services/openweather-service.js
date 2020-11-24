@@ -11,7 +11,7 @@ const auth = require('./auth.json')
 const config = require('./config.json')
 
 const API_KEY = auth.OpenWeather.key
-const HOST_URL = "https://api.openweathermap.org/data/2.5/"
+const BASE_URL = "https://api.openweathermap.org/data/2.5"
 const CITY_ID = config.OpenWeather.cityId
 const COORDS = config.coordinates
 
@@ -30,8 +30,9 @@ excludeFuture = excludeFuture.slice(0, -1) //remove trailing ','
  */
 function requestLiveWeather() {
     return new Promise(resolve => {
+        console.log(`get: ${BASE_URL}/weather?id=${CITY_ID}&units=metric&appid=${API_KEY}`)
         https.get(
-            `${HOST_URL}/weather?id=${CITY_ID}&units=metric&appid=${API_KEY}`,
+            `${BASE_URL}/weather?id=${CITY_ID}&units=metric&appid=${API_KEY}`,
             res => resolve(res)
         )
     })
@@ -45,8 +46,9 @@ function requestLiveWeather() {
  */
 function requestFutureWeather() {
     return new Promise(resolve => {
+        console.log(`get: ${BASE_URL}/onecall?lat=${COORDS.latitude}&lon=${COORDS.longitude}&exclude=${excludeFuture}&units=metric&appid=${API_KEY}`)
         https.get(
-            `${HOST_URL}/onecall?lat=${COORDS.latitude}&lon=${COORDS.longitude}&exclude=${excludeFuture}&units=metric&appid=${API_KEY}`,
+            `${BASE_URL}/onecall?lat=${COORDS.latitude}&lon=${COORDS.longitude}&exclude=${excludeFuture}&units=metric&appid=${API_KEY}`,
             res => resolve(res)
         )
     })

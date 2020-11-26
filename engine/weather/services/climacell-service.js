@@ -80,7 +80,45 @@ function requestFutureWeather() {
 
 function formatData( data ) {
 
+    let solveConditions = str => {
+        switch (str) {
+            case 'freezing_rain_heavy':
+            case 'freezing_rain':
+            case 'rain_heavy':
+            case 'rain':
+                return WeatherSnapshot.WeatherType.RAIN
+            case 'freezing_rain_light':
+            case 'rain_light':
+                return WeatherSnapshot.WeatherType.LIGHT_RAIN
+            case 'freezing_drizzle':
+            case 'drizzle':
+                return WeatherSnapshot.WeatherType.DRIZZLE
+            case 'ice_pellets_heavy':
+            case 'ice_pellets':
+            case 'ice_pellets_light':
+            case 'snow_heavy':
+            case 'snow':
+            case 'snow_light':
+                return WeatherSnapshot.WeatherType.SNOW
+            case 'tstorm':
+                return WeatherSnapshot.WeatherType.THUNDERSTORM
+            case 'flurries':
+            case 'fog':
+            case 'fog_light':
+                return WeatherSnapshot.WeatherType.FOG
+            case 'cloudy':
+            case 'mostly_cloudy':
+                return WeatherSnapshot.WeatherType.CLOUDS
+            case 'partly_cloudy':
+            case 'mostly_clear':
+                return WeatherSnapshot.WeatherType.LIGHT_CLOUDS
+            case 'clear':
+                return WeatherSnapshot.WeatherType.CLEAR
+        }
+    }
+
     let formatter = dat => {
+
         return new WeatherSnapshot({
             time: new Date(dat.observation_time.value),
             latitude: dat.lat,
@@ -88,11 +126,12 @@ function formatData( data ) {
             temperature: dat.temp.value,
             pressure: dat.baro_pressure.value,
             humidity: dat.humidity.value,
-            conditions: dat.weather_code.value,
-            precipitationType: dat.precipitation_type.value,
+            conditions: solveConditions(dat.weather_code.value),
+            precipitationType: dat.precipitation_type.value !== 'none' ? dat.precipitation_type.value : null,
             precipitationValue: dat.precipitation.value,
             windDirection: dat.wind_direction.value,
-            windSpeed: dat.wind_speed.value
+            windSpeed: dat.wind_speed.value,
+            precipitationProbability: 'precipitation_probability' in dat ? dat.precipitation_probability.value : null
         })
     }
 

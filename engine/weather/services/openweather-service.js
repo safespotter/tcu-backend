@@ -102,7 +102,7 @@ function formatData( data ) {
                 precip = {type: 'snow', value: item.snow['1h']}
             }
 
-            let wind = {direction: data.wind_deg, value: data.wind_speed}
+            let wind = {direction: item.wind_deg, speed: item.wind_speed}
 
             let tmp = {
                 time: new Date(item.dt),
@@ -131,7 +131,7 @@ function formatData( data ) {
 
         let wind = {direction: 0, speed: 0}
         if ('wind' in data) {
-            wind = {direction: data.wind.deg, value: data.wind.speed}
+            wind = {direction: data.wind.deg, speed: data.wind.speed}
         }
 
         formattedData = new WeatherModels.WeatherLive({

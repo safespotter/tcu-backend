@@ -10,7 +10,7 @@ const https = require('https')
 const auth = require('./auth.json')
 const config = require('./config.json')
 
-const WeatherSnapshot = require('../WeatherSnapshot')
+const WeatherModels = require('../../../models/mongo/mongo-weather')
 
 const API_KEY = auth.OpenWeather.key
 const BASE_URL = "https://api.openweathermap.org/data/2.5"
@@ -56,101 +56,97 @@ function requestFutureWeather() {
     })
 }
 
-/**
- * @param data: Object
- * @returns {WeatherSnapshot}
- */
 
 function formatData( data ) {
 
     let solveConditions = id => {
         if (id >= 700 && id <= 799)
-            return WeatherSnapshot.WeatherType.FOG
+            return WeatherModels.WeatherConditions.FOG
 
         // noinspection EqualityComparisonWithCoercionJS
         if (id == 800)
-            return WeatherSnapshot.WeatherType.CLEAR
+            return WeatherModels.WeatherConditions.CLEAR
 
         if (id >= 803 && id <= 899)
-            return WeatherSnapshot.WeatherType.CLOUDS
+            return WeatherModels.WeatherConditions.CLOUDS
 
         if (id >= 801 && id <= 802)
-            return WeatherSnapshot.WeatherType.LIGHT_CLOUDS
+            return WeatherModels.WeatherConditions.LIGHT_CLOUDS
 
         if (id >= 200 && id <= 299)
-            return WeatherSnapshot.WeatherType.THUNDERSTORM
+            return WeatherModels.WeatherConditions.THUNDERSTORM
 
         // noinspection EqualityComparisonWithCoercionJS
         if (id >= 600 && id <= 699 || id == 511)
-            return WeatherSnapshot.WeatherType.SNOW
+            return WeatherModels.WeatherConditions.SNOW
 
         if (id >= 300 && id <= 399)
-            return WeatherSnapshot.WeatherType.DRIZZLE
+            return WeatherModels.WeatherConditions.DRIZZLE
 
         if (id >= 500 && id <= 501 )
-            return WeatherSnapshot.WeatherType.LIGHT_RAIN
+            return WeatherModels.WeatherConditions.LIGHT_RAIN
 
         if (id >= 503 && id <= 504 || id >= 520 && id <= 599)
-            return WeatherSnapshot.WeatherType.RAIN
+            return WeatherModels.WeatherConditions.RAIN
     }
 
     let formattedData
 
     if ('hourly' in data) {
-        formattedData = []
+        formattedData = new WeatherModels.WeatherForecast()
         for (const item of data.hourly) {
-            let precipType = null
-            let precipValue = 0
-
+            let precip = {type: null, value: 0}
             if ('rain' in item) {
-                precipType = 'rain'
-                precipValue = item.rain['1h']
+                precip = {type: 'rain', value: item.rain['1h']}
             } else if ('snow' in item) {
-                precipType = 'snow'
-                precipValue = item.snow['1h']
+                precip = {type: 'snow', value: item.snow['1h']}
             }
 
-            let tmp = new WeatherSnapshot({
+            let wind = {direction: data.wind_deg, value: data.wind_speed}
+
+            let tmp = {
                 time: new Date(item.dt),
-                latitude: data.lat,
-                longitude: data.lon,
-                temperature: item.temp,
+                coordinates: {
+                    lat: data.lat,
+                    lon: data.lon,
+                },
+                temp: item.temp,
                 pressure: item.pressure,
                 humidity: item.humidity,
                 conditions: solveConditions(item.weather[0].id),
-                precipitationProbability: item.pop,
-                windDirection: item.wind_deg,
-                windSpeed: data.wind.speed,
-                precipitationType: precipType,
-                precipitationValue: precipValue
-            })
+                precipProbability: item.pop,
+                wind: wind,
+                precipitation: precip
+            }
 
-            formattedData.push(tmp)
+            formattedData.data.push(tmp)
         }
     } else {
-        let precipType = null
-        let precipValue = 0
-
+        let precip = {type: null, value: 0}
         if ('rain' in data) {
-            precipType = 'rain'
-            precipValue = data.rain['1h']
+            precip = {type: 'rain', value: data.rain['1h']}
         } else if ('snow' in data) {
-            precipType = 'snow'
-            precipValue = data.snow['1h']
+            precip = {type: 'snow', value: data.snow['1h']}
         }
-        formattedData = new WeatherSnapshot({
+
+        let wind = {direction: 0, speed: 0}
+        if ('wind' in data) {
+            wind = {direction: data.wind.deg, value: data.wind.speed}
+        }
+
+        formattedData = new WeatherModels.WeatherLive({
             time: new Date(data.dt * 1000),
-            latitude: data.coord.lat,
-            longitude: data.coord.lon,
-            temperature: data.main.temp,
+            coordinates: {
+                lat: data.coord.lat,
+                lon: data.coord.lon,
+            },
+            temp: data.main.temp,
             pressure: data.main.pressure,
             humidity: data.main.humidity,
-            conditions: data.weather[0].main,
-            windDirection: data.wind.deg,
-            windSpeed: data.wind.speed,
-            precipitationType: precipType,
-            precipitationValue: precipValue,
-            precipitationProbability: null
+            conditions: solveConditions(data.weather[0].id),
+            wind: wind,
+            precipitation: precip,
+            precipProbability: null
         })
     }
 

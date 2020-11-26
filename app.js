@@ -30,8 +30,13 @@ require('./config/routes')(app, passport, config);
 
 /** Connection to Mongo **/
 mongoose.Promise = require('bluebird');
-mongoose.connect('mongodb://localhost/tcu-backend', {useNewUrlParser: true, promiseLibrary: require('bluebird'), useUnifiedTopology: true})
+mongoose.connect(
+    'mongodb://localhost/tcu-backend',
+    {
+        useNewUrlParser: true,
+        promiseLibrary: require('bluebird'),
+        useUnifiedTopology: true,
+        useCreateIndex: true,
+    })
     .then(() =>  console.log('Engine connected successfully to the mongo database'))
     .catch((err) => console.error(err));
-
-

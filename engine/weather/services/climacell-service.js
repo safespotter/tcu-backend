@@ -11,7 +11,7 @@ const https = require('https')
 const auth = require('./auth.json')
 const config = require('./config.json')
 
-const WeatherSnapshot = require('../WeatherSnapshot')
+const WeatherModels = require('../../../models/mongo/mongo-weather')
 
 const COORDS = config.coordinates
 const OPTIONS = {
@@ -86,63 +86,69 @@ function formatData( data ) {
             case 'freezing_rain':
             case 'rain_heavy':
             case 'rain':
-                return WeatherSnapshot.WeatherType.RAIN
+                return WeatherModels.WeatherConditions.RAIN
             case 'freezing_rain_light':
             case 'rain_light':
-                return WeatherSnapshot.WeatherType.LIGHT_RAIN
+                return WeatherModels.WeatherConditions.LIGHT_RAIN
             case 'freezing_drizzle':
             case 'drizzle':
-                return WeatherSnapshot.WeatherType.DRIZZLE
+                return WeatherModels.WeatherConditions.DRIZZLE
             case 'ice_pellets_heavy':
             case 'ice_pellets':
             case 'ice_pellets_light':
             case 'snow_heavy':
             case 'snow':
             case 'snow_light':
-                return WeatherSnapshot.WeatherType.SNOW
+                return WeatherModels.WeatherConditions.SNOW
             case 'tstorm':
-                return WeatherSnapshot.WeatherType.THUNDERSTORM
+                return WeatherModels.WeatherConditions.THUNDERSTORM
             case 'flurries':
             case 'fog':
             case 'fog_light':
-                return WeatherSnapshot.WeatherType.FOG
+                return WeatherModels.WeatherConditions.FOG
             case 'cloudy':
             case 'mostly_cloudy':
-                return WeatherSnapshot.WeatherType.CLOUDS
+                return WeatherModels.WeatherConditions.CLOUDS
             case 'partly_cloudy':
             case 'mostly_clear':
-                return WeatherSnapshot.WeatherType.LIGHT_CLOUDS
+                return WeatherModels.WeatherConditions.LIGHT_CLOUDS
             case 'clear':
-                return WeatherSnapshot.WeatherType.CLEAR
+                return WeatherModels.WeatherConditions.CLEAR
         }
     }
 
     let formatter = dat => {
 
-        return new WeatherSnapshot({
+        return {
             time: new Date(dat.observation_time.value),
-            latitude: dat.lat,
-            longitude: dat.lon,
-            temperature: dat.temp.value,
+            coordinates: {
+                lat: dat.lat,
+                lon: dat.lon
+            },
+            temp: dat.temp.value,
             pressure: dat.baro_pressure.value,
             humidity: dat.humidity.value,
             conditions: solveConditions(dat.weather_code.value),
-            precipitationType: dat.precipitation_type.value !== 'none' ? dat.precipitation_type.value : null,
-            precipitationValue: dat.precipitation.value,
-            windDirection: dat.wind_direction.value,
-            windSpeed: dat.wind_speed.value,
-            precipitationProbability: 'precipitation_probability' in dat ? dat.precipitation_probability.value : null
-        })
+            precipitation: {
+                type: dat.precipitation_type.value !== 'none' ? dat.precipitation_type.value : null,
+                value: dat.precipitation.value,
+            },
+            wind: {
+                direction: dat.wind_direction.value,
+                speed: dat.wind_speed.value,
+            },
+            precipProbability: ('precipitation_probability' in dat) ? dat.precipitation_probability.value : null
+        }
     }
 
     let formattedData
     if (data instanceof Array) {
-        formattedData = []
+        formattedData = new WeatherModels.WeatherForecast()
         for (const item of data) {
-            formattedData.push(formatter(item))
+            formattedData.data.push(formatter(item))
         }
     } else {
-        formattedData = formatter(data)
+        formattedData = new WeatherModels.WeatherLive(formatter(data))
     }
 
     return formattedData

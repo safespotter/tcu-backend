@@ -1,4 +1,6 @@
 {
+  "TTL": 180,
+
   "coordinates": {
     "latitude": "39.2599",
     "longitude": "9.1397"

@@ -6,9 +6,10 @@ const ErrorHandler = require('../engine/error-handler');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const webpush = require('web-push');
+const SocketEmit = require ('../engine/SocketEmit');
 
 
-module.exports = function (app, passport, config) {
+module.exports = function (app, passport, config, io) {
 
     const PUBLIC_VAPID = "BFSKwNnTBL_de-3GSMGYFL9iB09a9Xz1EmyT3iRQ8L0WXWEO01_2XORztfHc_F816x4XhI7-SeEekCqwh7M5nv0";
     const PRIVATE_VAPID = "ak1qICoo4g-An5aOPC3fqw-vAvGcVOjvH7_XS1lGeow";
@@ -56,13 +57,13 @@ module.exports = function (app, passport, config) {
 
     /****************** SOCKET IO ******************/
 
-    const socket = require("socket.io");
-
-    const server = app.listen(3000, () => {
-        console.log('started in 3000')
-    });
-
-    const io = socket(server);
+    // const socket = require("socket.io");
+    //
+    // const server = app.listen(3000, () => {
+    //     console.log('started in 3000')
+    // });
+    //
+    // const io = socket(server);
 
     var SafeSpotter = require('../models/mongo/mongo-safeSpotter');
     var Notification = require('../models/mongo/mongo-notification');
@@ -75,6 +76,7 @@ module.exports = function (app, passport, config) {
         socketMap.push(socket);
         dataUpdate();
     });
+
     app.post('/SafeSpotter/create', function (req, res) {
         let tmp_critical;
         let alert;
@@ -205,5 +207,6 @@ module.exports = function (app, passport, config) {
     /****************** ERROR HANDLER ********************/
     app.use(ErrorHandler.fun404);
 
+    exports.dataUpdate = dataUpdate;
 };
 

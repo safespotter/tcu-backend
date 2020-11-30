@@ -6,6 +6,8 @@ const HttpStatus = require('http-status-codes');
 const _ = require("lodash");
 const fs = require('fs');
 const request = require('request');
+const SocketEmit = require('../engine/SocketEmit');
+const routes = require('../config/routes');
 
 /**Metodo che avvia il download del file video*/
 const download = (url, path, callback) => {
@@ -79,7 +81,7 @@ function customDayDate(date) {
 }
 
 /**funzione che aggiorna le notifiche*/
-async function createNotification(lamp_id, critical_issues) {
+async function createNotification(lamp_id, critical_issues, socketMap) {
     let tmp_critical;
     let alert;
     let id;
@@ -104,24 +106,20 @@ async function createNotification(lamp_id, critical_issues) {
         }
 
         if ((await SafespotterManager.find({id: lamp_id})).length !== 0 && critical_issues >= 4 && critical_issues <= 5) {
-            console.log ("lamp", lamp);
             let notification = new Notification;
             notification.id = lamp_id;
             notification.critical_issues = critical_issues;
             notification.street = lamp[0].street;
             await notification.save();
-            //pushNotification()
         }
 
         //dati su mongo
-        //rt.dataUpdate(id, alert); //richiamo l'emissione
+        routes.dataUpdate(id, alert); //richiamo l'emissione
 
     } catch (err) {
         console.log(err);
     }
 }
-
-
 
 /**API che restituisce la lista dei lampioni con relativa criticità*/
 async function returnList(req, res) {

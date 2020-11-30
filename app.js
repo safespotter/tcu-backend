@@ -10,12 +10,12 @@ const env = process.env.NODE_ENV || 'development';
 const config = require('./config/config')[env];
 
 /** Configuration Socket.io **/
-// const socket = require("socket.io");
-//
-// const server = app.listen(3000, () => {
-//     console.log('started in 3000')
-// });
-// const io = socket(server);
+const socket = require("socket.io");
+
+const server = app.listen(3000, () => {
+    console.log('started in 3000')
+});
+const io = socket(server);
 
 /** Configuration RTSP STREAM VIDEO **/
 
@@ -25,7 +25,7 @@ module.exports = {app, passport, config, Stream};
 /** Configuration of express, routes and passport **/
 require('./config/passport')(passport);
 require('./config/express')(app, passport);
-require('./config/routes')(app, passport, config);
+require('./config/routes')(app, passport, config, io);
 //require('./config/ipCamera')(Stream);
 
 /** Connection to Mongo **/

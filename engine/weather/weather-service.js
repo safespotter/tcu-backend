@@ -40,10 +40,11 @@ async function setService(service) {
  */
 async function getLiveWeather() {
     let cache = await getCacheLive()
-    if (cache) return cache
+    if (cache) return cache.toObject()
 
     return selectedService.requestLiveWeather()
         .then(data => data.save())
+        .then(data => data.toObject())
 }
 
 /**
@@ -55,16 +56,17 @@ async function getLiveWeather() {
  */
 async function getFutureWeather() {
     let cache = await getCacheFuture()
-    if (cache) return cache
+    if (cache) return cache.toObject()
 
     return selectedService.requestFutureWeather()
         .then(data => data.save())
+        .then(data => data.toObject())
 }
 
 
 async function getCacheLive() {
     try {
-        return  await CacheManager.WeatherLive.findOne(
+        return await CacheManager.WeatherLive.findOne(
             {time: {$gt: new Date(Date.now() - TTL * 1000)}}
         )
     } catch (e) {
@@ -75,7 +77,7 @@ async function getCacheLive() {
 
 async function getCacheFuture() {
     try {
-        return  CacheManager.WeatherForecast.findOne(
+        return await CacheManager.WeatherForecast.findOne(
             {time: {$gt: new Date(Date.now() - TTL * 1000)}}
         )
     } catch (e) {
@@ -101,7 +103,7 @@ const convertToHttp = foo => {
     return async (req, res) => {
         try {
             const data = await foo()
-            return res.status(HttpStatus.OK).send({data})
+            return res.status(HttpStatus.OK).send(data)
         } catch (error) {
             console.log(error);
             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
@@ -116,86 +118,3 @@ module.exports = {
     getLiveWeather: convertToHttp(getLiveWeather),
     getFutureWeather: convertToHttp(getFutureWeather),
 }
-
-
-// quick n dirty manual tests
-/*
-let testServices = async () => {
-    /!** Connection to Mongo **!/
-    const mongoose = require('mongoose')
-    mongoose.Promise = require('bluebird');
-    await mongoose.connect('mongodb://localhost/tcu-backend', {
-        useNewUrlParser: true,
-        promiseLibrary: require('bluebird'),
-        useUnifiedTopology: true,
-        useCreateIndex: true,
-    })
-        .then(() => console.log('Engine connected successfully to the mongo database'))
-        .catch((err) => console.error(err));
-
-    await setService(Services.OPEN_WEATHER)
-    console.log("Open Weather Api")
-    try {
-        let [dataLive, dataFuture] = await Promise.all([getLiveWeather(), getFutureWeather()])
-        console.log(dataLive)
-        console.log(dataFuture)
-    } catch (e) {
-        console.error(e)
-    }
-
-    await setService(Services.CLIMA_CELL)
-    console.log("Clima Cell Api")
-    try {
-        let [dataLive, dataFuture] = await Promise.all([getLiveWeather(), getFutureWeather()])
-        console.log(dataLive)
-        console.log(dataFuture)
-    } catch (e) {
-        console.error(e)
-    }
-}
-testServices().then()
-*/
-/*
-
-let testCache = async (service) => {
-    /!** Connection to Mongo **!/
-    const mongoose = require('mongoose')
-    mongoose.Promise = require('bluebird');
-    await mongoose.connect('mongodb://localhost/tcu-backend', {
-        useNewUrlParser: true,
-        promiseLibrary: require('bluebird'),
-        useUnifiedTopology: true,
-        useCreateIndex: true,
-    })
-        .then(() => console.log('Engine connected successfully to the mongo database'))
-        .catch((err) => console.error(err));
-
-    await setService(service)
-
-    let a
-    console.log("Live:")
-    try {
-        console.log('1: ')
-        a = await getLiveWeather()
-        console.log(a._id)
-        console.log('2: ')
-        a = await getLiveWeather()
-        console.log(a._id)
-    } catch (e) {
-        console.error(e)
-    }
-
-    console.log("Future:")
-    try {
-        console.log('1: ')
-        a = await getFutureWeather()
-        console.log(a._id)
-        console.log('2: ')
-        a = await getFutureWeather()
-        console.log(a._id)
-    } catch (e) {
-        console.error(e)
-    }
-}
-testCache(Services.OPEN_WEATHER).then()
-*/

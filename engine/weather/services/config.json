@@ -1,0 +1,42 @@
+{
+  "TTL": 180,
+
+  "coordinates": {
+    "latitude": "39.2599",
+    "longitude": "9.1397"
+  },
+  "OpenWeather": {
+    "cityId": "2524084",
+    "FutureData": {
+      "current": false,
+      "minutely": false,
+      "hourly": true,
+      "daily": false,
+      "alerts": false
+    }
+  },
+  "ClimaCell": {
+    "Fields": {
+      "temp": true,
+      "feels_like": false,
+      "dewpoint": false,
+      "humidity": true,
+      "wind_speed": true,
+      "wind_direction": true,
+      "wind_gust": false,
+      "baro_pressure": true,
+      "precipitation": true,
+      "precipitation_type": true,
+      "precipitation_probability": true,
+      "sunrise": false,
+      "sunset": false,
+      "visibility": false,
+      "cloud_cover": false,
+      "cloud_base": false,
+      "cloud_ceiling": false,
+      "surface_shortwave_radiation": false,
+      "moon_phase": false,
+      "weather_code": true
+    }
+  }
+}

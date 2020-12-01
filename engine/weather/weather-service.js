@@ -43,8 +43,6 @@ async function getLiveWeather() {
     if (cache) return cache
 
     return selectedService.requestLiveWeather()
-        .then(res => parseResponse(res))
-        .then(data => selectedService.formatData(data))
         .then(data => data.save())
 }
 
@@ -60,8 +58,6 @@ async function getFutureWeather() {
     if (cache) return cache
 
     return selectedService.requestFutureWeather()
-        .then(res => parseResponse(res))
-        .then(data => selectedService.formatData(data))
         .then(data => data.save())
 }
 
@@ -93,58 +89,6 @@ function clearCache() {
         CacheManager.WeatherLive.deleteMany({}),
         CacheManager.WeatherForecast.deleteMany({})
     ]).catch(e => console.log(e))
-}
-
-/**
- *  Resolves an https message.
- *
- * 'request' is deprecated so I'm not using it.
- * If anyone wants to use another package to handle http requests feel free to change this code and modify the APIs' services.
- *
- * Based on https://nodejs.org/api/http.html#http_http_get_options_callback
- *
- * @param res: https.IncomingMessage
- * @returns {Promise<Object>}
- */
-function parseResponse(res) {
-    return new Promise((resolve, reject) => {
-        const {statusCode} = res
-        const contentType = res.headers['content-type']
-
-        // Check for errors
-        let error
-
-        // if status code != 2xx
-        if (statusCode < 200 || statusCode >= 300) {
-            error = new Error('Request Failed.\n' +
-                `Status Code: ${statusCode}`)
-        }
-        // or if content type != application/json
-        else if (!/^application\/json/.test(contentType)) {
-            error = new Error('Invalid content-type.\n' +
-                `Expected application/json but received ${contentType}`)
-        }
-        // clear the response, handle error and return
-        if (error) {
-            res.resume()
-            reject(error)
-        }
-
-        // otherwise parse the data
-        res.setEncoding('utf8')
-        let rawData = ''
-        res.on('data', (chunk) => {
-            rawData += chunk
-        })
-        res.on('end', () => {
-            try {
-                const data = JSON.parse(rawData)
-                resolve(data)
-            } catch (e) {
-                reject(e)
-            }
-        })
-    }).then(data => data) //needed for await to behave correctly
 }
 
 /**

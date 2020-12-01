@@ -67,14 +67,26 @@ beforeAll(async function () {
 })
 
 afterEach(async function () {
-
-    const collections = await mongoose.connection.db.collections()
-    for (const collection of collections) {
-        collection.drop()
+    // Manually clear cache
+    try {
+        await Promise.all([
+            WeatherModel.WeatherLive.deleteMany(),
+            WeatherModel.WeatherForecast.deleteMany()
+        ])
+    } catch (e) {
+        console.error(e)
     }
 })
 
 afterAll(async function () {
+    try {
+        await Promise.all([
+            WeatherModel.WeatherLive.collection.drop(),
+            WeatherModel.WeatherForecast.collection.drop()
+        ])
+    } catch (e) {
+        console.error(e)
+    }
     await mongoose.disconnect()
 })
 

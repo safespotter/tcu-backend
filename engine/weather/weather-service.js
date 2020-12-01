@@ -64,7 +64,7 @@ async function getFutureWeather() {
 
 async function getCacheLive() {
     try {
-        return  await CacheManager.WeatherLive.findOne(
+        return await CacheManager.WeatherLive.findOne(
             {time: {$gt: new Date(Date.now() - TTL * 1000)}}
         )
     } catch (e) {
@@ -75,7 +75,7 @@ async function getCacheLive() {
 
 async function getCacheFuture() {
     try {
-        return  CacheManager.WeatherForecast.findOne(
+        return await CacheManager.WeatherForecast.findOne(
             {time: {$gt: new Date(Date.now() - TTL * 1000)}}
         )
     } catch (e) {

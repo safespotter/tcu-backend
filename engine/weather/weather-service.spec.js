@@ -17,6 +17,7 @@ class MockResponse {
     send(item) {
         if ('data' in item) {
             if ('toObject' in item.data) {
+                // Mongo documents don't like being compared
                 this.data = item.data.toObject()
             } else {
                 this.data = item.data
@@ -40,11 +41,17 @@ const mockService = {
         return new Promise(res => res(new WeatherModel.WeatherLive(mockData())))
     },
     requestFutureWeather: function () {
-        return new Promise(res => res([new WeatherModel.WeatherLive(mockData()), new WeatherModel.WeatherLive(mockData())]))
+        return new Promise(res => {
+            const r = new WeatherModel.WeatherForecast()
+            r.data.fill(mockData(), 0, 5)
+            res(r)
+        })
     }
 }
 
 beforeAll(async function () {
+
+    console.log("These tests rely on MongoDB. Make sure that the database is active and listening.")
 
     await mongoose.connect('mongodb://localhost/tcu-backend-test', {
         useNewUrlParser: true,
@@ -52,11 +59,19 @@ beforeAll(async function () {
         useUnifiedTopology: true,
         useCreateIndex: true,
     })
-        .then(() => console.log('Engine connected successfully to the mongo database'))
+        .then(() => console.log('Connected successfully to the mongo database'))
         .catch((err) => console.error(err));
 
     Services.MOCK = mockService
     await setService(mockService)
+})
+
+afterEach(async function () {
+
+    const collections = await mongoose.connection.db.collections()
+    for (const collection of collections) {
+        collection.drop()
+    }
 })
 
 afterAll(async function () {
@@ -64,14 +79,6 @@ afterAll(async function () {
 })
 
 describe("getLiveWeather", function () {
-
-    afterEach(async function () {
-
-        const collections = await mongoose.connection.db.collections()
-        for (const collection of collections) {
-            collection.drop()
-        }
-    })
 
     it("should return data", async function () {
         const res = new MockResponse()
@@ -100,6 +107,39 @@ describe("getLiveWeather", function () {
         await setService(mockService)
 
         await getLiveWeather({}, res2)
+
+        expect(res2.data).not.toEqual(res1.data)
+    })
+})
+
+describe("getFutureWeather", function () {
+
+    it("should return a collection of data", async function () {
+        const res = new MockResponse()
+        await getFutureWeather({}, res)
+        expect(res.statusCode).toBe(200)
+        expect(Object.keys(res.data)).toContain('data')
+    })
+
+    it("should return a cached response if it has been called recently", async function () {
+        const res1 = new MockResponse()
+        const res2 = new MockResponse()
+
+        await getFutureWeather({}, res1)
+        await getFutureWeather({}, res2)
+
+        expect(res2.data).toEqual(res1.data)
+    })
+
+    it("should clear the cache if the service changes", async function () {
+        const res1 = new MockResponse()
+        const res2 = new MockResponse()
+
+        await getFutureWeather({}, res1)
+
+        await setService(mockService)
+
+        await getFutureWeather({}, res2)
 
         expect(res2.data).not.toEqual(res1.data)
     })

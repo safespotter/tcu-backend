@@ -4,6 +4,7 @@
   "description": "",
   "private": true,
   "scripts": {
+    "unit": "npx jasmine",
     "test": "nodemon ./bin/www",
     "start": "node ./bin/www"
   },

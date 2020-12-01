@@ -38,5 +38,8 @@
     "socket.io": "^2.3.0",
     "web-push": "^3.4.4",
     "file-system": "2.2.2"
+  },
+  "devDependencies": {
+    "jasmine": "^3.6.3"
   }
 }

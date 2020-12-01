@@ -41,7 +41,7 @@ fieldsFuture = fieldsFuture.slice(0, -3) //remove trailing '%2C'
  * Returns a Promise of a https.IncomingMessage.
  * Example: https://docs.developer.climacell.co/reference#get-realtime
  *
- * @returns {Promise<https.IncomingMessage>}
+ * @returns {Promise<WeatherLive>}
  */
 function requestLiveWeather() {
     let path = `/v3/weather/realtime?lat=${COORDS.latitude}&lon=${COORDS.longitude}&fields=${fieldsLive}&unit_system=si`
@@ -54,7 +54,16 @@ function requestLiveWeather() {
             },
             res => resolve(res)
         )
-    })
+    }).then(res => {
+        res.setEncoding('utf8')
+        let rawData = ''
+        res.on('data', (chunk) => {
+            rawData += chunk
+        })
+        res.on('end', () => {
+            return JSON.parse(rawData)
+        })
+    }).then(data => formatData(data))
 }
 
 /**
@@ -62,7 +71,7 @@ function requestLiveWeather() {
  * Returns a Promise of a https.IncomingMessage.
  * Example: https://developer.climacell.co/v3/reference#get-hourly
  *
- * @returns {Promise<https.IncomingMessage>}
+ * @returns {Promise<WeatherForecast>}
  */
 function requestFutureWeather() {
     let path = `/v3/weather/forecast/hourly?lat=${COORDS.latitude}&lon=${COORDS.longitude}&fields=${fieldsFuture}&start_time=now&unit_system=si`
@@ -75,7 +84,16 @@ function requestFutureWeather() {
             },
             res => resolve(res)
         )
-    })
+    }).then(res => {
+        res.setEncoding('utf8')
+        let rawData = ''
+        res.on('data', (chunk) => {
+            rawData += chunk
+        })
+        res.on('end', () => {
+            return JSON.parse(rawData)
+        })
+    }).then(data => formatData(data))
 }
 
 function formatData( data ) {
@@ -154,4 +172,4 @@ function formatData( data ) {
     return formattedData
 }
 
-module.exports = {requestLiveWeather, requestFutureWeather, formatData}
+module.exports = {requestLiveWeather, requestFutureWeather}

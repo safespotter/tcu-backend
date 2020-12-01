@@ -28,7 +28,7 @@ excludeFuture = excludeFuture.slice(0, -1) //remove trailing ','
  * Gets the current weather for the city of Monserrato.
  * Returns a Promise of a https.IncomingMessage of this Object: https://openweathermap.org/current#current_JSON
  *
- * @returns {Promise<https.IncomingMessage>}
+ * @returns {Promise<WeatherLive>}
  */
 function requestLiveWeather() {
     return new Promise(resolve => {
@@ -37,14 +37,23 @@ function requestLiveWeather() {
             `${BASE_URL}/weather?id=${CITY_ID}&units=metric&appid=${API_KEY}`,
             res => resolve(res)
         )
-    })
+    }).then(res => {
+        res.setEncoding('utf8')
+        let rawData = ''
+        res.on('data', (chunk) => {
+            rawData += chunk
+        })
+        res.on('end', () => {
+            return JSON.parse(rawData)
+        })
+    }).then(data => formatData(data))
 }
 
 /**
  * Gets the future weather for the city of Monserrato, in intervals of 1 hour for 48 hours.
  * Returns a Promise of a https.IncomingMessage of this Object: https://openweathermap.org/api/one-call-api#parameter
  *
- * @returns {Promise<https.IncomingMessage>}
+ * @returns {Promise<WeatherForecast>}
  */
 function requestFutureWeather() {
     return new Promise(resolve => {
@@ -53,7 +62,16 @@ function requestFutureWeather() {
             `${BASE_URL}/onecall?lat=${COORDS.latitude}&lon=${COORDS.longitude}&exclude=${excludeFuture}&units=metric&appid=${API_KEY}`,
             res => resolve(res)
         )
-    })
+    }).then(res => {
+        res.setEncoding('utf8')
+        let rawData = ''
+        res.on('data', (chunk) => {
+            rawData += chunk
+        })
+        res.on('end', () => {
+            return JSON.parse(rawData)
+        })
+    }).then(data => formatData(data))
 }
 
 
@@ -153,4 +171,4 @@ function formatData( data ) {
     return formattedData
 }
 
-module.exports = {requestLiveWeather, requestFutureWeather, formatData}
+module.exports = {requestLiveWeather, requestFutureWeather}

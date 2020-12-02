@@ -38,13 +38,15 @@ function requestLiveWeather() {
             res => resolve(res)
         )
     }).then(res => {
-        res.setEncoding('utf8')
-        let rawData = ''
-        res.on('data', (chunk) => {
-            rawData += chunk
-        })
-        res.on('end', () => {
-            return JSON.parse(rawData)
+        return new Promise ( resolve => {
+            res.setEncoding('utf8')
+            let rawData = ''
+            res.on('data', (chunk) => {
+                rawData += chunk
+            })
+            res.on('end', () => {
+                resolve(JSON.parse(rawData))
+            })
         })
     }).then(data => formatData(data))
 }
@@ -63,13 +65,15 @@ function requestFutureWeather() {
             res => resolve(res)
         )
     }).then(res => {
-        res.setEncoding('utf8')
-        let rawData = ''
-        res.on('data', (chunk) => {
-            rawData += chunk
-        })
-        res.on('end', () => {
-            return JSON.parse(rawData)
+        return new Promise ( resolve => {
+            res.setEncoding('utf8')
+            let rawData = ''
+            res.on('data', (chunk) => {
+                rawData += chunk
+            })
+            res.on('end', () => {
+                resolve(JSON.parse(rawData))
+            })
         })
     }).then(data => formatData(data))
 }

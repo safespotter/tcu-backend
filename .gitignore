@@ -47,3 +47,4 @@ Thumbs.db
 
 # api keys
 **/weather/services/auth.json
+**/traffic/bingmaps/auth.json

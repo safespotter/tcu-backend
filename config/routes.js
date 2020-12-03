@@ -101,6 +101,7 @@ module.exports = function (app, passport, config, io) {
                             street: req.body.street,
                             condition: req.body.condition,
                             critical_issues: req.body.critical_issues,
+                            alert_type: req.body.alert_type,
                             condition_convert: convertCondition(req.body.critical_issues),
                             date: new Date()
                         })

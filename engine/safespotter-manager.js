@@ -38,6 +38,7 @@ function convertCondition(input) {
 function initializeLampStatus(model, data) {
     model.id = data.id;
     model.status = data.status;
+    model.alert_type = data.alert_type;
     return model;
 }
 
@@ -81,7 +82,7 @@ function customDayDate(date) {
 }
 
 /**funzione che aggiorna le notifiche*/
-async function createNotification(lamp_id, critical_issues, socketMap) {
+async function createNotification(lamp_id, critical_issues, alert_type) {
     let tmp_critical;
     let alert;
     let id;
@@ -99,6 +100,7 @@ async function createNotification(lamp_id, critical_issues, socketMap) {
                 {
                     critical_issues: critical_issues,
                     condition_convert: convertCondition(critical_issues),
+                    alert_type: alert_type,
                     date: new Date()
                 })
         } else {
@@ -159,7 +161,7 @@ async function saveDataFromStreetLamp(req, res) {
         }
 
         doc = initializeLampStatus(doc, data);
-        await createNotification(data.id, data.status);
+        await createNotification(data.id, data.status, data.alert_type);
 
         //controllo se i dati ricevuti hanno l'attributo video ed eventualmente lo salvo
         if (_.has(data, "videoURL")) {

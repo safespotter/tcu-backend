@@ -6,6 +6,7 @@ module.exports = mongoose.model('SafeSpotter', new mongoose.Schema({
     condition: String,
     critical_issues: Number,
     condition_convert: String,
+    alert_type: String,
     date: { type: Date, default: Date.now }
 },{
     versionKey: false

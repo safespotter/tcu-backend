@@ -1,5 +1,6 @@
 'use strict'
 const https = require('https')
+const { TrafficInfo } = require('../../../models/mongo/mongo-traffic')
 
 const CONFIG = require('./config.json')
 const AUTH = require('./auth.json')
@@ -38,7 +39,7 @@ if (Object.values(CONFIG.TYPE).some(item => !item.fetch)) {
 /**
  * Fetches data from the BingMaps Traffic API based on the configuration of this module
  *
- * @returns {Promise<Object>}
+ * @returns {Promise<TrafficInfo>}
  */
 function getTraffic() {
     return new Promise( resolve => {
@@ -49,6 +50,17 @@ function getTraffic() {
             res => resolve(res)
         )
     }).then(solveJsonResponse)
+        .then(res => {
+            let data = []
+            for (const set of res.resourceSets) {
+                data = data.concat(set)
+            }
+            return new TrafficInfo({
+                timestamp: Date.now(),
+                service: 'bingmaps',
+                events: data
+            })
+        })
 }
 
 /**

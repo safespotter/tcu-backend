@@ -42,11 +42,13 @@ if (Object.values(CONFIG.TYPE).some(item => !item.fetch)) {
  */
 function getTraffic() {
     return new Promise( resolve => {
+        const RESOURCE_URL = `https://${URL}/${MAP_AREA}?${PARAMS}key=${AUTH.KEY}`
+        console.log(`get: ${RESOURCE_URL}`)
         https.get(
-            `https://${URL}/${MAP_AREA}?${PARAMS}key=${AUTH.KEY}`,
+            RESOURCE_URL,
             res => resolve(res)
         )
-    }).then(solveHttpResponse)
+    }).then(solveJsonResponse)
 }
 
 /**
@@ -55,7 +57,7 @@ function getTraffic() {
  * @param res: http.IncomingMessage
  * @returns {Promise<Object>}
  */
-const solveHttpResponse = res => {
+const solveJsonResponse = res => {
     return new Promise( (resolve, reject) => {
         let rawData = ''
         res.on('data', (chunk) => {
@@ -73,5 +75,5 @@ const solveHttpResponse = res => {
 
 module.exports = { getTraffic }
 
-//// quick test
+//// Quick test
 // getTraffic().then(res => console.log(JSON.stringify(res))).catch(e => console.error(e))

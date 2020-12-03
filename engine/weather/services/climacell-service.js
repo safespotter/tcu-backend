@@ -24,15 +24,19 @@ const OPTIONS = {
 
 // create a string with the fields for liveWeather to be queried set in config.js
 let fieldsLive = ""
-for ( const [field, value] of Object.entries(config.ClimaCell.Fields)) {
-    if (value && field !== "precipitation_probability") { fieldsLive += field + "%2C" }
+for (const [field, value] of Object.entries(config.ClimaCell.Fields)) {
+    if (value && field !== "precipitation_probability") {
+        fieldsLive += field + "%2C"
+    }
 }
 fieldsLive = fieldsLive.slice(0, -3) //remove trailing '%2C'
 
 // create a string with the fields for futureWeather to be queried set in config.js
 let fieldsFuture = ""
-for ( const [field, value] of Object.entries(config.ClimaCell.Fields)) {
-    if (value) { fieldsFuture += field + "%2C" }
+for (const [field, value] of Object.entries(config.ClimaCell.Fields)) {
+    if (value) {
+        fieldsFuture += field + "%2C"
+    }
 }
 fieldsFuture = fieldsFuture.slice(0, -3) //remove trailing '%2C'
 
@@ -54,18 +58,8 @@ function requestLiveWeather() {
             },
             res => resolve(res)
         )
-    }).then(res => {
-        return new Promise ( resolve => {
-            res.setEncoding('utf8')
-            let rawData = ''
-            res.on('data', (chunk) => {
-                rawData += chunk
-            })
-            res.on('end', () => {
-                resolve(JSON.parse(rawData))
-            })
-        })
-    }).then(data => formatData(data))
+    }).then(solveJsonResponse)
+        .then(data => formatData(data))
 }
 
 /**
@@ -86,21 +80,33 @@ function requestFutureWeather() {
             },
             res => resolve(res)
         )
-    }).then(res => {
-        return new Promise ( resolve => {
-            res.setEncoding('utf8')
-            let rawData = ''
-            res.on('data', (chunk) => {
-                rawData += chunk
-            })
-            res.on('end', () => {
-                resolve(JSON.parse(rawData))
-            })
-        })
-    }).then(data => formatData(data))
+    }).then(solveJsonResponse)
+        .then(data => formatData(data))
 }
 
-function formatData( data ) {
+/**
+ * Transforms an http response with JSON content into a JS Object
+ *
+ * @param res: http.IncomingMessage
+ * @returns {Promise<Object>}
+ */
+const solveJsonResponse = res => {
+    return new Promise((resolve, reject) => {
+        let rawData = ''
+        res.on('data', (chunk) => {
+            rawData += chunk
+        })
+        res.on('end', () => {
+            if (res.statusCode > 299) {
+                reject(JSON.parse(rawData))
+            } else {
+                resolve(JSON.parse(rawData))
+            }
+        })
+    })
+}
+
+function formatData(data) {
 
     let solveConditions = str => {
         switch (str) {
@@ -177,3 +183,7 @@ function formatData( data ) {
 }
 
 module.exports = {requestLiveWeather, requestFutureWeather}
+
+//// Quick tests
+// requestLiveWeather().then(console.log).catch(console.error)
+// requestFutureWeather().then(console.log).catch(console.error)

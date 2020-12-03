@@ -32,23 +32,14 @@ excludeFuture = excludeFuture.slice(0, -1) //remove trailing ','
  */
 function requestLiveWeather() {
     return new Promise(resolve => {
-        console.log(`get: ${BASE_URL}/weather?id=${CITY_ID}&units=metric&appid=${API_KEY}`)
+        const RESOURCE_URL = `${BASE_URL}/weather?id=${CITY_ID}&units=metric&appid=${API_KEY}`
+        console.log(`get: ${RESOURCE_URL}`)
         https.get(
-            `${BASE_URL}/weather?id=${CITY_ID}&units=metric&appid=${API_KEY}`,
+            RESOURCE_URL,
             res => resolve(res)
         )
-    }).then(res => {
-        return new Promise ( resolve => {
-            res.setEncoding('utf8')
-            let rawData = ''
-            res.on('data', (chunk) => {
-                rawData += chunk
-            })
-            res.on('end', () => {
-                resolve(JSON.parse(rawData))
-            })
-        })
-    }).then(data => formatData(data))
+    }).then(solveJsonResponse)
+        .then(data => formatData(data))
 }
 
 /**
@@ -59,25 +50,37 @@ function requestLiveWeather() {
  */
 function requestFutureWeather() {
     return new Promise(resolve => {
-        console.log(`get: ${BASE_URL}/onecall?lat=${COORDS.latitude}&lon=${COORDS.longitude}&exclude=${excludeFuture}&units=metric&appid=${API_KEY}`)
+        const RESOURCE_URL = `${BASE_URL}/onecall?lat=${COORDS.latitude}&lon=${COORDS.longitude}&exclude=${excludeFuture}&units=metric&appid=${API_KEY}`
+        console.log(`get: ${RESOURCE_URL}`)
         https.get(
-            `${BASE_URL}/onecall?lat=${COORDS.latitude}&lon=${COORDS.longitude}&exclude=${excludeFuture}&units=metric&appid=${API_KEY}`,
+            RESOURCE_URL,
             res => resolve(res)
         )
-    }).then(res => {
-        return new Promise ( resolve => {
-            res.setEncoding('utf8')
-            let rawData = ''
-            res.on('data', (chunk) => {
-                rawData += chunk
-            })
-            res.on('end', () => {
-                resolve(JSON.parse(rawData))
-            })
-        })
-    }).then(data => formatData(data))
+    }).then(solveJsonResponse)
+        .then(data => formatData(data))
 }
 
+/**
+ * Transforms an http response with JSON content into a JS Object
+ *
+ * @param res: http.IncomingMessage
+ * @returns {Promise<Object>}
+ */
+const solveJsonResponse = res => {
+    return new Promise((resolve, reject) => {
+        let rawData = ''
+        res.on('data', (chunk) => {
+            rawData += chunk
+        })
+        res.on('end', () => {
+            if (res.statusCode > 299) {
+                reject(JSON.parse(rawData))
+            } else {
+                resolve(JSON.parse(rawData))
+            }
+        })
+    })
+}
 
 function formatData( data ) {
 
@@ -176,3 +179,7 @@ function formatData( data ) {
 }
 
 module.exports = {requestLiveWeather, requestFutureWeather}
+
+//// Quick tests
+// requestLiveWeather().then(console.log).catch(console.error)
+// requestFutureWeather().then(console.log).catch(console.error)

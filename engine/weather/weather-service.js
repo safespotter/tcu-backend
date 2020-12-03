@@ -107,7 +107,7 @@ const convertToHttp = foo => {
         } catch (error) {
             console.log(error);
             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
-                error: "something went wrong"
+                error: "Error when requesting weather data!"
             });
         }
     }

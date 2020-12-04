@@ -1,13 +1,12 @@
 const {getTraffic} = require('./traffic-service')
-const {TrafficInfo} = require('../../models/mongo/mongo-traffic')
-const {MockResponse} = require('../../spec/helpers/mocks.helper')
+const {TrafficCache, TrafficEvent} = require('../../models/mongo/mongo-traffic')
+const {MockResponse, stripProperty} = require('../../spec/helpers/mocks.helper')
 const {mongooseHelper} = require('../../spec/helpers/db.helper')
 
 //TODO: Set this up so that the module takes data from the mock and doesn't actually make an http request
 
 const mockData = () => {
     return {
-        timestamp: Date.now(),
         service: 'mock',
         events: [
             {
@@ -110,7 +109,11 @@ beforeAll(async function () {
 
 afterAll(async function () {
     try {
-        await TrafficInfo.collection.drop()
+        await Promise.all([
+            TrafficCache.collection.drop(),
+            TrafficEvent.collection.drop()
+        ])
+
     } catch (e) {
         console.error(e)
     }
@@ -120,7 +123,7 @@ afterAll(async function () {
 afterEach(async function () {
     // Manually clear cache
     try {
-        await TrafficInfo.deleteMany()
+        await TrafficCache.deleteMany()
     } catch (e) {
         console.error(e)
     }
@@ -130,7 +133,7 @@ describe("getTraffic", function() {
 
     let service = require('./bingmaps/bingmaps-service')
     beforeEach(function() {
-        spyOn(service, 'getTraffic').and.resolveTo(new TrafficInfo(mockData()))
+        spyOn(service, 'getTraffic').and.resolveTo(mockData())
     })
 
     it("should return data", async function () {
@@ -138,27 +141,29 @@ describe("getTraffic", function() {
         await getTraffic({}, res)
 
         expect(res.statusCode).toBe(200)
-        expect(res.body).toEqual(mockData().events)
-        expect(res.body).not.toBeInstanceOf(TrafficInfo)
+        expect(res.body.map(o => stripProperty(o, '_id'))).toEqual(mockData().events)
+        expect(Array.isArray(res.body)).toBe(true)
+        expect(res.body.some(o => o instanceof TrafficEvent)).toBe(false)
         expect(service.getTraffic).toHaveBeenCalled()
     })
 
     it("should return a cached response if there is recent data", async function () {
         const res = new MockResponse()
 
-        let fakeData = new TrafficInfo(mockData())
+        let fakeData = await TrafficCache.fromObject(mockData())
         await fakeData.save()
+        await fakeData.populate('events').execPopulate()
 
         await getTraffic({}, res)
 
-        expect(res.body).toEqual(fakeData.toObject().events)
+        expect(res.body).toEqual(fakeData.events.map(o => o.toObject()))
         expect(service.getTraffic).not.toHaveBeenCalled()
     })
 
     it("should return new data if the cache is too old", async function () {
         const res = new MockResponse()
 
-        let fakeData = new TrafficInfo(mockData())
+        let fakeData = await TrafficCache.fromObject(mockData())
         fakeData.timestamp = new Date(2020, 1, 1)
         await fakeData.save()
 

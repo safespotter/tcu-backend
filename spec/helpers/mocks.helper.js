@@ -15,4 +15,14 @@ class MockResponse {
     }
 }
 
-module.exports = {MockResponse}
+const stripProperty = (obj, prop) => {
+    let res = {}
+    for (const key of Object.keys(obj)) {
+        if (key !== prop) {
+            res[key] = obj[key]
+        }
+    }
+    return res
+}
+
+module.exports = {MockResponse, stripProperty}

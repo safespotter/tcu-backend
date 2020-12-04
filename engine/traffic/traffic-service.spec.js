@@ -127,12 +127,20 @@ afterEach(async function () {
 })
 
 describe("getTraffic", function() {
+
+    let service = require('./bingmaps/bingmaps-service')
+    beforeEach(function() {
+        spyOn(service, 'getTraffic').and.resolveTo(new TrafficInfo(mockData()))
+    })
+
     it("should return data", async function () {
         const res = new MockResponse()
         await getTraffic({}, res)
 
         expect(res.statusCode).toBe(200)
-        expect(res.body).not.toBe(null)
+        expect(res.body).toEqual(mockData().events)
+        expect(res.body).not.toBeInstanceOf(TrafficInfo)
+        expect(service.getTraffic).toHaveBeenCalled()
     })
 
     it("should return a cached response if there is recent data", async function () {
@@ -144,6 +152,7 @@ describe("getTraffic", function() {
         await getTraffic({}, res)
 
         expect(res.body).toEqual(fakeData.toObject().events)
+        expect(service.getTraffic).not.toHaveBeenCalled()
     })
 
     it("should return new data if the cache is too old", async function () {
@@ -156,6 +165,6 @@ describe("getTraffic", function() {
         await getTraffic({}, res)
 
         expect(res.statusCode).toBe(200)
-        expect(res.body).not.toEqual(fakeData.toObject().events)
+        expect(service.getTraffic).toHaveBeenCalled()
     })
 })

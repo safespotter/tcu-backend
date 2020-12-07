@@ -148,6 +148,7 @@ function formatData(data) {
     let formatter = dat => {
 
         return {
+            service: config.ClimaCell.service,
             time: new Date(dat.observation_time.value),
             coordinates: {
                 lat: dat.lat,
@@ -165,13 +166,15 @@ function formatData(data) {
                 direction: dat.wind_direction.value,
                 speed: dat.wind_speed.value,
             },
-            precipProbability: ('precipitation_probability' in dat) ? dat.precipitation_probability.value : null
+            precipProbability: ('precipitation_probability' in dat) ? dat.precipitation_probability.value : null,
+            sunrise: new Date(dat.sunrise.value),
+            sunset: new Date(dat.sunset.value),
         }
     }
 
     let formattedData
     if (data instanceof Array) {
-        formattedData = new WeatherModels.WeatherForecast()
+        formattedData = new WeatherModels.WeatherForecast({service: config.ClimaCell.service})
         for (const item of data) {
             formattedData.data.push(formatter(item))
         }
@@ -182,8 +185,13 @@ function formatData(data) {
     return formattedData
 }
 
-module.exports = {requestLiveWeather, requestFutureWeather}
+module.exports = {
+    requestLiveWeather,
+    requestFutureWeather,
+    TTL: config.ClimaCell.TTL,
+    service: config.ClimaCell.service,
+}
 
-//// Quick tests
+/* Quick tests */
 // requestLiveWeather().then(console.log).catch(console.error)
 // requestFutureWeather().then(console.log).catch(console.error)

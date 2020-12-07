@@ -15,14 +15,14 @@ async function getTraffic() {
             data = await Service.getTraffic()
             data = await TrafficCache.fromObject(data)
             data = await data.save()
-
+            // no await to not block the execution
+            clearOldCache().then()
         } catch (e) {
             console.error("Error when requesting traffic data!")
             console.error(e)
             data = cache // return the old cache since it's the only data we have
         }
     }
-    clearOldCache().then().catch(e => console.error("WHYYY" + e)) // don't want this to block the execution
     await data.populate('events').execPopulate()
     return data.events.map(o => o.toObject())
 }
@@ -33,13 +33,18 @@ async function getCache() {
 }
 
 async function clearOldCache() {
-    let cacheList = await TrafficCache.find({timestamp: {$lt: Date.now() - TTL}})
-    let eventList = cacheList.reduce((l, o) => l.concat(o.events), [])
+    try {
+        let cacheList = await TrafficCache.find({timestamp: {$lt: Date.now() - TTL}})
+        let eventList = cacheList.reduce((l, o) => l.concat(o.events), [])
 
-    await Promise.all ([
-        TrafficCache.deleteMany({_id: {$in: cacheList.map(o => o._id)}}),
-        TrafficEvent.deleteMany({_id: {$in: eventList}})
-    ])
+        await Promise.all([
+            TrafficCache.deleteMany({_id: {$in: cacheList.map(o => o._id)}}),
+            TrafficEvent.deleteMany({_id: {$in: eventList}})
+        ])
+    } catch (e) {
+        console.error("Error when clearing traffic cache:")
+        console.error(e)
+    }
 }
 
 module.exports = {getTraffic}

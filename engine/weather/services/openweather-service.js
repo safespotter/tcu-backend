@@ -118,7 +118,7 @@ function formatData( data ) {
     let formattedData
 
     if ('hourly' in data) {
-        formattedData = new WeatherModels.WeatherForecast()
+        formattedData = new WeatherModels.WeatherForecast({service: config.OpenWeather.service})
         for (const item of data.hourly) {
             let precip = {type: null, value: 0}
             if ('rain' in item) {
@@ -130,6 +130,7 @@ function formatData( data ) {
             let wind = {direction: item.wind_deg, speed: item.wind_speed}
 
             let tmp = {
+                service: config.OpenWeather.service,
                 time: new Date(item.dt),
                 coordinates: {
                     lat: data.lat,
@@ -160,6 +161,7 @@ function formatData( data ) {
         }
 
         formattedData = new WeatherModels.WeatherLive({
+            service: config.OpenWeather.service,
             time: new Date(data.dt * 1000),
             coordinates: {
                 lat: data.coord.lat,
@@ -171,15 +173,22 @@ function formatData( data ) {
             conditions: solveConditions(data.weather[0].id),
             wind: wind,
             precipitation: precip,
-            precipProbability: null
+            precipProbability: null,
+            sunrise: new Date(data.sys.sunrise * 1000),
+            sunset: new Date(data.sys.sunset * 1000),
         })
     }
 
     return formattedData
 }
 
-module.exports = {requestLiveWeather, requestFutureWeather}
+module.exports = {
+    requestLiveWeather,
+    requestFutureWeather,
+    TTL: config.OpenWeather.TTL,
+    service: config.OpenWeather.service,
+}
 
-//// Quick tests
-// requestLiveWeather().then(console.log).catch(console.error)
-// requestFutureWeather().then(console.log).catch(console.error)
+/* Quick tests */
+// requestLiveWeather().then(res => console.log(JSON.stringify(res))).catch(console.error)
+// requestFutureWeather().then(res => console.log(JSON.stringify(res))).catch(console.error)

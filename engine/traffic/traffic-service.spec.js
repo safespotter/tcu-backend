@@ -1,6 +1,6 @@
 const {getTraffic} = require('./traffic-service')
 const {TrafficCache, TrafficEvent} = require('../../models/mongo/mongo-traffic')
-const {MockResponse, stripProperty} = require('../../spec/helpers/mocks.helper')
+const {stripProperty} = require('../../spec/helpers/mocks.helper')
 const {mongooseHelper} = require('../../spec/helpers/db.helper')
 
 //TODO: Set this up so that the module takes data from the mock and doesn't actually make an http request
@@ -137,39 +137,33 @@ describe("getTraffic", function() {
     })
 
     it("should return data", async function () {
-        const res = new MockResponse()
-        await getTraffic({}, res)
+        const res = await getTraffic()
 
-        expect(res.statusCode).toBe(200)
-        expect(res.body.map(o => stripProperty(o, '_id'))).toEqual(mockData().events)
-        expect(Array.isArray(res.body)).toBe(true)
-        expect(res.body.some(o => o instanceof TrafficEvent)).toBe(false)
+        expect(Array.isArray(res)).toBe(true)
+        expect(res.map(o => stripProperty(o, '_id'))).toEqual(mockData().events)
+        expect(res.some(o => o instanceof TrafficEvent)).toBe(false)
         expect(service.getTraffic).toHaveBeenCalled()
     })
 
     it("should return a cached response if there is recent data", async function () {
-        const res = new MockResponse()
-
         let fakeData = await TrafficCache.fromObject(mockData())
         await fakeData.save()
         await fakeData.populate('events').execPopulate()
 
-        await getTraffic({}, res)
+        const res = await getTraffic()
 
-        expect(res.body).toEqual(fakeData.events.map(o => o.toObject()))
+        expect(res).toEqual(fakeData.events.map(o => o.toObject()))
         expect(service.getTraffic).not.toHaveBeenCalled()
     })
 
     it("should return new data if the cache is too old", async function () {
-        const res = new MockResponse()
-
         let fakeData = await TrafficCache.fromObject(mockData())
         fakeData.timestamp = new Date(2020, 1, 1)
         await fakeData.save()
 
-        await getTraffic({}, res)
+        const res = await getTraffic()
 
-        expect(res.statusCode).toBe(200)
+        expect(res).not.toBe(null)
         expect(service.getTraffic).toHaveBeenCalled()
     })
 })

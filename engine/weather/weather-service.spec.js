@@ -1,6 +1,5 @@
 const {Services, setService, getLiveWeather, getFutureWeather} = require('./weather-service')
 const WeatherModel = require('../../models/mongo/mongo-weather')
-const {MockResponse} = require('../../spec/helpers/mocks.helper')
 const {mongooseHelper} = require('../../spec/helpers/db.helper')
 
 const mockData = () => {
@@ -55,63 +54,47 @@ afterAll(async function () {
 describe("getLiveWeather", function () {
 
     it("should return data", async function () {
-        const res = new MockResponse()
-        await getLiveWeather({}, res)
+        const res = await getLiveWeather()
 
-        expect(res.statusCode).toBe(200)
-        expect(res.body).not.toBe(null)
+        expect(res).not.toBe(null)
     })
 
     it("should return a cached response if it has been called recently", async function () {
-        const res1 = new MockResponse()
-        const res2 = new MockResponse()
+        const res1 = await getLiveWeather()
+        const res2 = await getLiveWeather()
 
-        await getLiveWeather({}, res1)
-        await getLiveWeather({}, res2)
-
-        expect(res2.body).toEqual(res1.body)
+        expect(res2).toEqual(res1)
     })
 
     it("should clear the cache if the service changes", async function () {
-        const res1 = new MockResponse()
-        const res2 = new MockResponse()
-
-        await getLiveWeather({}, res1)
+        const res1 = await getLiveWeather()
         await setService(mockService)
-        await getLiveWeather({}, res2)
+        const res2 = await getLiveWeather()
 
-        expect(res2.body).not.toEqual(res1.body)
+        expect(res2).not.toEqual(res1)
     })
 })
 
 describe("getFutureWeather", function () {
 
     it("should return a collection of data", async function () {
-        const res = new MockResponse()
-        await getFutureWeather({}, res)
+        const res = await getFutureWeather()
 
-        expect(res.statusCode).toBe(200)
-        expect(Object.keys(res.body)).toContain('data')
+        expect(Array.isArray(res.data)).toBe(true)
     })
 
     it("should return a cached response if it has been called recently", async function () {
-        const res1 = new MockResponse()
-        const res2 = new MockResponse()
+        const res1 = await getFutureWeather()
+        const res2 = await getFutureWeather()
 
-        await getFutureWeather({}, res1)
-        await getFutureWeather({}, res2)
-
-        expect(res2.body).toEqual(res1.body)
+        expect(res2).toEqual(res1)
     })
 
     it("should clear the cache if the service changes", async function () {
-        const res1 = new MockResponse()
-        const res2 = new MockResponse()
-
-        await getFutureWeather({}, res1)
+        const res1 = await getFutureWeather()
         await setService(mockService)
-        await getFutureWeather({}, res2)
+        const res2 = await getFutureWeather()
 
-        expect(res2.body).not.toEqual(res1.body)
+        expect(res2).not.toEqual(res1)
     })
 })

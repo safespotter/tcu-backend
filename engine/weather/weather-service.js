@@ -4,7 +4,6 @@ const TTL = require('./services/config.json').TTL
 const ClimaCell = require('./services/climacell-service')
 const OpenWeather = require('./services/openweather-service')
 const CacheManager = require('../../models/mongo/mongo-weather')
-const HttpStatus = require('http-status-codes');
 
 /**
  * Dictionary of available Services
@@ -93,28 +92,9 @@ function clearCache() {
     ]).catch(e => console.log(e))
 }
 
-/**
- * Wrapper to call a function through http requests
- *
- * @param foo: function with no parameters
- * @returns {function( req, res ): Promise<any|undefined>}
- */
-const convertToHttp = foo => {
-    return async (req, res) => {
-        try {
-            const data = await foo()
-            return res.status(HttpStatus.OK).send(data)
-        } catch (error) {
-            console.log(error);
-            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
-                error: "Error when requesting weather data!"
-            });
-        }
-    }
-}
 module.exports = {
     Services,
     setService,
-    getLiveWeather: convertToHttp(getLiveWeather),
-    getFutureWeather: convertToHttp(getFutureWeather),
+    getLiveWeather,
+    getFutureWeather,
 }

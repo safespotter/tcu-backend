@@ -1,26 +1,18 @@
 'use strict'
 const Service = require('./bingmaps/bingmaps-service')
-const HttpStatus = require('http-status-codes')
 const {TrafficCache} = require("../../models/mongo/mongo-traffic");
 
 const TTL = 5 * 60 // 5 minutes in seconds
 
-async function getTraffic(req, res) {
-    try {
-        let data = await getCache()
-        if (!data) {
-            data = await Service.getTraffic()
-            data = await TrafficCache.fromObject(data)
-            data.save()
-        }
-        await data.populate('events').execPopulate()
-        return res.status(HttpStatus.OK).send(data.events.map(o => o.toObject()))
-    } catch (error) {
-        console.log(error);
-        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
-            error: "Error when requesting traffic data!"
-        });
+async function getTraffic() {
+    let data = await getCache()
+    if (!data) {
+        data = await Service.getTraffic()
+        data = await TrafficCache.fromObject(data)
+        data.save()
     }
+    await data.populate('events').execPopulate()
+    return data.events.map(o => o.toObject())
 }
 
 async function getCache() {

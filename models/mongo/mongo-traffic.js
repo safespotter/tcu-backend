@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 
 // Model for TrafficEvent
 const TrafficEvent = mongoose.model('TrafficEvent', new mongoose.Schema({
-    a: Number
+    severity: {type: Number, required: true}
 }, {strict: false, toObject: {versionKey: false}}))
 
 // Schema for TrafficCache
@@ -11,13 +11,6 @@ const cacheSchema = new mongoose.Schema({
     service: String,
     events: [{type: mongoose.ObjectId, ref: 'TrafficEvent'}]
 }, {toObject: {versionKey: false}})
-
-cacheSchema.post('find', async function () {
-    await this.populate('events').execPopulate()
-})
-cacheSchema.post('save', async function () {
-    await this.populate('events').execPopulate()
-})
 
 // Model for TrafficCache
 const TrafficCache = mongoose.model('TrafficCache', cacheSchema)
@@ -30,7 +23,8 @@ TrafficCache.fromObject = async obj => {
         obj.events = events.map(e => e._id)
         return new TrafficCache(obj)
     } catch (e) {
-        console.error('Error in creation of TrafficCache!')
+        console.error('Error in creation of TrafficCache:')
+        console.error(e)
     }
 }
 

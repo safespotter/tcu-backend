@@ -147,7 +147,7 @@ describe("getTraffic", function() {
 
     it("should return a cached response if there is recent data", async function () {
         let fakeData = await TrafficCache.fromObject(mockData())
-        await fakeData.save()
+        fakeData = await fakeData.save()
         await fakeData.populate('events').execPopulate()
 
         const res = await getTraffic()

@@ -1,6 +1,6 @@
 const {getTraffic} = require('./traffic-service')
 const {TrafficCache, TrafficEvent} = require('../../models/mongo/mongo-traffic')
-const {stripProperty, mockTrafficData} = require('../../spec/helpers/mocks.helper')
+const {mockTrafficData} = require('../../spec/helpers/mocks.helper')
 const {mongooseHelper} = require('../../spec/helpers/db.helper')
 
 //TODO: Set this up so that the module takes data from the mock and doesn't actually make an http request
@@ -49,7 +49,7 @@ describe("getTraffic", function() {
         const res = await getTraffic()
 
         expect(Array.isArray(res)).toBe(true)
-        expect(res.map(o => stripProperty(o, '_id'))).toEqual(mockData().events)
+        expect(res.every(o => o !== null && o !== undefined)).toEqual(true)
         expect(res.some(o => o instanceof TrafficEvent)).toBe(false)
         expect(service.getTraffic).toHaveBeenCalled()
     })

@@ -4,13 +4,21 @@ const {mongooseHelper} = require('../../spec/helpers/db.helper')
 const {mockWeatherData} = require('../../spec/helpers/mocks.helper')
 
 const mockLiveData = (service, time) => {
-    return mockWeatherData(1, o => { return {...o, time: time, service: service}})
+    return mockWeatherData(1, o => {
+        o.time = time
+        o.service = service
+        return o
+    })[0]
 }
 const mockFutureData = (service, time) => {
     return {
         service: service,
         time: time,
-        data: mockWeatherData(5, o => { return {...o, time: time, service: service}})
+        data: mockWeatherData(5, o => {
+            o.time = time
+            o.service = service
+            return o
+        })
     }
 }
 

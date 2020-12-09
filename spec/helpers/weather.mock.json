@@ -1,0 +1,266 @@
+[
+  {
+    "time": "2020-12-09T14:00:00.000Z",
+    "_id": "5fd0d92f87d3ec13d8a07b85",
+    "service": "mock",
+    "coordinates": {
+      "lat": 39.2599,
+      "lon": 9.1397
+    },
+    "temp": 12.46,
+    "pressure": 1007.29,
+    "humidity": 56.47,
+    "conditions": "light clouds",
+    "precipitation": {
+      "type": null,
+      "value": 0
+    },
+    "wind": {
+      "direction": 303.13,
+      "speed": 6.69
+    },
+    "precipProbability": 10,
+    "sunrise": "2020-12-09T06:31:57.350Z",
+    "sunset": "2020-12-09T16:00:26.789Z"
+  },
+  {
+    "time": "2020-12-09T15:00:00.000Z",
+    "_id": "5fd0d92f87d3ec13d8a07b86",
+    "service": "mock",
+    "coordinates": {
+      "lat": 39.2599,
+      "lon": 9.1397
+    },
+    "temp": 11.77,
+    "pressure": 1007.78,
+    "humidity": 58.91,
+    "conditions": "light clouds",
+    "precipitation": {
+      "type": null,
+      "value": 0
+    },
+    "wind": {
+      "direction": 297.96,
+      "speed": 6.2
+    },
+    "precipProbability": 10,
+    "sunrise": "2020-12-09T06: 31: 57.350Z",
+    "sunset": "2020-12-09T16: 00: 26.789Z"
+  },
+  {
+    "time": "2020-12-09T16: 00: 00.000Z",
+    "_id": "5fd0d92f87d3ec13d8a07b87",
+    "service": "mock",
+    "coordinates": {
+      "lat": 39.2599,
+      "lon": 9.1397
+    },
+    "temp": 10.85,
+    "pressure": 1008.22,
+    "humidity": 62.11,
+    "conditions": "clear",
+    "precipitation": {
+      "type": null,
+      "value": 0
+    },
+    "wind": {
+      "direction": 297.91,
+      "speed": 5.06
+    },
+    "precipProbability": 10,
+    "sunrise": "2020-12-09T06: 31: 57.350Z",
+    "sunset": "2020-12-09T16: 00: 26.789Z"
+  },
+  {
+    "time": "2020-12-09T17: 00: 00.000Z",
+    "_id": "5fd0d92f87d3ec13d8a07b88",
+    "service": "mock",
+    "coordinates": {
+      "lat": 39.2599,
+      "lon": 9.1397
+    },
+    "temp": 9.99,
+    "pressure": 1008.96,
+    "humidity": 67.43,
+    "conditions": "light clouds",
+    "precipitation": {
+      "type": null,
+      "value": 0
+    },
+    "wind": {
+      "direction": 294.41,
+      "speed": 3.58
+    },
+    "precipProbability": 5,
+    "sunrise": "2020-12-09T06:31:57.350Z",
+    "sunset": "2020-12-09T16:00:26.789Z"
+  },
+  {
+    "time": "2020-12-09T18:00: 00.000Z",
+    "_id": "5fd0d92f87d3ec13d8a07b89",
+    "service": "mock",
+    "coordinates": {
+      "lat": 39.2599,
+      "lon": 9.1397
+    },
+    "temp": 9.36,
+    "pressure": 1009.9,
+    "humidity": 70.47,
+    "conditions": "light clouds",
+    "precipitation": {
+      "type": null,
+      "value": 0
+    },
+    "wind": {
+      "direction": 291.95,
+      "speed": 3.29
+    },
+    "precipProbability": 5,
+    "sunrise": "2020-12-09T06: 31: 57.350Z",
+    "sunset": "2020-12-09T16: 00: 26.789Z"
+  },
+  {
+    "time": "2020-12-09T19: 00: 00.000Z",
+    "_id": "5fd0d92f87d3ec13d8a07b8a",
+    "service": "mock",
+    "coordinates": {
+      "lat": 39.2599,
+      "lon": 9.1397
+    },
+    "temp": 8.77,
+    "pressure": 1010.32,
+    "humidity": 74.85,
+    "conditions": "clear",
+    "precipitation": {
+      "type": null,
+      "value": 0
+    },
+    "wind": {
+      "direction": 296.94,
+      "speed": 2.75
+    },
+    "precipProbability": 5,
+    "sunrise": "2020-12-09T06: 31: 57.350Z",
+    "sunset": "2020-12-09T16: 00: 26.789Z"
+  },
+  {
+    "time": "2020-12-09T20:00:00.000Z",
+    "_id": "5fd0d92f87d3ec13d8a07b8b",
+    "service": "mock",
+    "coordinates": {
+      "lat": 39.2599,
+      "lon": 9.1397
+    },
+    "temp": 8.51,
+    "pressure": 1010.59,
+    "humidity": 75.45,
+    "conditions": "light clouds",
+    "precipitation": {
+      "type": null,
+      "value": 0
+    },
+    "wind": {
+      "direction": 284.2,
+      "speed": 2.74
+    },
+    "precipProbability": 20,
+    "sunrise": "2020-12-09T06: 31: 57.350Z",
+    "sunset": "2020-12-09T16: 00: 26.789Z"
+  },
+  {
+    "time": "2020-12-09T21: 00: 00.000Z",
+    "_id": "5fd0d92f87d3ec13d8a07b8c",
+    "service": "mock",
+    "coordinates": {
+      "lat": 39.2599,
+      "lon": 9.1397
+    },
+    "temp": 8.51,
+    "pressure": 1010.87,
+    "humidity": 78.28,
+    "conditions": "clouds",
+    "precipitation": {
+      "type": null,
+      "value": 0
+    },
+    "wind": {
+      "direction": 284.94,
+      "speed": 2.89
+    },
+    "precipProbability": 25,
+    "sunrise": "2020-12-09T06: 31: 57.350Z",
+    "sunset": "2020-12-09T16: 00: 26.789Z"
+  },
+  {
+    "time": "2020-12-09T22: 00: 00.000Z",
+    "_id": "5fd0d92f87d3ec13d8a07b8d",
+    "service": "mock",
+    "coordinates": {
+      "lat": 39.2599,
+      "lon": 9.1397
+    },
+    "temp": 8.88,
+    "pressure": 1010.82,
+    "humidity": 76.59,
+    "conditions": "light clouds",
+    "precipitation": {
+      "type": null,
+      "value": 0
+    },
+    "wind": {
+      "direction": 279.39,
+      "speed": 3.62
+    },
+    "precipProbability": 30,
+    "sunrise": "2020-12-09T06:31:57.350Z",
+    "sunset": "2020-12-09T16: 00: 26.789Z"
+  },
+  {
+    "time": "2020-12-09T23: 00: 00.000Z",
+    "_id": "5fd0d92f87d3ec13d8a07b8e",
+    "service": "mock",
+    "coordinates": {
+      "lat": 39.2599,
+      "lon": 9.1397
+    },
+    "temp": 9.1,
+    "pressure": 1010.6,
+    "humidity": 77.25,
+    "conditions": "light clouds",
+    "precipitation": {
+      "type": null,
+      "value": 0
+    },
+    "wind": {
+      "direction": 279.44,
+      "speed": 4.26
+    },
+    "precipProbability": 35,
+    "sunrise": "2020-12-09T06: 31: 57.350Z",
+    "sunset": "2020-12-09T16: 00: 26.789Z"
+  },
+  {
+    "time": "2020-12-10T00: 00: 00.000Z",
+    "_id": "5fd0d92f87d3ec13d8a07b8f",
+    "service": "mock",
+    "coordinates": {
+      "lat": 39.2599,
+      "lon": 9.1397
+    },
+    "temp": 9.33,
+    "pressure": 1010.13,
+    "humidity": 75.54,
+    "conditions": "light clouds",
+    "precipitation": {
+      "type": null,
+      "value": 0
+    },
+    "wind": {
+      "direction": 284.45,
+      "speed": 5.39
+    },
+    "precipProbability": 40,
+    "sunrise": "2020-12-10T06:32:46.265Z",
+    "sunset": "2020-12-10T16:00:32.748Z"
+  }
+]

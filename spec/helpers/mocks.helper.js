@@ -1,3 +1,19 @@
+const mockTrafficData = (quantity = 3, map = o => o) => {
+    const pool = require('./traffic.mock.json')
+    let data = new Array(quantity)
+    data = data.map(_ => pool[Math.random() * Math.floor(pool.lenght)])
+    data = data.map(o => map(JSON.parse(o)))
+    return data
+}
+
+const mockWeatherData = (quantity = 1, map = o => o) => {
+    const pool = require('./weather.mock.json')
+    let data = new Array(quantity)
+    data = data.map(_ => pool[Math.random() * Math.floor(pool.lenght)])
+    data = data.map(o => map(JSON.parse(o)))
+    return data
+}
+
 class MockResponse {
     status(code) {
         this.statusCode = code
@@ -25,4 +41,4 @@ const stripProperty = (obj, prop) => {
     return res
 }
 
-module.exports = {MockResponse, stripProperty}
+module.exports = {MockResponse, stripProperty, mockTrafficData, mockWeatherData}

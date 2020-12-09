@@ -2,6 +2,7 @@ const {getTraffic} = require('./traffic-service')
 const {TrafficCache, TrafficEvent} = require('../../models/mongo/mongo-traffic')
 const {mockTrafficData} = require('../../spec/helpers/mocks.helper')
 const {mongooseHelper} = require('../../spec/helpers/db.helper')
+const service = require('./bingmaps/bingmaps-service')
 
 //TODO: Set this up so that the module takes data from the mock and doesn't actually make an http request
 
@@ -40,7 +41,6 @@ afterEach(async function () {
 
 describe("getTraffic", function() {
 
-    let service = require('./bingmaps/bingmaps-service')
     beforeEach(function() {
         spyOn(service, 'getTraffic').and.resolveTo(mockData())
     })

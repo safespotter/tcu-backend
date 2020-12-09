@@ -10,10 +10,10 @@ const {WeatherConditions} = require("../models/mongo/mongo-weather");
  *
  * @param point: {lat: number, lon: number}
  */
-function evaluateRisk(point) {
-    const weatherL = WeatherService.getLiveWeather()
-    const weatherF = WeatherService.getFutureWeather()
-    const traffic = TrafficService.getTraffic()
+async function evaluateRisk(point) {
+    const weatherL = await WeatherService.getLiveWeather()
+    const weatherF = await WeatherService.getFutureWeather()
+    const traffic = await TrafficService.getTraffic()
 
     /* day - night */
     // check if is night or if it is sunset/sunrise (duration = 2 * nightTransitionTime)
@@ -26,8 +26,8 @@ function evaluateRisk(point) {
         Date.now() < weatherL.sunrise + nightTransitionTime && !isNight
 
     /* traffic */
-    // check the most severe incident nearby (aOI in meters)
-    const areaOfInterest = 1000 // 1km
+    // check the most severe incident nearby (aOI is the radius in meters)
+    const areaOfInterest = 500 // 500m
     const distanceFromCoords = (pointA, pointB) => {
         // https://gis.stackexchange.com/questions/2951/algorithm-for-offsetting-a-latitude-longitude-by-some-amount-of-meters
         const latDiff = pointA.lat - pointB.lat
@@ -79,7 +79,7 @@ function evaluateRisk(point) {
         isPrecipProbable: isPrecipProbable * 0.5,
     }
     const risk = Object.values(weights).reduce((sum, v) => sum + v)
-    return Math.max(Math.ceil(+risk), 3)
+    return Math.min(Math.ceil(+risk), 3)
 }
 
 const convertServiceToRequest = (foo, serviceName) => async (req, res) => {
@@ -96,7 +96,8 @@ const convertServiceToRequest = (foo, serviceName) => async (req, res) => {
 }
 
 module.exports = {
-    requestWeatherLive: convertServiceToRequest(WeatherService.getLiveWeather(), 'weather live'),
-    requestWeatherForecast: convertServiceToRequest(WeatherService.getFutureWeather(), 'weather forecast'),
-    requestTraffic: convertServiceToRequest(TrafficService.getTraffic(), 'traffic'),
+    requestWeatherLive: convertServiceToRequest(WeatherService.getLiveWeather, 'weather live'),
+    requestWeatherForecast: convertServiceToRequest(WeatherService.getFutureWeather, 'weather forecast'),
+    requestTraffic: convertServiceToRequest(TrafficService.getTraffic, 'traffic'),
+    evaluateRisk,
 }

@@ -32,23 +32,14 @@ excludeFuture = excludeFuture.slice(0, -1) //remove trailing ','
  */
 function requestLiveWeather() {
     return new Promise(resolve => {
-        console.log(`get: ${BASE_URL}/weather?id=${CITY_ID}&units=metric&appid=${API_KEY}`)
+        const RESOURCE_URL = `${BASE_URL}/weather?id=${CITY_ID}&units=metric&appid=${API_KEY}`
+        console.log(`get: ${RESOURCE_URL}`)
         https.get(
-            `${BASE_URL}/weather?id=${CITY_ID}&units=metric&appid=${API_KEY}`,
+            RESOURCE_URL,
             res => resolve(res)
         )
-    }).then(res => {
-        return new Promise ( resolve => {
-            res.setEncoding('utf8')
-            let rawData = ''
-            res.on('data', (chunk) => {
-                rawData += chunk
-            })
-            res.on('end', () => {
-                resolve(JSON.parse(rawData))
-            })
-        })
-    }).then(data => formatData(data))
+    }).then(solveJsonResponse)
+        .then(data => formatData(data))
 }
 
 /**
@@ -59,25 +50,37 @@ function requestLiveWeather() {
  */
 function requestFutureWeather() {
     return new Promise(resolve => {
-        console.log(`get: ${BASE_URL}/onecall?lat=${COORDS.latitude}&lon=${COORDS.longitude}&exclude=${excludeFuture}&units=metric&appid=${API_KEY}`)
+        const RESOURCE_URL = `${BASE_URL}/onecall?lat=${COORDS.latitude}&lon=${COORDS.longitude}&exclude=${excludeFuture}&units=metric&appid=${API_KEY}`
+        console.log(`get: ${RESOURCE_URL}`)
         https.get(
-            `${BASE_URL}/onecall?lat=${COORDS.latitude}&lon=${COORDS.longitude}&exclude=${excludeFuture}&units=metric&appid=${API_KEY}`,
+            RESOURCE_URL,
             res => resolve(res)
         )
-    }).then(res => {
-        return new Promise ( resolve => {
-            res.setEncoding('utf8')
-            let rawData = ''
-            res.on('data', (chunk) => {
-                rawData += chunk
-            })
-            res.on('end', () => {
-                resolve(JSON.parse(rawData))
-            })
-        })
-    }).then(data => formatData(data))
+    }).then(solveJsonResponse)
+        .then(data => formatData(data))
 }
 
+/**
+ * Transforms an http response with JSON content into a JS Object
+ *
+ * @param res: http.IncomingMessage
+ * @returns {Promise<Object>}
+ */
+const solveJsonResponse = res => {
+    return new Promise((resolve, reject) => {
+        let rawData = ''
+        res.on('data', (chunk) => {
+            rawData += chunk
+        })
+        res.on('end', () => {
+            if (res.statusCode > 299) {
+                reject(JSON.parse(rawData))
+            } else {
+                resolve(JSON.parse(rawData))
+            }
+        })
+    })
+}
 
 function formatData( data ) {
 
@@ -115,7 +118,7 @@ function formatData( data ) {
     let formattedData
 
     if ('hourly' in data) {
-        formattedData = new WeatherModels.WeatherForecast()
+        formattedData = new WeatherModels.WeatherForecast({service: config.OpenWeather.service})
         for (const item of data.hourly) {
             let precip = {type: null, value: 0}
             if ('rain' in item) {
@@ -127,6 +130,7 @@ function formatData( data ) {
             let wind = {direction: item.wind_deg, speed: item.wind_speed}
 
             let tmp = {
+                service: config.OpenWeather.service,
                 time: new Date(item.dt),
                 coordinates: {
                     lat: data.lat,
@@ -157,6 +161,7 @@ function formatData( data ) {
         }
 
         formattedData = new WeatherModels.WeatherLive({
+            service: config.OpenWeather.service,
             time: new Date(data.dt * 1000),
             coordinates: {
                 lat: data.coord.lat,
@@ -168,11 +173,22 @@ function formatData( data ) {
             conditions: solveConditions(data.weather[0].id),
             wind: wind,
             precipitation: precip,
-            precipProbability: null
+            precipProbability: null,
+            sunrise: new Date(data.sys.sunrise * 1000),
+            sunset: new Date(data.sys.sunset * 1000),
         })
     }
 
     return formattedData
 }
 
-module.exports = {requestLiveWeather, requestFutureWeather}
+module.exports = {
+    requestLiveWeather,
+    requestFutureWeather,
+    TTL: config.OpenWeather.TTL,
+    service: config.OpenWeather.service,
+}
+
+/* Quick tests */
+// requestLiveWeather().then(res => console.log(JSON.stringify(res))).catch(console.error)
+// requestFutureWeather().then(res => console.log(JSON.stringify(res))).catch(console.error)

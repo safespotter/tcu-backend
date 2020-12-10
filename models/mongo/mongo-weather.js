@@ -13,7 +13,8 @@ const WeatherConditions = {
 }
 
 const WeatherSnapshot = new mongoose.Schema({
-    time: {type: Date, index: true},
+    service: {type: String, required: true, index: true},
+    time: {type: Date, index: true, default: Date.now()},
     coordinates: {
         lat: Number,
         lon: Number
@@ -30,14 +31,18 @@ const WeatherSnapshot = new mongoose.Schema({
     wind: {
         direction: {type: Number},
         speed: Number
-    }
+    },
+    sunrise: Date,
+    sunset: Date,
 },{
+    strict: false,
     versionKey: false
 })
 
 const WeatherLive = mongoose.model('WeatherLive', WeatherSnapshot)
 
-const WeatherForecast = mongoose.model('WeatherForecast', new mongoose.Schema ({
+const WeatherForecast = mongoose.model('WeatherForecast', new mongoose.Schema({
+    service: {type: String, required: true, index: true},
     time: {type: Date, default: Date.now, index: true},
     data: [WeatherSnapshot]
 },{

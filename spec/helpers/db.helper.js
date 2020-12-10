@@ -1,23 +1,34 @@
 const mongooseHelper = {
-    _consumers: 0,
     mongoose: require('mongoose'),
+    _consumers: 0,
+    _ready: false,
+
     connect: async function () {
         this._consumers++
-        if (!this._connection) {
+        //only start the connection if you are the first to request the db
+        if (this._consumers === 1) {
             console.log("These tests rely on MongoDB. Make sure that the database is active and listening.")
-
             this.mongoose.Promise = require('bluebird');
-            this._connection = await this.mongoose.connect('mongodb://localhost/tcu-backend-test', {
+            this.mongoose.connect('mongodb://localhost/tcu-backend-test', {
                 useNewUrlParser: true,
                 promiseLibrary: require('bluebird'),
                 useUnifiedTopology: true,
                 useCreateIndex: true,
             })
-                .then(() => console.log('Connected successfully to the mongo database'))
+                .then(() => {
+                    console.log('Connected successfully to the mongo database')
+                    // set the flag
+                    this._ready = true
+                })
                 .catch((err) => console.error(err));
         }
-        return this._connection
+        // wait for the db
+        while (!this._ready) {
+            // sleep
+            await new Promise(resolve => setTimeout(resolve))
+        }
     },
+
     disconnect: async function () {
         this._consumers--
         if (this._consumers === 0) {

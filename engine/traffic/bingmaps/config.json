@@ -1,0 +1,74 @@
+{
+  "URL": "dev.virtualearth.net/REST/v1/Traffic/Incidents",
+  "CULTURE": "it",
+  "BORDERS": {
+    "N": 39.27445,
+    "S": 39.24734,
+    "W": 9.11854,
+    "E": 9.15124
+  },
+  "SEVERITY": {
+    "LowImpact": {
+      "fetch": true,
+      "id": 1
+    },
+    "Minor": {
+      "fetch": true,
+      "id":  2
+    },
+    "Moderate": {
+      "fetch": true,
+      "id": 3
+    },
+    "Serious": {
+      "fetch": true,
+      "id": 4
+    }
+  },
+  "TYPE": {
+    "Accident": {
+      "fetch": true,
+      "id": 1
+    },
+    "Congestion": {
+      "fetch": true,
+      "id": 2
+    },
+    "DisabledVehicle": {
+      "fetch": true,
+      "id": 3
+    },
+    "MassTransit": {
+      "fetch": true,
+      "id": 4
+    },
+    "Miscellaneous": {
+      "fetch": true,
+      "id": 5
+    },
+    "OtherNews": {
+      "fetch": true,
+      "id": 6
+    },
+    "PlannedEvent": {
+      "fetch": true,
+      "id": 7
+    },
+    "RoadHazard": {
+      "fetch": true,
+      "id": 8
+    },
+    "Construction": {
+      "fetch": true,
+      "id": 9
+    },
+    "Alert": {
+      "fetch": true,
+      "id": 10
+    },
+    "Weather": {
+      "fetch": true,
+      "id": 11
+    }
+  }
+}

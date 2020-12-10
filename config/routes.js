@@ -1,7 +1,7 @@
 const AccMan = require('../engine/access-manager');
 const DashMan = require('../engine/dashboard-manager');
 const CalMan = require('../engine/calendar-manager');
-const WeatherService = require('../engine/weather/weather-service')
+const InfoManager = require('../engine/info-manager')
 const SafMan = require('../engine/safespotter-manager');
 const ErrorHandler = require('../engine/error-handler');
 const cors = require('cors');
@@ -58,8 +58,8 @@ module.exports = function (app, passport, config, io) {
     app.get(`${safePath}/getStreetLampStatus/:id`, reqAuth, AccMan.roleAuth(all), SafMan.getStreetLampStatus);
 
     /****************** WEATHER SERVICE ********************/
-    app.get(`${weatherPath}/getLive`, reqAuth, AccMan.roleAuth(all), WeatherService.getLiveWeather);
-    app.get(`${weatherPath}/getForecast`, reqAuth, AccMan.roleAuth(all), WeatherService.getFutureWeather);
+    app.get(`${weatherPath}/getLive`, reqAuth, AccMan.roleAuth(all), InfoManager.requestWeatherLive);
+    app.get(`${weatherPath}/getForecast`, reqAuth, AccMan.roleAuth(all), InfoManager.requestWeatherForecast);
 
     /****************** SOCKET IO ******************/
 

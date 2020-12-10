@@ -24,15 +24,19 @@ const OPTIONS = {
 
 // create a string with the fields for liveWeather to be queried set in config.js
 let fieldsLive = ""
-for ( const [field, value] of Object.entries(config.ClimaCell.Fields)) {
-    if (value && field !== "precipitation_probability") { fieldsLive += field + "%2C" }
+for (const [field, value] of Object.entries(config.ClimaCell.Fields)) {
+    if (value && field !== "precipitation_probability") {
+        fieldsLive += field + "%2C"
+    }
 }
 fieldsLive = fieldsLive.slice(0, -3) //remove trailing '%2C'
 
 // create a string with the fields for futureWeather to be queried set in config.js
 let fieldsFuture = ""
-for ( const [field, value] of Object.entries(config.ClimaCell.Fields)) {
-    if (value) { fieldsFuture += field + "%2C" }
+for (const [field, value] of Object.entries(config.ClimaCell.Fields)) {
+    if (value) {
+        fieldsFuture += field + "%2C"
+    }
 }
 fieldsFuture = fieldsFuture.slice(0, -3) //remove trailing '%2C'
 
@@ -54,18 +58,8 @@ function requestLiveWeather() {
             },
             res => resolve(res)
         )
-    }).then(res => {
-        return new Promise ( resolve => {
-            res.setEncoding('utf8')
-            let rawData = ''
-            res.on('data', (chunk) => {
-                rawData += chunk
-            })
-            res.on('end', () => {
-                resolve(JSON.parse(rawData))
-            })
-        })
-    }).then(data => formatData(data))
+    }).then(solveJsonResponse)
+        .then(data => formatData(data))
 }
 
 /**
@@ -86,21 +80,33 @@ function requestFutureWeather() {
             },
             res => resolve(res)
         )
-    }).then(res => {
-        return new Promise ( resolve => {
-            res.setEncoding('utf8')
-            let rawData = ''
-            res.on('data', (chunk) => {
-                rawData += chunk
-            })
-            res.on('end', () => {
-                resolve(JSON.parse(rawData))
-            })
-        })
-    }).then(data => formatData(data))
+    }).then(solveJsonResponse)
+        .then(data => formatData(data))
 }
 
-function formatData( data ) {
+/**
+ * Transforms an http response with JSON content into a JS Object
+ *
+ * @param res: http.IncomingMessage
+ * @returns {Promise<Object>}
+ */
+const solveJsonResponse = res => {
+    return new Promise((resolve, reject) => {
+        let rawData = ''
+        res.on('data', (chunk) => {
+            rawData += chunk
+        })
+        res.on('end', () => {
+            if (res.statusCode > 299) {
+                reject(JSON.parse(rawData))
+            } else {
+                resolve(JSON.parse(rawData))
+            }
+        })
+    })
+}
+
+function formatData(data) {
 
     let solveConditions = str => {
         switch (str) {
@@ -142,6 +148,7 @@ function formatData( data ) {
     let formatter = dat => {
 
         return {
+            service: config.ClimaCell.service,
             time: new Date(dat.observation_time.value),
             coordinates: {
                 lat: dat.lat,
@@ -159,13 +166,15 @@ function formatData( data ) {
                 direction: dat.wind_direction.value,
                 speed: dat.wind_speed.value,
             },
-            precipProbability: ('precipitation_probability' in dat) ? dat.precipitation_probability.value : null
+            precipProbability: ('precipitation_probability' in dat) ? dat.precipitation_probability.value : null,
+            sunrise: new Date(dat.sunrise.value),
+            sunset: new Date(dat.sunset.value),
         }
     }
 
     let formattedData
     if (data instanceof Array) {
-        formattedData = new WeatherModels.WeatherForecast()
+        formattedData = new WeatherModels.WeatherForecast({service: config.ClimaCell.service})
         for (const item of data) {
             formattedData.data.push(formatter(item))
         }
@@ -176,4 +185,13 @@ function formatData( data ) {
     return formattedData
 }
 
-module.exports = {requestLiveWeather, requestFutureWeather}
+module.exports = {
+    requestLiveWeather,
+    requestFutureWeather,
+    TTL: config.ClimaCell.TTL,
+    service: config.ClimaCell.service,
+}
+
+/* Quick tests */
+// requestLiveWeather().then(console.log).catch(console.error)
+// requestFutureWeather().then(console.log).catch(console.error)

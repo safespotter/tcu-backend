@@ -54,7 +54,7 @@ module.exports = function (app, passport, config, io) {
 
     /****************** SAFESPOTTER MANAGER ********************/
     app.get(`${safePath}/getData`, reqAuth, AccMan.roleAuth(all), SafMan.returnList);
-    app.post(`${safePath}/saveDataFromStreetLamp`, SafMan.saveDataFromStreetLamp);
+    app.post(`${safePath}/updateLamppostStatus`, SafMan.saveDataFromStreetLamp);
     app.get(`${safePath}/getStreetLampStatus/:id`, reqAuth, AccMan.roleAuth(all), SafMan.getStreetLampStatus);
 
     /****************** WEATHER SERVICE ********************/

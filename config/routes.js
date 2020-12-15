@@ -56,6 +56,7 @@ module.exports = function (app, passport, config, io) {
     app.get(`${safePath}/getData`, reqAuth, AccMan.roleAuth(all), SafMan.returnList);
     app.post(`${safePath}/updateLamppostStatus`, SafMan.saveDataFromStreetLamp);
     app.get(`${safePath}/getStreetLampStatus/:id`, reqAuth, AccMan.roleAuth(all), SafMan.getStreetLampStatus);
+    app.post(`${safePath}/checkNotification`, reqAuth, AccMan.roleAuth(all), SafMan.checkNotification);
 
     /****************** WEATHER SERVICE ********************/
     app.get(`${weatherPath}/getLive`, reqAuth, AccMan.roleAuth(all), InfoManager.requestWeatherLive);

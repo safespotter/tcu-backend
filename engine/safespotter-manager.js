@@ -107,11 +107,12 @@ async function createNotification(lamp_id, critical_issues, alert_type) {
 
         }
 
-        if ((await SafespotterManager.find({id: lamp_id})).length !== 0 && critical_issues >= 4 && critical_issues <= 5) {
+        if ((await SafespotterManager.find({id: lamp_id})).length !== 0 && critical_issues >= 3 && critical_issues <= 5) {
             let notification = new Notification;
             notification.id = lamp_id;
             notification.critical_issues = critical_issues;
             notification.street = lamp[0].street;
+            notification.checked = false;
             await notification.save();
         }
 
@@ -217,4 +218,26 @@ async function getStreetLampStatus(req, res) {
     }
 }
 
-module.exports = {returnList, saveDataFromStreetLamp, getStreetLampStatus};
+/**API che setta il valore checked della notifica*/
+async function checkNotification(req, res) {
+    try {
+        const lamp_id = req.body.id;
+        const date = req.body.date;
+
+        await Notification.updateOne({$and:[{id: lamp_id}, {date: date}]}, {
+            checked: true
+        });
+
+        return res.status(HttpStatus.OK).send({
+            message: "notification checked"
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "something went wrong with notification checking"
+        });
+    }
+}
+
+module.exports = {returnList, saveDataFromStreetLamp, getStreetLampStatus, checkNotification};

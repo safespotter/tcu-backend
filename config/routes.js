@@ -131,8 +131,8 @@ module.exports = function (app, passport, config, io) {
     async function dataUpdate(num, alert) {
         console.log('Socket Emmit');
         const safespotter = await SafeSpotter.find().sort({date: -1});
-        const notification = await Notification.find({});
-        const count = await Notification.countDocuments({});
+        const notification = await Notification.find({checked: false});
+        const count = await Notification.countDocuments({checked: false});
         for (let socketMapObj of socketMap) {
             if (safespotter.length > 0) {
                 socketMapObj.emit('dataUpdate', [

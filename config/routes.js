@@ -139,6 +139,12 @@ module.exports = function (app, passport, config, io) {
                     safespotter, num, alert, notification, count]);
             }
         }
+
+        // mark them as "checked" after they get sent once
+        for (let el of safespotter) {
+            el.checked = true
+            el.save() // the result is not used so don't await it
+        }
     }
 
 

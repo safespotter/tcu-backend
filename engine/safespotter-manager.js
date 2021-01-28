@@ -101,7 +101,8 @@ async function createNotification(lamp_id, critical_issues, alert_type) {
                     critical_issues: critical_issues,
                     condition_convert: convertCondition(critical_issues),
                     alert_type: alert_type,
-                    date: new Date()
+                    date: new Date(),
+                    checked: false,
                 })
         } else {
 

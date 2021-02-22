@@ -34,7 +34,7 @@ Object.keys(db).forEach(modelName => {
 sequelize
   .authenticate()
   .then(function(err) {
-    console.log('===> UTC BACKEND SUCCESSFULLY LAUNCHED: database connected.');
+    console.log('===> TCU BACKEND SUCCESSFULLY LAUNCHED: database connected.');
   })
   .catch(function (err) {
     console.log('===> FATAL ERROR: unable to connect to the database. ', err);

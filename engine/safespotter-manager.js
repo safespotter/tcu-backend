@@ -225,7 +225,7 @@ async function checkNotification(req, res) {
         const lamp_id = req.body.id;
         const date = req.body.date;
 
-        await Notification.updateOne({$and:[{id: lamp_id}, {date: date}]}, {
+        await Notification.updateOne({$and: [{id: lamp_id}, {date: date}]}, {
             checked: true
         });
 
@@ -241,4 +241,62 @@ async function checkNotification(req, res) {
     }
 }
 
-module.exports = {returnList, saveDataFromStreetLamp, getStreetLampStatus, checkNotification};
+async function updateLamppostConfiguration(req, res) {
+
+    // notification_type = 0 -> nessuna notifica
+    // notification_type = 1 -> notifica verde
+    // notification_type = 2 -> notifica gialla
+    // notification_type = 3 -> notifica arancione
+    // notification_type = 4 -> notifica rossa
+
+    try {
+        const lamp_id = req.params.id;
+        const alert_id = req.body.alert_id;
+        const configuration_type = req.body.configuration_type;
+
+        if (configuration_type < 0 || configuration_type > 4) {
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "valore di notifica errato"
+            })
+        }
+
+        await SafespotterManager.updateOne(
+            {
+                $and: [
+                    {id: lamp_id},
+                    {'configuration.alert_id': alert_id}
+                ]
+            },
+            {
+                configuration: {
+                    alert_id: alert_id,
+                    configuration_type: configuration_type
+                }
+            },
+            {
+                upsert: true
+            }
+        );
+
+        return res.status(HttpStatus.OK).send({
+            lamp_id: lamp_id,
+            alert_id: alert_id,
+            notification_type: configuration_type
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "something went wrong updating lamppost configuration"
+        });
+    }
+
+}
+
+module.exports = {
+    returnList,
+    saveDataFromStreetLamp,
+    getStreetLampStatus,
+    checkNotification,
+    updateLamppostConfiguration
+};

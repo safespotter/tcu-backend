@@ -9,6 +9,7 @@ module.exports = mongoose.model('SafeSpotter', new mongoose.Schema({
     alert_type: String,
     date: { type: Date, default: Date.now },
     checked: { type: Boolean, default: false },
+    configuration: []
 },{
     versionKey: false
 }));

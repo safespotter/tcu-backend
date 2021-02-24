@@ -243,16 +243,24 @@ async function checkNotification(req, res) {
 
 async function updateLamppostConfiguration(req, res) {
 
-    // notification_type = 0 -> nessuna notifica
-    // notification_type = 1 -> notifica verde
-    // notification_type = 2 -> notifica gialla
-    // notification_type = 3 -> notifica arancione
-    // notification_type = 4 -> notifica rossa
+    // configuration_type = 0 -> nessuna notifica
+    // configuration_type = 1 -> notifica verde
+    // configuration_type = 2 -> notifica gialla
+    // configuration_type = 3 -> notifica arancione
+    // configuration_type = 4 -> notifica rossa
 
     try {
         const lamp_id = req.params.id;
         const alert_id = req.body.alert_id;
         const configuration_type = req.body.configuration_type;
+
+        let doc = await SafespotterManager.findOne({id: lamp_id});
+
+        if (doc == null) {
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "Lampione non presente nella lista"
+            })
+        }
 
         if (configuration_type < 0 || configuration_type > 4) {
             return res.status(HttpStatus.BAD_REQUEST).send({
@@ -260,23 +268,25 @@ async function updateLamppostConfiguration(req, res) {
             })
         }
 
-        await SafespotterManager.updateOne(
-            {
-                $and: [
-                    {id: lamp_id},
-                    {'configuration.alert_id': alert_id}
-                ]
-            },
-            {
-                configuration: {
-                    alert_id: alert_id,
-                    configuration_type: configuration_type
-                }
-            },
-            {
-                upsert: true
+        //se la configurazione non esiste
+        if (_.isEmpty(doc.configuration)) {
+            doc.configuration = [{alert_id: alert_id, configuration_type: configuration_type}];
+            doc.save();
+        } else {
+            //devo controllare se l'alert id è presente dentro configuration
+            //se presente allora devo aggiornare il configuration type
+            //altrimenti devo pushare i due valori (alert_id, configuration_type)
+            console.log("doc config ", doc.configuration[_.findKey(doc.configuration, {'alert_id': alert_id})]);
+            let index = _.indexOf(doc.configuration, doc.configuration[_.findKey(doc.configuration, {'alert_id': alert_id})]);
+            if (index >= 0){
+                doc.configuration[index].configuration_type = configuration_type;
+                doc.markModified('configuration');
+                doc.save();
+            } else {
+                doc.configuration.push({alert_id: alert_id, configuration_type: configuration_type});
+                doc.save();
             }
-        );
+        }
 
         return res.status(HttpStatus.OK).send({
             lamp_id: lamp_id,

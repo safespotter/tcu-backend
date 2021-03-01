@@ -278,7 +278,7 @@ async function updateLamppostConfiguration(req, res) {
             //altrimenti devo pushare i due valori (alert_id, configuration_type)
             console.log("doc config ", doc.configuration[_.findKey(doc.configuration, {'alert_id': alert_id})]);
             let index = _.indexOf(doc.configuration, doc.configuration[_.findKey(doc.configuration, {'alert_id': alert_id})]);
-            if (index >= 0){
+            if (index >= 0) {
                 doc.configuration[index].configuration_type = configuration_type;
                 doc.markModified('configuration');
                 doc.save();
@@ -303,10 +303,42 @@ async function updateLamppostConfiguration(req, res) {
 
 }
 
+async function getLamppostConfiguration(req, res) {
+
+    try {
+
+        const lamp_id = req.params.id;
+        let configuration;
+        let doc = await SafespotterManager.findOne({id: lamp_id});
+
+        if (doc == null) {
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "Lampione non presente nella lista"
+            })
+        }
+
+        configuration = doc.configuration;
+
+        return res.status(HttpStatus.OK).send({
+            lamp_id: lamp_id,
+            configuration: configuration
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "something went wrong updating lamppost configuration"
+        });
+    }
+
+
+}
+
 module.exports = {
     returnList,
     saveDataFromStreetLamp,
     getStreetLampStatus,
     checkNotification,
-    updateLamppostConfiguration
+    updateLamppostConfiguration,
+    getLamppostConfiguration
 };

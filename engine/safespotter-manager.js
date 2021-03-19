@@ -36,9 +36,8 @@ function convertCondition(input) {
 
 /**Metodo che inizializza lo status del lampione*/
 function initializeLampStatus(model, data) {
-    model.id = data.id;
-    model.status = data.status;
-    model.alert_type = data.alert_type;
+    model.lamp_id = data.lamp_id;
+    model.alert_id = data.alert_id;
     return model;
 }
 
@@ -81,41 +80,27 @@ function customDayDate(date) {
     return custom_date;
 }
 
-/**funzione che aggiorna le notifiche*/
-async function createNotification(lamp_id, critical_issues, alert_type) {
-    let tmp_critical;
+/**funzione che crea le notifiche e aggiorna il lampione*/
+async function createNotification(lamp_id, alert_id) {
     let alert;
     let id;
     try {
         let lamp = await SafespotterManager.find({id: lamp_id});
-        /*controllo che il lampione sia presente nel database e nel caso lo aggiungo*/
 
-        if (lamp.length !== 0 && critical_issues >= 0 && critical_issues <= 5) {
-            tmp_critical = lamp;
-            tmp_critical[0].critical_issues !== critical_issues ? id = lamp_id : id = -1;
-            //se l'allerta è massima viene usato un flag
-            critical_issues === 5 ? alert = 1 : alert = 0;
+        await SafespotterManager.updateOne({id: lamp_id},
+            {
+                alert_id: alert_id,
+                date: new Date(),
+                checked: false,
+            });
 
-            await SafespotterManager.updateOne({id: lamp_id},
-                {
-                    critical_issues: critical_issues,
-                    condition_convert: convertCondition(critical_issues),
-                    alert_type: alert_type,
-                    date: new Date(),
-                    checked: false,
-                })
-        } else {
 
-        }
+        let notification = new Notification;
+        notification.lamp_id = lamp_id;
+        notification.street = lamp[0].street;
+        notification.checked = false;
+        await notification.save();
 
-        if ((await SafespotterManager.find({id: lamp_id})).length !== 0 && critical_issues >= 3 && critical_issues <= 5) {
-            let notification = new Notification;
-            notification.id = lamp_id;
-            notification.critical_issues = critical_issues;
-            notification.street = lamp[0].street;
-            notification.checked = false;
-            await notification.save();
-        }
 
         //dati su mongo
         routes.dataUpdate(id, alert); //richiamo l'emissione
@@ -145,8 +130,8 @@ async function saveDataFromStreetLamp(req, res) {
     try {
         //salvo su variabile il contenuto del body
         const data = req.body;
-        let path = "";
         let doc = new LampStatus;
+        let path = "";
 
         // controllo che siano stati passati dei dati
         if (typeof data === "undefined" || _.isEmpty(data)) {
@@ -155,21 +140,15 @@ async function saveDataFromStreetLamp(req, res) {
             })
         }
 
-        //controllo che il valore di status sia sul range 0-5
-        if (data.status < 0 || data.status > 5) {
-            return res.status(HttpStatus.BAD_REQUEST).send({
-                error: "valore di status errato"
-            })
-        }
 
         doc = initializeLampStatus(doc, data);
-        await createNotification(data.id, data.status, data.alert_type);
+        await createNotification(data.lamp_id, data.alert_id);
 
         //controllo se i dati ricevuti hanno l'attributo video ed eventualmente lo salvo
         if (_.has(data, "videoURL")) {
 
             //creo il path di salvataggio
-            path = pathCreator(data.id.toString(), customDayDate(Date.now()), customTimeDate(Date.now()));
+            path = pathCreator(data.lamp_id.toString(), customDayDate(Date.now()), customTimeDate(Date.now()));
 
             //eseguo il download del video a partire dall'url
             download(data["videoURL"], path, () => {

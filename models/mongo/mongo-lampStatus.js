@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
 
 module.exports = mongoose.model('LampStatus', new mongoose.Schema({
-    id: Number,
-    status: Number,
-    alert_type: String,
+    lamp_id: Number,
+    alert_id: Number,
     date: { type: Date, default: Date.now },
     videoURL: String
 },{

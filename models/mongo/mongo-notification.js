@@ -2,12 +2,11 @@ const mongoose = require('mongoose');
 
 
 module.exports = mongoose.model('Notification', new mongoose.Schema({
-    id: Number,
+    lamp_id: Number,
     street: String,
-    critical_issues: Number,
+    alert_id: Number,
     date: { type: Date, default: Date.now },
-    checked: Boolean,
-    condition_convert: String
+    checked: Boolean
 },{
     versionKey: false
 }));

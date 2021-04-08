@@ -82,8 +82,7 @@ function customDayDate(date) {
 
 /**funzione che crea le notifiche e aggiorna il lampione*/
 async function createNotification(lamp_id, alert_id) {
-    let alert;
-    let id;
+
     try {
         let lamp = await SafespotterManager.find({id: lamp_id});
 
@@ -97,13 +96,14 @@ async function createNotification(lamp_id, alert_id) {
 
         let notification = new Notification;
         notification.lamp_id = lamp_id;
+        notification.alert_id = alert_id;
         notification.street = lamp[0].street;
         notification.checked = false;
         await notification.save();
 
 
         //dati su mongo
-        routes.dataUpdate(id, alert); //richiamo l'emissione
+        routes.dataUpdate(lamp_id); //richiamo l'emissione
 
     } catch (err) {
         console.log(err);
@@ -125,7 +125,7 @@ async function returnList(req, res) {
 }
 
 /** API che riceve e salva le comunicazioni dai lampioni */
-async function saveDataFromStreetLamp(req, res) {
+async function updateLamppostStatus(req, res) {
 
     try {
         //salvo su variabile il contenuto del body
@@ -180,10 +180,10 @@ async function getStreetLampStatus(req, res) {
 
     try {
         let data;
-        let id = req.params.id;
+        let lamp_id = req.params.lamp_id;
 
         data = await LampStatus.find({
-            'id': id
+            'lamp_id': lamp_id
         }).sort({"date": "desc"});
 
         return res.status(HttpStatus.OK).send({
@@ -315,7 +315,7 @@ async function getLamppostConfiguration(req, res) {
 
 module.exports = {
     returnList,
-    saveDataFromStreetLamp,
+    updateLamppostStatus,
     getStreetLampStatus,
     checkNotification,
     updateLamppostConfiguration,

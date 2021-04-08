@@ -54,8 +54,8 @@ module.exports = function (app, passport, config, io) {
 
     /****************** SAFESPOTTER MANAGER ********************/
     app.get(`${safePath}/getData`, reqAuth, AccMan.roleAuth(all), SafMan.returnList);
-    app.post(`${safePath}/updateLamppostStatus`, SafMan.saveDataFromStreetLamp);
-    app.get(`${safePath}/getStreetLampStatus/:id`, reqAuth, AccMan.roleAuth(all), SafMan.getStreetLampStatus);
+    app.post(`${safePath}/updateLamppostStatus`, SafMan.updateLamppostStatus);
+    app.get(`${safePath}/getStreetLampStatus/:lamp_id`, reqAuth, AccMan.roleAuth(all), SafMan.getStreetLampStatus);
     app.post(`${safePath}/checkNotification`, reqAuth, AccMan.roleAuth(all), SafMan.checkNotification);
     app.put(`${safePath}/updateLamppostConfiguration/:id`, reqAuth, AccMan.roleAuth(all), SafMan.updateLamppostConfiguration);
     app.get(`${safePath}/getLamppostConfiguration/:id`, reqAuth, AccMan.roleAuth(all), SafMan.getLamppostConfiguration);
@@ -86,6 +86,7 @@ module.exports = function (app, passport, config, io) {
         dataUpdate();
     });
 
+    /** need to be fixed*/
     app.post('/SafeSpotter/create', function (req, res) {
         let tmp_critical;
         let alert;
@@ -130,7 +131,7 @@ module.exports = function (app, passport, config, io) {
     });
 
 
-    async function dataUpdate(num, alert) {
+    async function dataUpdate(num, alert = 0) {
         console.log('Socket Emmit');
         const safespotter = await SafeSpotter.find().sort({date: -1});
         const notification = await Notification.find({checked: false});

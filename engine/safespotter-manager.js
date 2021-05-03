@@ -84,27 +84,38 @@ function customDayDate(date) {
 async function createNotification(lamp_id, alert_id) {
 
     try {
+        let anomaly_level = 0;
         let lamp = await SafespotterManager.find({id: lamp_id});
 
-        await SafespotterManager.updateOne({id: lamp_id},
-            {
-                alert_id: alert_id,
-                date: new Date(),
-                checked: false,
-            });
+        _.find(lamp[0].configuration, function (el) {
+            if(el.alert_id == alert_id){
+                anomaly_level = el.configuration_type;
+            }
+        });
 
+        //se l'anomalia che arriva è minimo di livello 2 e maggiore uguale a quella già esistente
+        if (anomaly_level >= lamp[0].anomaly_level || lamp[0].anomaly_level === undefined) {
 
-        let notification = new Notification;
-        notification.lamp_id = lamp_id;
-        notification.alert_id = alert_id;
-        notification.street = lamp[0].street;
-        notification.checked = false;
-        await notification.save();
+            await SafespotterManager.updateOne({id: lamp_id},
+                {
+                    alert_id: alert_id,
+                    anomaly_level: anomaly_level,
+                    date: new Date(),
+                    checked: false,
+                });
 
+            if (anomaly_level >= 2) {
+                let notification = new Notification;
+                notification.lamp_id = lamp_id;
+                notification.alert_id = alert_id;
+                notification.street = lamp[0].street;
+                notification.checked = false;
+                await notification.save();
+            }
 
-        //dati su mongo
-        routes.dataUpdate(lamp_id); //richiamo l'emissione
-
+            //dati su mongo
+            routes.dataUpdate(lamp_id); //richiamo l'emissione
+        }
     } catch (err) {
         console.log(err);
     }
@@ -142,6 +153,8 @@ async function updateLamppostStatus(req, res) {
 
 
         doc = initializeLampStatus(doc, data);
+
+        //creo la notifica e aggiorno il lampione
         await createNotification(data.lamp_id, data.alert_id);
 
         //controllo se i dati ricevuti hanno l'attributo video ed eventualmente lo salvo
@@ -259,6 +272,7 @@ async function updateLamppostConfiguration(req, res) {
             let index = _.indexOf(doc.configuration, doc.configuration[_.findKey(doc.configuration, {'alert_id': alert_id})]);
             if (index >= 0) {
                 doc.configuration[index].configuration_type = configuration_type;
+                doc.anomaly_level = configuration_type;
                 doc.markModified('configuration');
                 doc.save();
             } else {
@@ -266,7 +280,7 @@ async function updateLamppostConfiguration(req, res) {
                 doc.save();
             }
         }
-
+        routes.dataUpdate(lamp_id);
         return res.status(HttpStatus.OK).send({
             lamp_id: lamp_id,
             alert_id: alert_id,

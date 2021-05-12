@@ -87,7 +87,8 @@ module.exports = function (app, passport, config, io) {
     });
 
     /** need to be fixed*/
-    app.post('/SafeSpotter/create', function (req, res) {
+
+    /*app.post('/SafeSpotter/create', function (req, res) {
         let tmp_critical;
         let alert;
         let id;
@@ -128,7 +129,7 @@ module.exports = function (app, passport, config, io) {
                 //res.status(400).send(err);
             }
         })();
-    });
+    });*/
 
 
     async function dataUpdate(num, alert = 0) {

@@ -86,12 +86,32 @@ async function createNotification(lamp_id, alert_id) {
     try {
         let anomaly_level = 0;
         let lamp = await SafespotterManager.find({id: lamp_id});
+        let timer;
 
         _.find(lamp[0].configuration, function (el) {
-            if(el.alert_id == alert_id){
+            if (el.alert_id == alert_id) {
                 anomaly_level = el.configuration_type;
             }
         });
+
+        //timer provvisori
+        switch (anomaly_level) {
+            case '0':
+                timer = 0;
+                break;
+            case '1':
+                timer = 15000;
+                break;
+            case '2':
+                timer = 30000;
+                break;
+            case '3':
+                timer = 60000;
+                break;
+            case '4':
+                timer = 90000;
+                break;
+        }
 
         //se l'anomalia che arriva è minimo di livello 2 e maggiore uguale a quella già esistente
         if (anomaly_level >= lamp[0].anomaly_level || lamp[0].anomaly_level === undefined) {
@@ -115,11 +135,24 @@ async function createNotification(lamp_id, alert_id) {
 
             //dati su mongo
             routes.dataUpdate(lamp_id); //richiamo l'emissione
+
+
+            setTimeout(async () => {
+                await SafespotterManager.updateOne({id: lamp_id},
+                    {
+                        alert_id: 0,
+                        anomaly_level: 0,
+                        date: new Date(),
+                        checked: false,
+                    });
+                routes.dataUpdate(lamp_id);
+            }, timer);
         }
     } catch (err) {
         console.log(err);
     }
 }
+
 
 /**API che restituisce la lista dei lampioni con relativa criticità*/
 async function returnList(req, res) {
@@ -154,7 +187,7 @@ async function updateLamppostStatus(req, res) {
 
         doc = initializeLampStatus(doc, data);
 
-        //creo la notifica e aggiorno il lampione
+        //creo la notifica se l'anomalia che arriva è maggiore di quella già esistente e aggiorno il lampione
         await createNotification(data.lamp_id, data.alert_id);
 
         //controllo se i dati ricevuti hanno l'attributo video ed eventualmente lo salvo
@@ -272,7 +305,7 @@ async function updateLamppostConfiguration(req, res) {
             let index = _.indexOf(doc.configuration, doc.configuration[_.findKey(doc.configuration, {'alert_id': alert_id})]);
             if (index >= 0) {
                 doc.configuration[index].configuration_type = configuration_type;
-                doc.anomaly_level = configuration_type;
+                //doc.anomaly_level = configuration_type;
                 doc.markModified('configuration');
                 doc.save();
             } else {

@@ -94,24 +94,32 @@ async function createNotification(lamp_id, alert_id) {
             }
         });
 
-        //timer provvisori
-        switch (anomaly_level) {
-            case '0':
-                timer = 0;
-                break;
-            case '1':
-                timer = 900000;
-                break;
-            case '2':
-                timer = 900000;
-                break;
-            case '3':
-                timer = 900000;
-                break;
-            case '4':
-                timer = 900000;
-                break;
-        }
+        // //timer provvisori
+        // switch (anomaly_level) {
+        //     case '0':
+        //         timer = 0;
+        //         break;
+        //     case '1':
+        //         timer = 900000;
+        //         break;
+        //     case '2':
+        //         timer = 900000;
+        //         break;
+        //     case '3':
+        //         timer = 900000;
+        //         break;
+        //     case '4':
+        //         timer = 900000;
+        //         break;
+        // }
+
+        _.find(lamp[0].timers, function (el) {
+            if (el.alert_level == anomaly_level) {
+                timer = el.timer;
+            }
+        });
+
+        console.log("timer :", timer);
 
         //se l'anomalia che arriva è minimo di livello 1 e maggiore uguale a quella già esistente
         if (anomaly_level >= lamp[0].anomaly_level || lamp[0].anomaly_level === undefined) {

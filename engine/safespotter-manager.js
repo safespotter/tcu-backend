@@ -100,20 +100,20 @@ async function createNotification(lamp_id, alert_id) {
                 timer = 0;
                 break;
             case '1':
-                timer = 15000;
+                timer = 900000;
                 break;
             case '2':
-                timer = 30000;
+                timer = 900000;
                 break;
             case '3':
-                timer = 60000;
+                timer = 900000;
                 break;
             case '4':
-                timer = 90000;
+                timer = 900000;
                 break;
         }
 
-        //se l'anomalia che arriva è minimo di livello 2 e maggiore uguale a quella già esistente
+        //se l'anomalia che arriva è minimo di livello 1 e maggiore uguale a quella già esistente
         if (anomaly_level >= lamp[0].anomaly_level || lamp[0].anomaly_level === undefined) {
 
             await SafespotterManager.updateOne({id: lamp_id},
@@ -124,7 +124,7 @@ async function createNotification(lamp_id, alert_id) {
                     checked: false,
                 });
 
-            if (anomaly_level >= 2) {
+            if (anomaly_level >= 1) {
                 let notification = new Notification;
                 notification.lamp_id = lamp_id;
                 notification.alert_id = alert_id;
@@ -138,6 +138,7 @@ async function createNotification(lamp_id, alert_id) {
 
 
             setTimeout(async () => {
+                // fare check della notifica
                 await SafespotterManager.updateOne({id: lamp_id},
                     {
                         alert_id: 0,

@@ -298,7 +298,7 @@ async function updateLamppostConfiguration(req, res) {
 
         if (configuration_type < 0 || configuration_type > 4) {
             return res.status(HttpStatus.BAD_REQUEST).send({
-                error: "valore di notifica errato"
+                error: "valore di allerta errato"
             })
         }
 
@@ -369,11 +369,59 @@ async function getLamppostConfiguration(req, res) {
 
 }
 
+async function updateLamppostTimer(req, res) {
+    try {
+        const lamp_id = req.params.id;
+        const alert_level = req.body.alert_level;
+        const timer = req.body.timer; //value in ms
+
+        let doc = await SafespotterManager.findOne({id: lamp_id});
+
+        if (doc == null) {
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "Lampione non presente nella lista"
+            })
+        }
+
+        if (alert_level < 0 || alert_level > 4) {
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "valore di allerta errato"
+            })
+        }
+
+        if (timer < 0){
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "valore del timer errato"
+            })
+        }
+
+
+        let index = _.indexOf(doc.timers, doc.timers[_.findKey(doc.timers, {'alert_level': alert_level})]);
+
+        doc.timers[index].timer = timer;
+        doc.markModified('timers');
+        doc.save();
+
+        return res.status(HttpStatus.OK).send({
+            lamp_id: lamp_id,
+            alert_level: alert_level,
+            timer: timer
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "something went wrong updating lamppost timers"
+        });
+    }
+}
+
 module.exports = {
     returnList,
     updateLamppostStatus,
     getStreetLampStatus,
     checkNotification,
     updateLamppostConfiguration,
-    getLamppostConfiguration
+    getLamppostConfiguration,
+    updateLamppostTimer
 };

@@ -373,7 +373,7 @@ async function updateLamppostTimer(req, res) {
     try {
         const lamp_id = req.params.id;
         const alert_level = req.body.alert_level;
-        const timer = req.body.timer; //value in ms
+        const timer = parseInt(req.body.timer, 10); //value in ms
 
         let doc = await SafespotterManager.findOne({id: lamp_id});
 
@@ -389,7 +389,7 @@ async function updateLamppostTimer(req, res) {
             })
         }
 
-        if (timer < 0){
+        if (timer < 0) {
             return res.status(HttpStatus.BAD_REQUEST).send({
                 error: "valore del timer errato"
             })

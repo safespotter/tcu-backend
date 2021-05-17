@@ -416,6 +416,37 @@ async function updateLamppostTimer(req, res) {
     }
 }
 
+async function getLamppostTimers(req, res) {
+
+    try {
+
+        const lamp_id = req.params.id;
+        let timers;
+        let doc = await SafespotterManager.findOne({id: lamp_id});
+
+        if (doc == null) {
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "Lampione non presente nella lista"
+            })
+        }
+
+        timers = doc.timers;
+
+        return res.status(HttpStatus.OK).send({
+            lamp_id: lamp_id,
+            timers: timers
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "something went wrong updating lamppost configuration"
+        });
+    }
+
+
+}
+
 module.exports = {
     returnList,
     updateLamppostStatus,
@@ -423,5 +454,6 @@ module.exports = {
     checkNotification,
     updateLamppostConfiguration,
     getLamppostConfiguration,
-    updateLamppostTimer
+    updateLamppostTimer,
+    getLamppostTimers
 };

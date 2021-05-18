@@ -86,32 +86,13 @@ async function createNotification(lamp_id, alert_id) {
     try {
         let anomaly_level = 0;
         let lamp = await SafespotterManager.find({id: lamp_id});
-        let timer;
+        let timer = 0;
 
         _.find(lamp[0].configuration, function (el) {
             if (el.alert_id == alert_id) {
                 anomaly_level = el.configuration_type;
             }
         });
-
-        // //timer provvisori
-        // switch (anomaly_level) {
-        //     case '0':
-        //         timer = 0;
-        //         break;
-        //     case '1':
-        //         timer = 900000;
-        //         break;
-        //     case '2':
-        //         timer = 900000;
-        //         break;
-        //     case '3':
-        //         timer = 900000;
-        //         break;
-        //     case '4':
-        //         timer = 900000;
-        //         break;
-        // }
 
         _.find(lamp[0].timers, function (el) {
             if (el.alert_level == anomaly_level) {
@@ -139,14 +120,19 @@ async function createNotification(lamp_id, alert_id) {
                 notification.street = lamp[0].street;
                 notification.checked = false;
                 await notification.save();
+
+                //check della notifica
+                setTimeout(async () => {
+                    notification.checked = true;
+                    await notification.save();
+                }, timer);
             }
 
             //dati su mongo
             routes.dataUpdate(lamp_id); //richiamo l'emissione
 
-
+            //check del lampione
             setTimeout(async () => {
-                // fare check della notifica
                 await SafespotterManager.updateOne({id: lamp_id},
                     {
                         alert_id: 0,
@@ -256,6 +242,7 @@ async function getStreetLampStatus(req, res) {
 /**API che setta il valore checked della notifica*/
 async function checkNotification(req, res) {
     try {
+
         const lamp_id = req.body.id;
         const date = req.body.date;
 

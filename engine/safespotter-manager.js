@@ -8,6 +8,7 @@ const fs = require('fs');
 const request = require('request');
 const SocketEmit = require('../engine/SocketEmit');
 const routes = require('../config/routes');
+const webpush = require('web-push');
 
 /**Metodo che avvia il download del file video*/
 const download = (url, path, callback) => {
@@ -126,6 +127,10 @@ async function createNotification(lamp_id, alert_id) {
                     notification.checked = true;
                     await notification.save();
                 }, timer);
+            }
+
+            if (anomaly_level >= 2) {
+                // notifiche push
             }
 
             //dati su mongo
@@ -331,6 +336,7 @@ async function getLamppostConfiguration(req, res) {
 
         const lamp_id = req.params.id;
         let configuration;
+        let timers;
         let doc = await SafespotterManager.findOne({id: lamp_id});
 
         if (doc == null) {
@@ -340,10 +346,12 @@ async function getLamppostConfiguration(req, res) {
         }
 
         configuration = doc.configuration;
+        timers = doc.timers;
 
         return res.status(HttpStatus.OK).send({
             lamp_id: lamp_id,
-            configuration: configuration
+            configuration: configuration,
+            timers: timers
         });
 
     } catch (error) {
@@ -358,9 +366,11 @@ async function getLamppostConfiguration(req, res) {
 
 async function updateLamppostTimer(req, res) {
     try {
+
         const lamp_id = req.params.id;
-        const alert_level = req.body.alert_level;
+        const alert_level = req.body.alert_level.toString();
         const timer = parseInt(req.body.timer, 10); //value in ms
+        //const timer = req.body.timer;
 
         let doc = await SafespotterManager.findOne({id: lamp_id});
 

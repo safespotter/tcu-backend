@@ -68,13 +68,13 @@ module.exports = function (app, passport, config, io) {
 
     /****************** SOCKET IO ******************/
 
-    // const socket = require("socket.io");
-    //
-    // const server = app.listen(3000, () => {
-    //     console.log('started in 3000')
-    // });
-    //
-    // const io = socket(server);
+        // const socket = require("socket.io");
+        //
+        // const server = app.listen(3000, () => {
+        //     console.log('started in 3000')
+        // });
+        //
+        // const io = socket(server);
 
     var SafeSpotter = require('../models/mongo/mongo-safeSpotter');
     var Notification = require('../models/mongo/mongo-notification');
@@ -148,8 +148,8 @@ module.exports = function (app, passport, config, io) {
 
         // mark them as "checked" after they get sent once
         for (let el of safespotter) {
-            el.checked = true
-            el.save() // the result is not used so don't await it
+            el.checked = true;
+            el.save(); // the result is not used so don't await it
         }
     }
 
@@ -228,5 +228,8 @@ module.exports = function (app, passport, config, io) {
     app.use(ErrorHandler.fun404);
 
     exports.dataUpdate = dataUpdate;
+    exports.pushNotification = pushNotification;
 };
+
+
 

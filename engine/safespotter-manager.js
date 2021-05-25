@@ -88,6 +88,7 @@ async function createNotification(lamp_id, alert_id) {
         let anomaly_level = 0;
         let lamp = await SafespotterManager.find({id: lamp_id});
         let timer = 0;
+        let timestamp = new Date();
 
         _.find(lamp[0].configuration, function (el) {
             if (el.alert_id == alert_id) {
@@ -101,8 +102,6 @@ async function createNotification(lamp_id, alert_id) {
             }
         });
 
-        console.log("timer :", timer);
-
         //se l'anomalia che arriva è minimo di livello 1 e maggiore uguale a quella già esistente
         if (anomaly_level >= lamp[0].anomaly_level || lamp[0].anomaly_level === undefined) {
 
@@ -110,7 +109,7 @@ async function createNotification(lamp_id, alert_id) {
                 {
                     alert_id: alert_id,
                     anomaly_level: anomaly_level,
-                    date: new Date(),
+                    date: timestamp,
                     checked: false,
                 });
 
@@ -138,7 +137,8 @@ async function createNotification(lamp_id, alert_id) {
 
             //check del lampione
             setTimeout(async () => {
-                await SafespotterManager.updateOne({id: lamp_id},
+                //aggiungere "where" sul timestamp
+                await SafespotterManager.updateOne({id: lamp_id, date: timestamp},
                     {
                         alert_id: 0,
                         anomaly_level: 0,
@@ -302,7 +302,6 @@ async function updateLamppostConfiguration(req, res) {
             //devo controllare se l'alert id è presente dentro configuration
             //se presente allora devo aggiornare il configuration type
             //altrimenti devo pushare i due valori (alert_id, configuration_type)
-            console.log("doc config ", doc.configuration[_.findKey(doc.configuration, {'alert_id': alert_id})]);
             let index = _.indexOf(doc.configuration, doc.configuration[_.findKey(doc.configuration, {'alert_id': alert_id})]);
             if (index >= 0) {
                 doc.configuration[index].configuration_type = configuration_type;

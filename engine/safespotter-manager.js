@@ -18,20 +18,38 @@ const download = (url, path, callback) => {
 };
 
 /**Funzione che converte in stringa le condizioni di criticità*/
-function convertCondition(input) {
-    switch (parseInt(input)) {
-        case 0:
-            return 'NESSUNA';
+function convertAlertType(input) {
+    switch (input) {
         case 1:
-            return 'BASSA';
+            return 'Cambio di corsia illegale';
         case 2:
-            return 'DISCRETA';
+            return 'Traffico congestionato';
         case 3:
-            return 'MODERATA';
+            return 'Oggetto o persona in strada';
         case 4:
-            return 'ALTA';
+            return 'Invasione di area pedonale';
         case 5:
-            return 'MASSIMA';
+            return 'Possible incidente';
+        case 6:
+            return 'Veicolo in sosta vietata';
+        default:
+            return 'Errore anomalia';
+    }
+}
+
+/**Funzione che converte in stringa le condizioni di criticità*/
+function convertAlertLevel(input) {
+    switch (input) {
+        case '0':
+            return 'NESSUNA';
+        case '1':
+            return 'VERDE';
+        case '2':
+            return 'GIALLA';
+        case '3':
+            return 'ARANCIONE';
+        case '4':
+            return 'ROSSA';
     }
 }
 
@@ -130,6 +148,7 @@ async function createNotification(lamp_id, alert_id) {
 
             if (anomaly_level >= 2) {
                 // notifiche push
+                routes.pushNotification(convertAlertLevel(anomaly_level), convertAlertType(alert_id), timestamp);
             }
 
             //dati su mongo

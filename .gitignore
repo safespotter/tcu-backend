@@ -46,5 +46,7 @@ testem.log
 Thumbs.db
 
 # api keys
+/config/config.json
+./config/config.json
 **/weather/services/auth.json
 **/traffic/bingmaps/auth.json

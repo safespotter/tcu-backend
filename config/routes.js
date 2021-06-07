@@ -16,7 +16,7 @@ module.exports = function (app, passport, config, io) {
 
     const PUBLIC_VAPID = config["public_vapid"];
     const PRIVATE_VAPID = config["private_vapid"];
-    const site_URL = (config['site_URL'].includes('localhost') ? 'http://localhost:4200' : '') + '/#/preferences/api-keys?err=true';
+    //const site_URL = (config['site_URL'].includes('localhost') ? 'http://localhost:4200' : '') + '/#/preferences/api-keys?err=true';
 
     /* PATHs */
     const amPath = '/users';

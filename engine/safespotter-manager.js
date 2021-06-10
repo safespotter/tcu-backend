@@ -462,6 +462,92 @@ async function getLamppostTimers(req, res) {
 
 }
 
+async function addLamppost(req, res) {
+
+    try {
+
+        //aggiungere id lampione
+
+        const street = req.body.street;
+
+        let doc = new SafespotterManager;
+
+        doc = defaultConfiguration(doc);
+
+        //aggiungere salvataggio
+
+        return res.status(HttpStatus.OK).send(doc);
+
+    } catch (error) {
+        console.log(error);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "something went wrong adding the new lamppost"
+        });
+    }
+
+}
+
+function defaultConfiguration(lamp) {
+
+
+
+    lamp.date = new Date();
+    lamp.configuration =
+        [
+            {
+                "alert_id": "1",
+                "configuration_type": "0"
+            },
+            {
+                "alert_id": "2",
+                "configuration_type": "0"
+            },
+            {
+                "alert_id": "3",
+                "configuration_type": "0"
+            },
+            {
+                "alert_id": "4",
+                "configuration_type": "0"
+            },
+            {
+                "alert_id": "5",
+                "configuration_type": "0"
+            },
+            {
+                "alert_id": "6",
+                "configuration_type": "0"
+            }
+        ];
+    lamp.timers = [
+        {
+            "alert_level" : "0",
+            "timer" : 0
+        },
+        {
+            "alert_level" : "1",
+            "timer" : 900000
+        },
+        {
+            "alert_level" : "2",
+            "timer" : 900000
+        },
+        {
+            "alert_level" : "3",
+            "timer" : 900000
+        },
+        {
+            "alert_level" : "4",
+            "timer" : 900000
+        }
+    ];
+    lamp.alert_id = 0;
+    lamp.anomaly_level = 0;
+    lamp.condition = "Connesso";
+
+    return lamp;
+}
+
 module.exports = {
     returnList,
     updateLamppostStatus,
@@ -470,5 +556,6 @@ module.exports = {
     updateLamppostConfiguration,
     getLamppostConfiguration,
     updateLamppostTimer,
-    getLamppostTimers
+    getLamppostTimers,
+    addLamppost
 };

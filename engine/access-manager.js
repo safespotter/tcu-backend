@@ -52,43 +52,47 @@ const createUser = async (req, res) => {
                     city: user.city,
                     zip: user.zip,
                     password: password,
-                    user_type: getUserTypeByString(user.user_type),
-                    is_verified: false,
+                    user_type: 0,
+                    is_verified: true,
                     token: token,
                     checksum: '0'
                 })
                     .then(newUser => {
 
                         const user_id = newUser.get('id');
-                        DashboardManager.internalCreateDefaultDashboards(user_id)
-                            .then(() => {
-                                //if (!is_verified)
-                                try {
-                                    // TODO FIX: ripristinare sendmail
-                                    //sendMail(res, user.email, token);
-                                }
-                                catch (err) {
-                                    console.error("Cannot send the email. Probably, the SMTP server is not active in this machine.");
-                                    //console.log(err);
-                                }
-
-                                return res.status(HttpStatus.CREATED).send({
-                                    created: true,
-                                    first_name: newUser.get('first_name'),
-                                    last_name: newUser.get('last_name')
-                                });
-                            })
-                            .catch(err => {
-                                User.destroy({where: {id: user_id}}); // Deletes the new db row
-
-                                console.log('ACCESS_MANAGER ERROR. Details below:');
-                                console.error(err);
-                                return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
-                                    created: false,
-                                    message: 'Cannot create the new user',
-                                    username: user.username
-                                });
-                            });
+                    //     DashboardManager.internalCreateDefaultDashboards(user_id)
+                    //         .then(() => {
+                    //             //if (!is_verified)
+                    //             try {
+                    //                 // TODO FIX: ripristinare sendmail
+                    //                 //sendMail(res, user.email, token);
+                    //             }
+                    //             catch (err) {
+                    //                 console.error("Cannot send the email. Probably, the SMTP server is not active in this machine.");
+                    //                 //console.log(err);
+                    //             }
+                    //
+                    //             return res.status(HttpStatus.CREATED).send({
+                    //                 created: true,
+                    //                 first_name: newUser.get('first_name'),
+                    //                 last_name: newUser.get('last_name')
+                    //             });
+                    //         })
+                    //         .catch(err => {
+                    //             User.destroy({where: {id: user_id}}); // Deletes the new db row
+                    //
+                    //             console.log('ACCESS_MANAGER ERROR. Details below:');
+                    //             console.error(err);
+                    //             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+                    //                 created: false,
+                    //                 message: 'Cannot create the new user',
+                    //                 username: user.username
+                    //             });
+                    //         });
+                        return res.status(HttpStatus.CREATED).send({
+                            created: true,
+                            username: newUser.get('username')
+                        });
                     })
                     .catch(err => {
                         console.log('ACCESS_MANAGER ERROR. Details below:');

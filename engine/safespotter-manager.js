@@ -466,17 +466,30 @@ async function addLamppost(req, res) {
 
     try {
 
-        //aggiungere id lampione
+        let id = 1;
+        const safespotters = await SafespotterManager.find({});
+
+        if (safespotters.length > 0)
+        //get the max id value and then add 1
+            id = _.maxBy(safespotters, 'id').id + 1;
+
 
         const street = req.body.street;
+        const position = req.body.position;
 
         let doc = new SafespotterManager;
 
+        doc.id = id;
+        doc.street = street;
+        doc.position = position;
+
         doc = defaultConfiguration(doc);
 
-        //aggiungere salvataggio
+        doc.save();
 
-        return res.status(HttpStatus.OK).send(doc);
+        return res.status(HttpStatus.OK).send({
+            message: 'lamppost added successfully'
+        });
 
     } catch (error) {
         console.log(error);
@@ -488,7 +501,6 @@ async function addLamppost(req, res) {
 }
 
 function defaultConfiguration(lamp) {
-
 
 
     lamp.date = new Date();
@@ -521,24 +533,24 @@ function defaultConfiguration(lamp) {
         ];
     lamp.timers = [
         {
-            "alert_level" : "0",
-            "timer" : 0
+            "alert_level": "0",
+            "timer": 0
         },
         {
-            "alert_level" : "1",
-            "timer" : 900000
+            "alert_level": "1",
+            "timer": 900000
         },
         {
-            "alert_level" : "2",
-            "timer" : 900000
+            "alert_level": "2",
+            "timer": 900000
         },
         {
-            "alert_level" : "3",
-            "timer" : 900000
+            "alert_level": "3",
+            "timer": 900000
         },
         {
-            "alert_level" : "4",
-            "timer" : 900000
+            "alert_level": "4",
+            "timer": 900000
         }
     ];
     lamp.alert_id = 0;

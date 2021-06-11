@@ -627,38 +627,67 @@ async function addLamppost(req, res) {
  *  id: number
  *
  * */
-async function deleteLamppost (req, res){
-   try{
+async function deleteLamppost(req, res) {
+    try {
 
-       const lamp_id = req.params.id;
+        const lamp_id = req.params.id;
 
-       await SafespotterManager.deleteOne({id: lamp_id}).then(
-           result => {
-               res.status(HttpStatus.OK).send({
-                   message: "lamppost deleted successfully"
-               })
-           }
-       ).catch(err => {
-           console.log(err);
-           return res.status(HttpStatus.BAD_REQUEST).send({
-               error: "lamppost id not detected"
-           });
-       });
+        await SafespotterManager.deleteOne({id: lamp_id}).then(
+            result => {
+                res.status(HttpStatus.OK).send({
+                    message: "lamppost deleted successfully"
+                })
+            }
+        ).catch(err => {
+            console.log(err);
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "lamppost id not detected"
+            });
+        });
 
-   } catch (error) {
-       console.log(error);
-       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
-           error: "something went wrong removing the lamppost"
-       });
-   }
+    } catch (error) {
+        console.log(error);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "something went wrong removing the lamppost"
+        });
+    }
 }
 
-async function updateLamppost (req, res){
+/** API che aggiunge un lampione all'infrastruttura
+ *
+ * Body:
+ *  lamp_id: number
+ *  street: string
+ *  position: string
+ *
+ * */
+async function updateLamppost(req, res) {
 
-    try{
+    try {
         const lamp_id = req.body.lamp_id;
         const street = req.body.street;
         const position = req.body.position;
+
+        await SafespotterManager.updateOne({id: lamp_id}, {
+            street: street,
+            position: position
+        }).then(
+            result => {
+                if (result.nModified)
+                    res.status(HttpStatus.OK).send({
+                        message: "lamppost updated successfully"
+                    });
+                else
+                    return res.status(HttpStatus.BAD_REQUEST).send({
+                        error: "lamppost id not detected"
+                    });
+            }
+        ).catch(err => {
+            console.log(err);
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "lamppost id not detected"
+            });
+        });
 
     } catch (error) {
         console.log(error);
@@ -679,5 +708,6 @@ module.exports = {
     updateLamppostTimer,
     getLamppostTimers,
     addLamppost,
-    deleteLamppost
+    deleteLamppost,
+    updateLamppost
 };

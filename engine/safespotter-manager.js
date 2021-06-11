@@ -576,7 +576,6 @@ async function getLamppostTimers(req, res) {
 
 }
 
-
 /** API che aggiunge un lampione all'infrastruttura
  *
  * Body:
@@ -622,6 +621,38 @@ async function addLamppost(req, res) {
 
 }
 
+/** API che aggiunge un lampione all'infrastruttura
+ *
+ * Parametri:
+ *  id: number
+ *
+ * */
+async function deleteLamppost (req, res){
+   try{
+
+       const lamp_id = req.params.id;
+
+       await SafespotterManager.deleteOne({id: lamp_id}).then(
+           result => {
+               res.status(HttpStatus.OK).send({
+                   message: "lamppost deleted successfully"
+               })
+           }
+       ).catch(err => {
+           console.log(err);
+           return res.status(HttpStatus.BAD_REQUEST).send({
+               error: "lamppost id not detected"
+           });
+       });
+
+   } catch (error) {
+       console.log(error);
+       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+           error: "something went wrong removing the lamppost"
+       });
+   }
+}
+
 module.exports = {
     returnList,
     updateLamppostStatus,
@@ -631,5 +662,6 @@ module.exports = {
     getLamppostConfiguration,
     updateLamppostTimer,
     getLamppostTimers,
-    addLamppost
+    addLamppost,
+    deleteLamppost
 };

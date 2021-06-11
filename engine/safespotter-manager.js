@@ -653,6 +653,22 @@ async function deleteLamppost (req, res){
    }
 }
 
+async function updateLamppost (req, res){
+
+    try{
+        const lamp_id = req.body.lamp_id;
+        const street = req.body.street;
+        const position = req.body.position;
+
+    } catch (error) {
+        console.log(error);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "something went wrong updating the lamppost"
+        });
+    }
+
+}
+
 module.exports = {
     returnList,
     updateLamppostStatus,

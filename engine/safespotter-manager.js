@@ -99,6 +99,68 @@ function customDayDate(date) {
     return custom_date;
 }
 
+
+/** configurazione di default del lampione */
+function defaultLamppostConfiguration(lamp) {
+
+
+    lamp.date = new Date();
+    lamp.configuration =
+        [
+            {
+                "alert_id": "1",
+                "configuration_type": "0"
+            },
+            {
+                "alert_id": "2",
+                "configuration_type": "0"
+            },
+            {
+                "alert_id": "3",
+                "configuration_type": "0"
+            },
+            {
+                "alert_id": "4",
+                "configuration_type": "0"
+            },
+            {
+                "alert_id": "5",
+                "configuration_type": "0"
+            },
+            {
+                "alert_id": "6",
+                "configuration_type": "0"
+            }
+        ];
+    lamp.timers = [
+        {
+            "alert_level": "0",
+            "timer": 0
+        },
+        {
+            "alert_level": "1",
+            "timer": 900000
+        },
+        {
+            "alert_level": "2",
+            "timer": 900000
+        },
+        {
+            "alert_level": "3",
+            "timer": 900000
+        },
+        {
+            "alert_level": "4",
+            "timer": 900000
+        }
+    ];
+    lamp.alert_id = 0;
+    lamp.anomaly_level = 0;
+    lamp.condition = "Connesso";
+
+    return lamp;
+}
+
 /**funzione che crea le notifiche e aggiorna il lampione*/
 async function createNotification(lamp_id, alert_id) {
 
@@ -187,7 +249,14 @@ async function returnList(req, res) {
     }
 }
 
-/** API che riceve e salva le comunicazioni dai lampioni */
+/** API che riceve e salva le comunicazioni dai lampioni
+ *
+ *  Body:
+ *      lamp_id: number,
+ *      alert_id: number,
+ *      videoURL: string
+ *
+ * */
 async function updateLamppostStatus(req, res) {
 
     try {
@@ -240,7 +309,12 @@ async function updateLamppostStatus(req, res) {
 
 }
 
-/** API che preleva le informazioni salvate dei lampioni in ordine di data*/
+/** API che preleva le informazioni salvate dei lampioni in ordine di data
+ *
+ *  Parametri:
+ *      lamp_id: number
+ *
+ * */
 async function getStreetLampStatus(req, res) {
 
     try {
@@ -263,7 +337,13 @@ async function getStreetLampStatus(req, res) {
     }
 }
 
-/**API che setta il valore checked della notifica*/
+/**API che setta il valore checked della notifica
+ *
+ *  Body:
+ *      id: number
+ *      date: string
+ *
+ * */
 async function checkNotification(req, res) {
     try {
 
@@ -286,6 +366,17 @@ async function checkNotification(req, res) {
     }
 }
 
+
+/** API che aggiorna la configurazione di un lampione
+ *
+ * Parametri:
+ *  lamp_id: number
+ *
+ * Body:
+ *  alert_id: number
+ *  configuration_type: number
+ *
+ * */
 async function updateLamppostConfiguration(req, res) {
 
     // configuration_type = 0 -> nessuna notifica
@@ -348,6 +439,13 @@ async function updateLamppostConfiguration(req, res) {
 
 }
 
+
+/** API che preleva la configurazione di un lampione passato come parametro
+ *
+ *  Parametri:
+ *      lamp_id: number
+ *
+ * */
 async function getLamppostConfiguration(req, res) {
 
     try {
@@ -382,6 +480,16 @@ async function getLamppostConfiguration(req, res) {
 
 }
 
+/** API che aggiorna i timer delle anomalie di un lampione
+ *
+ * Parametri:
+ *  lamp_id: number
+ *
+ * Body:
+ *  alert_level: number
+ *  timer: number
+ *
+ * */
 async function updateLamppostTimer(req, res) {
     try {
 
@@ -431,6 +539,12 @@ async function updateLamppostTimer(req, res) {
     }
 }
 
+/** API che preleva i timer di un lampione passato come parametro
+ *
+ *  Parametri:
+ *      lamp_id: number
+ *
+ * */
 async function getLamppostTimers(req, res) {
 
     try {
@@ -462,6 +576,14 @@ async function getLamppostTimers(req, res) {
 
 }
 
+
+/** API che aggiunge un lampione all'infrastruttura
+ *
+ * Body:
+ *  street: string
+ *  position: string
+ *
+ * */
 async function addLamppost(req, res) {
 
     try {
@@ -483,7 +605,7 @@ async function addLamppost(req, res) {
         doc.street = street;
         doc.position = position;
 
-        doc = defaultConfiguration(doc);
+        doc = defaultLamppostConfiguration(doc);
 
         doc.save();
 
@@ -498,66 +620,6 @@ async function addLamppost(req, res) {
         });
     }
 
-}
-
-function defaultConfiguration(lamp) {
-
-
-    lamp.date = new Date();
-    lamp.configuration =
-        [
-            {
-                "alert_id": "1",
-                "configuration_type": "0"
-            },
-            {
-                "alert_id": "2",
-                "configuration_type": "0"
-            },
-            {
-                "alert_id": "3",
-                "configuration_type": "0"
-            },
-            {
-                "alert_id": "4",
-                "configuration_type": "0"
-            },
-            {
-                "alert_id": "5",
-                "configuration_type": "0"
-            },
-            {
-                "alert_id": "6",
-                "configuration_type": "0"
-            }
-        ];
-    lamp.timers = [
-        {
-            "alert_level": "0",
-            "timer": 0
-        },
-        {
-            "alert_level": "1",
-            "timer": 900000
-        },
-        {
-            "alert_level": "2",
-            "timer": 900000
-        },
-        {
-            "alert_level": "3",
-            "timer": 900000
-        },
-        {
-            "alert_level": "4",
-            "timer": 900000
-        }
-    ];
-    lamp.alert_id = 0;
-    lamp.anomaly_level = 0;
-    lamp.condition = "Connesso";
-
-    return lamp;
 }
 
 module.exports = {

@@ -660,13 +660,14 @@ async function deleteLamppost(req, res) {
  * Body:
  *  lamp_id: number
  *  street: string
- *  lat: string
- *  long: string
+ *  lat: number
+ *  long: number
  *
  * */
 async function updateLamppost(req, res) {
 
     try {
+        // aggiungere controlli agli input
         const lamp_id = req.body.lamp_id;
         const street = req.body.street;
         const latitude = req.body.lat;

@@ -580,7 +580,9 @@ async function getLamppostTimers(req, res) {
  *
  * Body:
  *  street: string
- *  position: string
+ *  lat: number
+ *  long: number
+ *  ip: string
  *
  * */
 async function addLamppost(req, res) {
@@ -598,6 +600,7 @@ async function addLamppost(req, res) {
         const street = req.body.street;
         const latitude = req.body.lat;
         const longitude = req.body.long;
+        const ip = req.body.ip;
 
         let doc = new SafespotterManager;
 
@@ -605,6 +608,7 @@ async function addLamppost(req, res) {
         doc.street = street;
         doc.lat = latitude;
         doc.long = longitude;
+        doc.ip = ip;
 
         doc = defaultLamppostConfiguration(doc);
 
@@ -662,6 +666,7 @@ async function deleteLamppost(req, res) {
  *  street: string
  *  lat: number
  *  long: number
+ *  ip: string
  *
  * */
 async function updateLamppost(req, res) {
@@ -672,6 +677,7 @@ async function updateLamppost(req, res) {
         const street = req.body.street;
         const latitude = req.body.lat;
         const longitude = req.body.long;
+        const ip = req.body.ip
 
         await SafespotterManager.updateOne({id: lamp_id}, {
             street: street,

@@ -8,6 +8,7 @@ module.exports = mongoose.model('SafeSpotter', new mongoose.Schema({
     anomaly_level: Number,
     lat: Number,
     long: Number,
+    ip: String,
     date: { type: Date, default: Date.now },
     checked: { type: Boolean, default: false },
     configuration: [],

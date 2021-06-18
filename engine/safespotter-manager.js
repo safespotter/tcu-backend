@@ -596,7 +596,6 @@ async function addLamppost(req, res) {
         //get the max id value and then add 1
             id = _.maxBy(safespotters, 'id').id + 1;
 
-
         const street = req.body.street;
         const latitude = req.body.lat;
         const longitude = req.body.long;
@@ -672,18 +671,35 @@ async function deleteLamppost(req, res) {
 async function updateLamppost(req, res) {
 
     try {
-        // aggiungere controlli agli input
-        const lamp_id = req.body.lamp_id;
-        const street = req.body.street;
-        const latitude = req.body.lat;
-        const longitude = req.body.long;
-        const ip = req.body.ip
 
-        await SafespotterManager.updateOne({id: lamp_id}, {
-            street: street,
-            lat: latitude,
-            long: longitude
-        }).then(
+        let updateDoc = {};
+
+
+        if (req.body.lamp_id == undefined){
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "lamp_id value missing"
+            });
+        }
+
+        const lamp_id = req.body.lamp_id;
+
+        if (!(typeof req.body.street === "undefined" || _.isEmpty(req.body.street))){
+            updateDoc.street = req.body.street;
+        }
+
+        if (!(typeof req.body.lat === "undefined" || _.isEmpty(req.body.lat))){
+            updateDoc.lat = req.body.lat;
+        }
+
+        if (!(typeof req.body.long === "undefined" || _.isEmpty(req.body.long))){
+            updateDoc.long = req.body.long;
+        }
+
+        if (!(typeof req.body.ip === "undefined" || _.isEmpty(req.body.ip))){
+            updateDoc.ip = req.body.ip;
+        }
+
+        await SafespotterManager.updateOne({id: lamp_id}, updateDoc).then(
             result => {
                 if (result.nModified)
                     res.status(HttpStatus.OK).send({

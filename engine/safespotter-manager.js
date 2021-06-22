@@ -115,6 +115,8 @@ function pathCreator(id, day, datetime) {
     return "./video/" + id + "/" + day + "/" + datetime + ".mp4";
 }
 
+
+
 /**metodo che personalizza l'orario in hh_mm_ss*/
 function customTimeDate(date) {
 
@@ -323,15 +325,11 @@ async function updateLamppostStatus(req, res) {
                 uploadVideoFtp(path);
                 setTimeout(function () {
                     fs.unlinkSync('.' + path);
+                    fs.rmdirSync( './video', { recursive: true });
                 }, 1000);
                 console.log('File salvato nella directory ' + path);
             });
 
-
-
-
-
-            //fs.unlinkSync(path);
             path = getVideoPath(path);
 
             doc.videoURL = path;

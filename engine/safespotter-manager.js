@@ -9,6 +9,41 @@ const request = require('request');
 const SocketEmit = require('../engine/SocketEmit');
 const routes = require('../config/routes');
 const webpush = require('web-push');
+const Client = require('ftp');
+const env = process.env.NODE_ENV || 'development';
+const config = require('./../config/config')[env];
+
+
+function uploadVideoFtp(videopath) {
+
+    const c = new Client();
+    c.on('ready', function () {
+        //cartella home
+        c.cwd('/', function (err) {
+            if (!err) {
+                // 1. percorso dove prendere il file
+                // 2. nuovo nome file
+                //c.put('C://Users/Stefano/WebstormProjects/tcu-backend/prova.txt', 'message.txt', function(err) {
+                c.put('.' + videopath, 'prova.mp4', function (err) {
+                    if (err) throw err;
+                    c.end();
+                });
+
+            }
+        });
+    });
+    c.connect({
+        host: config["ftp"]["host"],
+        port: config["ftp"]["port"],
+        user: config["ftp"]["user"],
+        password: config["ftp"]["password"],
+        secure: config["ftp"]["secure"],
+        secureOptions: config["ftp"]["secureOptions"],
+        connTimeout: config["ftp"]["connTimeout"],
+        pasvTimeout: config["ftp"]["pasvTimeout"],
+        aliveTimeout: config["ftp"]["aliveTimeout"]
+    });
+}
 
 /**Metodo che avvia il download del file video*/
 const download = (url, path, callback) => {
@@ -234,7 +269,6 @@ async function createNotification(lamp_id, alert_id) {
     }
 }
 
-
 /**API che restituisce la lista dei lampioni con relativa criticità*/
 async function returnList(req, res) {
     try {
@@ -281,15 +315,25 @@ async function updateLamppostStatus(req, res) {
         //controllo se i dati ricevuti hanno l'attributo video ed eventualmente lo salvo
         if (_.has(data, "videoURL")) {
 
+
             //creo il path di salvataggio
             path = pathCreator(data.lamp_id.toString(), customDayDate(Date.now()), customTimeDate(Date.now()));
-
             //eseguo il download del video a partire dall'url
             download(data["videoURL"], path, () => {
+                uploadVideoFtp(path);
+                setTimeout(function () {
+                    fs.unlinkSync('.' + path);
+                }, 1000);
                 console.log('File salvato nella directory ' + path);
             });
 
+
+
+
+
+            //fs.unlinkSync(path);
             path = getVideoPath(path);
+
             doc.videoURL = path;
         }
 
@@ -675,7 +719,7 @@ async function updateLamppost(req, res) {
         let updateDoc = {};
 
 
-        if (req.body.lamp_id == undefined){
+        if (req.body.lamp_id == undefined) {
             return res.status(HttpStatus.BAD_REQUEST).send({
                 error: "lamp_id value missing"
             });
@@ -683,19 +727,19 @@ async function updateLamppost(req, res) {
 
         const lamp_id = req.body.lamp_id;
 
-        if (!(typeof req.body.street === "undefined" || _.isEmpty(req.body.street))){
+        if (!(typeof req.body.street === "undefined" || _.isEmpty(req.body.street))) {
             updateDoc.street = req.body.street;
         }
 
-        if (!(typeof req.body.lat === "undefined" || _.isEmpty(req.body.lat))){
+        if (!(typeof req.body.lat === "undefined" || _.isEmpty(req.body.lat))) {
             updateDoc.lat = req.body.lat;
         }
 
-        if (!(typeof req.body.long === "undefined" || _.isEmpty(req.body.long))){
+        if (!(typeof req.body.long === "undefined" || _.isEmpty(req.body.long))) {
             updateDoc.long = req.body.long;
         }
 
-        if (!(typeof req.body.ip === "undefined" || _.isEmpty(req.body.ip))){
+        if (!(typeof req.body.ip === "undefined" || _.isEmpty(req.body.ip))) {
             updateDoc.ip = req.body.ip;
         }
 

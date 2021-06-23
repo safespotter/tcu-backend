@@ -14,17 +14,22 @@ const env = process.env.NODE_ENV || 'development';
 const config = require('./../config/config')[env];
 
 
-function uploadVideoFtp(videopath) {
+function uploadVideoFtp(id, day, datetime, path) {
 
     const c = new Client();
     c.on('ready', function () {
         //cartella home
         c.cwd('/', function (err) {
+
             if (!err) {
                 // 1. percorso dove prendere il file
                 // 2. nuovo nome file
                 //c.put('C://Users/Stefano/WebstormProjects/tcu-backend/prova.txt', 'message.txt', function(err) {
-                c.put('.' + videopath, 'prova.mp4', function (err) {
+                // c.mkdir('provalamp', false, function (err) {
+                //     if (err) throw err;
+                // });
+                c.put(path, id + '_' + day + '_' + datetime + '.mp4', function (err) {
+                // c.put(path, 'prova.mp4', function (err) {
                     if (err) throw err;
                     c.end();
                 });
@@ -114,7 +119,6 @@ function pathCreator(id, day, datetime) {
     //restituisco il path
     return "./video/" + id + "/" + day + "/" + datetime + ".mp4";
 }
-
 
 
 /**metodo che personalizza l'orario in hh_mm_ss*/
@@ -300,6 +304,7 @@ async function updateLamppostStatus(req, res) {
         const data = req.body;
         let doc = new LampStatus;
         let path = "";
+        const day = Date.now();
 
         // controllo che siano stati passati dei dati
         if (typeof data === "undefined" || _.isEmpty(data)) {
@@ -319,20 +324,23 @@ async function updateLamppostStatus(req, res) {
 
 
             //creo il path di salvataggio
-            path = pathCreator(data.lamp_id.toString(), customDayDate(Date.now()), customTimeDate(Date.now()));
+            path = pathCreator(data.lamp_id.toString(), customDayDate(day), customTimeDate(day));
             //eseguo il download del video a partire dall'url
             download(data["videoURL"], path, () => {
-                uploadVideoFtp(path);
+                uploadVideoFtp(data.lamp_id.toString(), customDayDate(day), customTimeDate(day), path);
                 setTimeout(function () {
-                    fs.unlinkSync('.' + path);
-                    fs.rmdirSync( './video', { recursive: true });
+                    console.log('path timeout ', path);
+                    fs.unlinkSync(path);
+                    fs.rmdirSync('./video', {recursive: true});
                 }, 1000);
                 console.log('File salvato nella directory ' + path);
             });
 
-            path = getVideoPath(path);
+            //path = getVideoPath(path);
 
-            doc.videoURL = path;
+            const new_path = data.lamp_id.toString() + '_' + customDayDate(day) + '_' + customTimeDate(day) + '.mp4';
+
+            doc.videoURL = new_path;
         }
 
         //salvo su mongodb i dati ricevuti dal lampione (aggiungere altri se necessario)

@@ -94,9 +94,10 @@ function convertAlertLevel(input) {
 }
 
 /**Metodo che inizializza lo status del lampione*/
-function initializeLampStatus(model, data) {
+function initializeLampStatus(model, data, date) {
     model.lamp_id = data.lamp_id;
     model.alert_id = data.alert_id;
+    model.date = date;
     return model;
 }
 
@@ -314,7 +315,7 @@ async function updateLamppostStatus(req, res) {
         }
 
 
-        doc = initializeLampStatus(doc, data);
+        doc = initializeLampStatus(doc, data, day);
 
         //creo la notifica se l'anomalia che arriva è maggiore di quella già esistente e aggiorno il lampione
         await createNotification(data.lamp_id, data.alert_id);
@@ -329,7 +330,6 @@ async function updateLamppostStatus(req, res) {
             download(data["videoURL"], path, () => {
                 uploadVideoFtp(data.lamp_id.toString(), customDayDate(day), customTimeDate(day), path);
                 setTimeout(function () {
-                    console.log('path timeout ', path);
                     fs.unlinkSync(path);
                     fs.rmdirSync('./video', {recursive: true});
                 }, 1000);

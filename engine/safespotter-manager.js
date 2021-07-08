@@ -632,7 +632,8 @@ async function getLamppostTimers(req, res) {
  *  street: string
  *  lat: number
  *  long: number
- *  ip: string
+ *  ip_cam_fix: string
+ *  ip_cam_brand: string
  *
  * */
 async function addLamppost(req, res) {
@@ -649,7 +650,8 @@ async function addLamppost(req, res) {
         const street = req.body.street;
         const latitude = req.body.lat;
         const longitude = req.body.long;
-        const ip = req.body.ip;
+        const ip_cam_fix = req.body.ip_cam_fix;
+        const ip_cam_brand = req.body.ip_cam_brand;
 
         let doc = new SafespotterManager;
 
@@ -657,7 +659,8 @@ async function addLamppost(req, res) {
         doc.street = street;
         doc.lat = latitude;
         doc.long = longitude;
-        doc.ip = ip;
+        doc.ip_cam_fix = ip_cam_fix;
+        doc.ip_cam_brand = ip_cam_brand;
 
         doc = defaultLamppostConfiguration(doc);
 
@@ -715,7 +718,8 @@ async function deleteLamppost(req, res) {
  *  street: string
  *  lat: number
  *  long: number
- *  ip: string
+ *  ip_cam_fix: string
+ *  ip_cam_brand: string
  *
  * */
 async function updateLamppost(req, res) {
@@ -745,8 +749,12 @@ async function updateLamppost(req, res) {
             updateDoc.long = req.body.long;
         }
 
-        if (!(typeof req.body.ip === "undefined" || _.isEmpty(req.body.ip))) {
-            updateDoc.ip = req.body.ip;
+        if (!(typeof req.body.ip_cam_fix === "undefined" || _.isEmpty(req.body.ip_cam_fix))) {
+            updateDoc.ip_cam_fix = req.body.ip_cam_fix;
+        }
+
+        if (!(typeof req.body.ip_cam_brand === "undefined" || _.isEmpty(req.body.ip_cam_brand))) {
+            updateDoc.ip_cam_brand = req.body.ip_cam_brand;
         }
 
         await SafespotterManager.updateOne({id: lamp_id}, updateDoc).then(

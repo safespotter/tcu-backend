@@ -2,7 +2,8 @@
 const https = require('https')
 
 const CONFIG = require('./config.json')
-const AUTH = require('./auth.json')
+const env = process.env.NODE_ENV || 'development';
+const AUTH = require('./../../../config/config')[env];
 
 const URL = CONFIG.URL
 const BORDERS = CONFIG.BORDERS
@@ -42,7 +43,7 @@ if (Object.values(CONFIG.TYPE).some(item => !item.fetch)) {
  */
 function getTraffic() {
     return new Promise( resolve => {
-        const RESOURCE_URL = `https://${URL}/${MAP_AREA}?${PARAMS}key=${AUTH.KEY}`
+        const RESOURCE_URL = `https://${URL}/${MAP_AREA}?${PARAMS}key=${AUTH.Traffic.KEY}`
         console.log(`get: ${RESOURCE_URL}`)
         https.get(
             RESOURCE_URL,

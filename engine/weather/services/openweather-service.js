@@ -7,7 +7,8 @@
 
 const https = require('https')
 
-const auth = require('./auth.json')
+const env = process.env.NODE_ENV || 'development';
+const auth = require('./../../../config/config')[env];
 const config = require('./config.json')
 
 const WeatherModels = require('../../../models/mongo/mongo-weather')

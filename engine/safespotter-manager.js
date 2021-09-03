@@ -12,6 +12,10 @@ const webpush = require('web-push');
 const Client = require('ftp');
 const env = process.env.NODE_ENV || 'development';
 const config = require('./../config/config')[env];
+const telegramToken = config['TelegramToken'];
+const telegramChatID = config['TelegramChatID'];
+const TelegramBot = require('node-telegram-bot-api');
+const bot = new TelegramBot(telegramToken, {polling: true});
 
 
 function uploadVideoFtp(id, day, datetime, path) {
@@ -29,7 +33,7 @@ function uploadVideoFtp(id, day, datetime, path) {
                 //     if (err) throw err;
                 // });
                 c.put(path, id + '_' + day + '_' + datetime + '.mp4', function (err) {
-                // c.put(path, 'prova.mp4', function (err) {
+                    // c.put(path, 'prova.mp4', function (err) {
                     if (err) throw err;
                     c.end();
                 });
@@ -253,6 +257,11 @@ async function createNotification(lamp_id, alert_id) {
             if (anomaly_level >= 2) {
                 // notifiche push
                 routes.pushNotification(convertAlertLevel(anomaly_level), convertAlertType(alert_id), timestamp);
+            }
+
+            if (anomaly_level >= 4) {
+                // notifica telegram
+                bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id) + ' in ' + lamp[0].street + ". Si prega di prestare la massima prudenza.");
             }
 
             //dati su mongo

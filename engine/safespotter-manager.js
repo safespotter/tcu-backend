@@ -671,25 +671,25 @@ async function addLamppost(req, res) {
             })
         }
 
-        if (latitude.latitude == 0){
+        if (latitude.length == 0){
             return res.status(HttpStatus.BAD_REQUEST).send({
                 message: 'latitude field empty. Required parameter'
             })
         }
 
-        if (longitude.longitude == 0){
+        if (longitude.length == 0){
             return res.status(HttpStatus.BAD_REQUEST).send({
                 message: 'longitude field empty. Required parameter'
             })
         }
 
-        if (longitude.ip_cam_fix == 0){
+        if (ip_cam_fix.length == 0){
             return res.status(HttpStatus.BAD_REQUEST).send({
                 message: 'ip_cam_fix field empty. Required parameter'
             })
         }
 
-        if (longitude.ip_cam_brand == 0){
+        if (ip_cam_fix.length == 0){
             return res.status(HttpStatus.BAD_REQUEST).send({
                 message: 'ip_cam_brand field empty. Required parameter'
             })

@@ -262,6 +262,8 @@ async function createNotification(lamp_id, alert_id) {
             if (anomaly_level >= 4) {
                 // notifica telegram
                 bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id) + ' in ' + lamp[0].street + ". Si prega di prestare la massima prudenza.");
+                // invio anomalia servizio Tetralert
+
             }
 
             //dati su mongo
@@ -638,12 +640,13 @@ async function getLamppostTimers(req, res) {
 /** API che aggiunge un lampione all'infrastruttura
  *
  * Body:
- *  street: string
- *  lat: number
- *  long: number
- *  ip_cam_fix: string
- *  ip_cam_brand: string
+ *  street *: string
+ *  lat *: number
+ *  long *: number
+ *  ip_cam_fix *: string
+ *  ip_cam_brand *: string
  *
+ *  * Required parameters
  * */
 async function addLamppost(req, res) {
 
@@ -661,6 +664,36 @@ async function addLamppost(req, res) {
         const longitude = req.body.long;
         const ip_cam_fix = req.body.ip_cam_fix;
         const ip_cam_brand = req.body.ip_cam_brand;
+
+        if (street.length == 0){
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                message: 'street field empty. Required parameter'
+            })
+        }
+
+        if (latitude.latitude == 0){
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                message: 'latitude field empty. Required parameter'
+            })
+        }
+
+        if (longitude.longitude == 0){
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                message: 'longitude field empty. Required parameter'
+            })
+        }
+
+        if (longitude.ip_cam_fix == 0){
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                message: 'ip_cam_fix field empty. Required parameter'
+            })
+        }
+
+        if (longitude.ip_cam_brand == 0){
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                message: 'ip_cam_brand field empty. Required parameter'
+            })
+        }
 
         let doc = new SafespotterManager;
 

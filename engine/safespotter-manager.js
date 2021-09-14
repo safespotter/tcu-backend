@@ -665,31 +665,31 @@ async function addLamppost(req, res) {
         const ip_cam_fix = req.body.ip_cam_fix;
         const ip_cam_brand = req.body.ip_cam_brand;
 
-        if (street.length == 0){
+        if (street.length == 0) {
             return res.status(HttpStatus.BAD_REQUEST).send({
                 message: 'street field empty. Required parameter'
             })
         }
 
-        if (latitude.length == 0){
+        if (latitude.length == 0) {
             return res.status(HttpStatus.BAD_REQUEST).send({
                 message: 'latitude field empty. Required parameter'
             })
         }
 
-        if (longitude.length == 0){
+        if (longitude.length == 0) {
             return res.status(HttpStatus.BAD_REQUEST).send({
                 message: 'longitude field empty. Required parameter'
             })
         }
 
-        if (ip_cam_fix.length == 0){
+        if (ip_cam_fix.length == 0) {
             return res.status(HttpStatus.BAD_REQUEST).send({
                 message: 'ip_cam_fix field empty. Required parameter'
             })
         }
 
-        if (ip_cam_fix.length == 0){
+        if (ip_cam_fix.length == 0) {
             return res.status(HttpStatus.BAD_REQUEST).send({
                 message: 'ip_cam_brand field empty. Required parameter'
             })
@@ -707,6 +707,11 @@ async function addLamppost(req, res) {
         doc = defaultLamppostConfiguration(doc);
 
         doc.save();
+
+        setTimeout(function () {
+            routes.dataUpdate(id);
+        }, 1000);
+
 
         return res.status(HttpStatus.OK).send({
             message: 'lamppost added successfully'

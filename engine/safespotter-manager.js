@@ -714,6 +714,7 @@ async function addLamppost(req, res) {
 
 
         return res.status(HttpStatus.OK).send({
+            id: id,
             message: 'lamppost added successfully'
         });
 

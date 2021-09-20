@@ -807,10 +807,16 @@ async function updateLamppost(req, res) {
 
         await SafespotterManager.updateOne({id: lamp_id}, updateDoc).then(
             result => {
-                if (result.nModified)
+                if (result.nModified) {
+
+                    setTimeout(function () {
+                        routes.dataUpdate(lamp_id);
+                    }, 1000);
+
                     res.status(HttpStatus.OK).send({
                         message: "lamppost updated successfully"
                     });
+                }
                 else
                     return res.status(HttpStatus.BAD_REQUEST).send({
                         error: "lamppost id not detected"

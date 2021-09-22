@@ -740,6 +740,9 @@ async function deleteLamppost(req, res) {
 
         await SafespotterManager.deleteOne({id: lamp_id}).then(
             result => {
+                setTimeout(function () {
+                    routes.dataUpdate(lamp_id);
+                }, 1000);
                 res.status(HttpStatus.OK).send({
                     message: "lamppost deleted successfully"
                 })

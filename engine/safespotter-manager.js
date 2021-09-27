@@ -240,12 +240,25 @@ async function createNotification(lamp_id, alert_id) {
                 });
 
             if (anomaly_level >= 1) {
+
+                const not = await Notification.find({});
+                let not_id = 1;
+
+                if (not.length > 0)
+                //get the max id value and then add 1
+                    not_id = _.maxBy(not, 'notification_id').notification_id + 1;
+
                 let notification = new Notification;
+                notification.notification_id = not_id;
                 notification.lamp_id = lamp_id;
                 notification.alert_id = alert_id;
                 notification.street = lamp[0].street;
                 notification.checked = false;
                 await notification.save();
+
+                await SafespotterManager.updateOne({id: lamp_id},{
+                    notification_id: not_id
+                });
 
                 //check della notifica
                 setTimeout(async () => {
@@ -408,10 +421,10 @@ async function getStreetLampStatus(req, res) {
 async function checkNotification(req, res) {
     try {
 
-        const lamp_id = req.body.id;
+        const lamp_id = req.body.lamp_id;
         const date = req.body.date;
 
-        await Notification.updateOne({$and: [{id: lamp_id}, {date: date}]}, {
+        await Notification.updateOne({$and: [{lamp_id: lamp_id}, {date: date}]}, {
             checked: true
         });
 
@@ -844,6 +857,7 @@ async function updateLamppost(req, res) {
 async function updateActionRequiredAlert(req, res) {
 
     const lamp_id = req.body.lamp_id;
+    const notification_id = req.body.notification_id;
 
     await SafespotterManager.updateOne({id: lamp_id}, {
         alert_id: 0,
@@ -851,6 +865,12 @@ async function updateActionRequiredAlert(req, res) {
     }).then(
         result => {
             if (result.nModified) {
+
+                setTimeout(async () => {
+                    await Notification.updateOne({$and: [{lamp_id: lamp_id}, {notification_id: notification_id}]}, {
+                        checked: true
+                    }).then(result => console.log("aggiorno notifica", result));
+                }, 1000);
 
                 setTimeout(function () {
                     routes.dataUpdate(lamp_id);

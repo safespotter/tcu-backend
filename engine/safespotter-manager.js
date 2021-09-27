@@ -841,6 +841,41 @@ async function updateLamppost(req, res) {
 
 }
 
+async function updateActionRequiredAlert(req, res) {
+
+    const lamp_id = req.body.lamp_id;
+
+    await SafespotterManager.updateOne({id: lamp_id}, {
+        alert_id: 0,
+        anomaly_level: 0
+    }).then(
+        result => {
+            if (result.nModified) {
+
+                setTimeout(function () {
+                    routes.dataUpdate(lamp_id);
+                }, 1000);
+
+                res.status(HttpStatus.OK).send({
+                    message: "lamppost updated successfully"
+                });
+            }
+            else
+                return res.status(HttpStatus.BAD_REQUEST).send({
+                    error: "lamppost id not detected"
+                });
+        }
+    ).catch(err => {
+        console.log(err);
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "lamppost id not detected"
+        });
+    });
+
+
+}
+
+
 module.exports = {
     returnList,
     updateLamppostStatus,
@@ -852,5 +887,6 @@ module.exports = {
     getLamppostTimers,
     addLamppost,
     deleteLamppost,
-    updateLamppost
+    updateLamppost,
+    updateActionRequiredAlert
 };

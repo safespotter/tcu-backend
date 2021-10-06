@@ -895,6 +895,36 @@ async function updateActionRequiredAlert(req, res) {
             error: "lamppost id not detected"
         });
     });
+}
+
+async function updatePanel(req, res){
+    const lamp_id = req.body.lamp_id;
+    const level = req.body.level;
+
+    await SafespotterManager.updateOne({id: lamp_id}, {
+        panel: level
+    }).then(
+        result => {
+            if (result.nModified) {
+
+                setTimeout(function () {
+                    routes.dataUpdate(lamp_id);
+                }, 1000);
+
+                res.status(HttpStatus.OK).send({
+                    message: "Panel updated successfully"
+                });
+            } else
+                return res.status(HttpStatus.BAD_REQUEST).send({
+                    error: "lamppost id not detected or level is wrong"
+                });
+        }
+    ).catch(err => {
+        console.log(err);
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "lamppost id not detected"
+        });
+    });
 
 
 }
@@ -912,5 +942,6 @@ module.exports = {
     addLamppost,
     deleteLamppost,
     updateLamppost,
-    updateActionRequiredAlert
+    updateActionRequiredAlert,
+    updatePanel
 };

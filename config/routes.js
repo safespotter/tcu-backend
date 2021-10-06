@@ -67,6 +67,7 @@ module.exports = function (app, passport, config, io) {
     app.delete(`${safePath}/deleteLamppost/:id`, reqAuth, AccMan.roleAuth(all), SafMan.deleteLamppost);
     app.put(`${safePath}/updateLamppost`, reqAuth, AccMan.roleAuth(all), SafMan.updateLamppost);
     app.put(`${safePath}/updateActionRequiredAlert`, reqAuth, AccMan.roleAuth(all), SafMan.updateActionRequiredAlert);
+    app.put(`${safePath}/updatePanel`, reqAuth, AccMan.roleAuth(all), SafMan.updatePanel);
 
     /****************** WEATHER SERVICE ********************/
     app.get(`${weatherPath}/getLive`, reqAuth, AccMan.roleAuth(all), InfoManager.requestWeatherLive);

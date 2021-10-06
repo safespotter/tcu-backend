@@ -245,7 +245,7 @@ async function createNotification(lamp_id, alert_id) {
                 let not_id = 1;
 
                 if (not.length > 0)
-                //get the max id value and then add 1
+                    //get the max id value and then add 1
                     not_id = _.maxBy(not, 'notification_id').notification_id + 1;
 
                 let notification = new Notification;
@@ -256,7 +256,7 @@ async function createNotification(lamp_id, alert_id) {
                 notification.checked = false;
                 await notification.save();
 
-                await SafespotterManager.updateOne({id: lamp_id},{
+                await SafespotterManager.updateOne({id: lamp_id}, {
                     notification_id: not_id
                 });
 
@@ -275,7 +275,12 @@ async function createNotification(lamp_id, alert_id) {
             if (anomaly_level >= 4) {
                 // notifica telegram
                 bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id) + ' in ' + lamp[0].street + ". Si prega di prestare la massima prudenza.");
-                // invio anomalia servizio Tetralert
+
+                //attivazione del pannello luminoso
+                await SafespotterManager.updateOne({id: lamp_id},
+                    {
+                        panel: 3
+                    })
 
             }
 
@@ -284,13 +289,13 @@ async function createNotification(lamp_id, alert_id) {
 
             //check del lampione
             setTimeout(async () => {
-                //aggiungere "where" sul timestamp
                 await SafespotterManager.updateOne({id: lamp_id, date: timestamp},
                     {
                         alert_id: 0,
                         anomaly_level: 0,
                         date: new Date(),
                         checked: false,
+                        panel: 0
                     });
                 routes.dataUpdate(lamp_id);
             }, timer);
@@ -669,7 +674,7 @@ async function addLamppost(req, res) {
         const safespotters = await SafespotterManager.find({});
 
         if (safespotters.length > 0)
-        //get the max id value and then add 1
+            //get the max id value and then add 1
             id = _.maxBy(safespotters, 'id').id + 1;
 
         const street = req.body.street;
@@ -832,8 +837,7 @@ async function updateLamppost(req, res) {
                     res.status(HttpStatus.OK).send({
                         message: "lamppost updated successfully"
                     });
-                }
-                else
+                } else
                     return res.status(HttpStatus.BAD_REQUEST).send({
                         error: "lamppost id not detected"
                     });
@@ -861,7 +865,8 @@ async function updateActionRequiredAlert(req, res) {
 
     await SafespotterManager.updateOne({id: lamp_id}, {
         alert_id: 0,
-        anomaly_level: 0
+        anomaly_level: 0,
+        panel: 0
     }).then(
         result => {
             if (result.nModified) {
@@ -879,8 +884,7 @@ async function updateActionRequiredAlert(req, res) {
                 res.status(HttpStatus.OK).send({
                     message: "lamppost updated successfully"
                 });
-            }
-            else
+            } else
                 return res.status(HttpStatus.BAD_REQUEST).send({
                     error: "lamppost id not detected"
                 });

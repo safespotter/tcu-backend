@@ -11,11 +11,12 @@ module.exports = mongoose.model('SafeSpotter', new mongoose.Schema({
     long: Number,
     ip_cam_fix: String,
     ip_cam_brand: String,
-    date: { type: Date, default: Date.now },
-    checked: { type: Boolean, default: false },
+    date: {type: Date, default: Date.now},
+    checked: {type: Boolean, default: false},
     configuration: [],
-    timers: []
-},{
+    timers: [],
+    panel: {type: Number, default: 0}
+}, {
     versionKey: false
 }));
 

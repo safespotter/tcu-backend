@@ -899,10 +899,10 @@ async function updateActionRequiredAlert(req, res) {
 
 async function updatePanel(req, res){
     const lamp_id = req.body.lamp_id;
-    const level = req.body.level;
+    const panel = req.body.panel;
 
     await SafespotterManager.updateOne({id: lamp_id}, {
-        panel: level
+        panel: panel
     }).then(
         result => {
             if (result.nModified) {

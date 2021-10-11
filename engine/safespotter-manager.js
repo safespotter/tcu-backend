@@ -916,7 +916,7 @@ async function updatePanel(req, res){
                 });
             } else
                 return res.status(HttpStatus.BAD_REQUEST).send({
-                    error: "lamppost id not detected or level is wrong"
+                    error: "lamppost id not detected or panel is wrong"
                 });
         }
     ).catch(err => {
@@ -929,6 +929,41 @@ async function updatePanel(req, res){
 
 }
 
+async function manualAlert(req, res) {
+
+    const lamp_id = req.body.lamp_id;
+    const alert_id = req.body.alert_id;
+    const anomaly_level = req.body.anomaly_level;
+    const panel = req.body.panel;
+
+    await SafespotterManager.updateOne({id: lamp_id}, {
+        alert_id: alert_id,
+        anomaly_level: anomaly_level,
+        panel: panel
+    }).then(
+        result => {
+            if (result.nModified) {
+
+                setTimeout(function () {
+                    routes.dataUpdate(lamp_id);
+                }, 1000);
+
+                res.status(HttpStatus.OK).send({
+                    message: "Manual alert sent successfully"
+                });
+            } else
+                return res.status(HttpStatus.BAD_REQUEST).send({
+                    error: "lamppost id not detected or parameters are wrong"
+                });
+        }
+    ).catch(err => {
+        console.log(err);
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "lamppost id not detected"
+        });
+    });
+
+}
 
 module.exports = {
     returnList,
@@ -943,5 +978,6 @@ module.exports = {
     deleteLamppost,
     updateLamppost,
     updateActionRequiredAlert,
-    updatePanel
+    updatePanel,
+    manualAlert
 };

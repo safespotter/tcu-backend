@@ -936,6 +936,8 @@ async function manualAlert(req, res) {
     const anomaly_level = req.body.anomaly_level;
     const panel = req.body.panel;
 
+    const date = new Date;
+
     await SafespotterManager.updateOne({id: lamp_id}, {
         alert_id: alert_id,
         anomaly_level: anomaly_level,
@@ -944,7 +946,14 @@ async function manualAlert(req, res) {
         result => {
             if (result.nModified) {
 
-                setTimeout(function () {
+                setTimeout( function () {
+
+                    let doc = new LampStatus;
+                    doc.lamp_id = lamp_id;
+                    doc.alert_id = alert_id;
+                    doc.date = date;
+                    doc.save();
+
                     routes.dataUpdate(lamp_id);
                 }, 1000);
 

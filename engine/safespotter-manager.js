@@ -63,18 +63,25 @@ const download = (url, path, callback) => {
 
 /**Funzione che converte in stringa le condizioni di criticità*/
 function convertAlertType(input) {
+    console.log('input', input)
     switch (input) {
         case 1:
+        case '1':
             return 'Cambio di corsia illegale';
         case 2:
+        case '2':
             return 'Traffico congestionato';
         case 3:
+        case '3':
             return 'Oggetto o persona in strada';
         case 4:
+        case '4':
             return 'Invasione di area pedonale';
         case 5:
+        case '5':
             return 'Possible incidente';
         case 6:
+        case '6':
             return 'Veicolo in sosta vietata';
         default:
             return 'Errore anomalia';
@@ -274,7 +281,7 @@ async function createNotification(lamp_id, alert_id) {
 
             if (anomaly_level >= 4) {
                 // notifica telegram
-                bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id) + ' in ' + lamp[0].street + ". Si prega di prestare la massima prudenza.");
+                bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id) + ' in ' + lamp[0].street + ".");
 
                 //attivazione del pannello luminoso
                 await SafespotterManager.updateOne({id: lamp_id},
@@ -897,7 +904,7 @@ async function updateActionRequiredAlert(req, res) {
     });
 }
 
-async function updatePanel(req, res){
+async function updatePanel(req, res) {
     const lamp_id = req.body.lamp_id;
     const panel = req.body.panel;
 
@@ -935,18 +942,21 @@ async function manualAlert(req, res) {
     const alert_id = req.body.alert_id;
     const anomaly_level = req.body.anomaly_level;
     const panel = req.body.panel;
+    const timer = req.body.timer;
+    const telegram = req.body.telegram || false;
 
     const date = new Date;
 
     await SafespotterManager.updateOne({id: lamp_id}, {
         alert_id: alert_id,
         anomaly_level: anomaly_level,
-        panel: panel
+        panel: panel,
+        date: date
     }).then(
         result => {
             if (result.nModified) {
 
-                setTimeout( function () {
+                setTimeout(function () {
 
                     let doc = new LampStatus;
                     doc.lamp_id = lamp_id;
@@ -954,12 +964,27 @@ async function manualAlert(req, res) {
                     doc.date = date;
                     doc.save();
 
+                    if (telegram) {
+                        bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id));
+                    }
                     routes.dataUpdate(lamp_id);
                 }, 1000);
 
                 res.status(HttpStatus.OK).send({
                     message: "Manual alert sent successfully"
                 });
+
+                console.log("timer", timer);
+
+                setTimeout(async function () {
+                    await SafespotterManager.updateOne({id: lamp_id}, {
+                        alert_id: 0,
+                        anomaly_level: 0,
+                        panel: 0
+                    }).then(() => routes.dataUpdate(lamp_id));
+
+                }, timer);
+
             } else
                 return res.status(HttpStatus.BAD_REQUEST).send({
                     error: "lamppost id not detected or parameters are wrong"

@@ -870,70 +870,81 @@ async function updateActionRequiredAlert(req, res) {
     const lamp_id = req.body.lamp_id;
     const notification_id = req.body.notification_id;
 
-    await SafespotterManager.updateOne({id: lamp_id}, {
-        alert_id: 0,
-        anomaly_level: 0,
-        panel: 0
-    }).then(
-        result => {
-            if (result.nModified) {
+    try {
+        await SafespotterManager.updateOne({id: lamp_id}, {
+            alert_id: 0,
+            anomaly_level: 0,
+            panel: 0
+        }).then(
+            result => {
+                if (result.nModified) {
 
-                setTimeout(async () => {
-                    await Notification.updateOne({$and: [{lamp_id: lamp_id}, {notification_id: notification_id}]}, {
-                        checked: true
-                    }).then(result => console.log("aggiorno notifica", result));
-                }, 1000);
+                    setTimeout(async () => {
+                        await Notification.updateOne({$and: [{lamp_id: lamp_id}, {notification_id: notification_id}]}, {
+                            checked: true
+                        }).then(result => console.log("aggiorno notifica", result));
+                    }, 1000);
 
-                setTimeout(function () {
-                    routes.dataUpdate(lamp_id);
-                }, 1000);
+                    setTimeout(function () {
+                        routes.dataUpdate(lamp_id);
+                    }, 1000);
 
-                res.status(HttpStatus.OK).send({
-                    message: "lamppost updated successfully"
-                });
-            } else
-                return res.status(HttpStatus.BAD_REQUEST).send({
-                    error: "lamppost id not detected"
-                });
-        }
-    ).catch(err => {
-        console.log(err);
-        return res.status(HttpStatus.BAD_REQUEST).send({
-            error: "lamppost id not detected"
+                    res.status(HttpStatus.OK).send({
+                        message: "lamppost updated successfully"
+                    });
+                } else
+                    return res.status(HttpStatus.BAD_REQUEST).send({
+                        error: "lamppost id not detected"
+                    });
+            }
+        ).catch(err => {
+            console.log(err);
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "lamppost id not detected"
+            });
         });
-    });
+    } catch (e) {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "Generic error"
+        });
+    }
+
 }
 
 async function updatePanel(req, res) {
     const lamp_id = req.body.lamp_id;
     const panel = req.body.panel;
 
-    await SafespotterManager.updateOne({id: lamp_id}, {
-        panel: panel
-    }).then(
-        result => {
-            if (result.nModified) {
+    try {
+        await SafespotterManager.updateOne({id: lamp_id}, {
+            panel: panel
+        }).then(
+            result => {
+                if (result.nModified) {
 
-                setTimeout(function () {
-                    routes.dataUpdate(lamp_id);
-                }, 1000);
+                    setTimeout(function () {
+                        routes.dataUpdate(lamp_id);
+                    }, 1000);
 
-                res.status(HttpStatus.OK).send({
-                    message: "Panel updated successfully"
-                });
-            } else
-                return res.status(HttpStatus.BAD_REQUEST).send({
-                    error: "lamppost id not detected or panel is wrong"
-                });
-        }
-    ).catch(err => {
-        console.log(err);
-        return res.status(HttpStatus.BAD_REQUEST).send({
-            error: "lamppost id not detected"
+                    res.status(HttpStatus.OK).send({
+                        message: "Panel updated successfully"
+                    });
+                } else
+                    return res.status(HttpStatus.BAD_REQUEST).send({
+                        error: "lamppost id not detected or panel is wrong"
+                    });
+            }
+        ).catch(err => {
+            console.log(err);
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "lamppost id not detected"
+            });
         });
-    });
-
-
+    } catch (e) {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "Generic error"
+        });
+    }
 }
 
 async function manualAlert(req, res) {
@@ -947,55 +958,91 @@ async function manualAlert(req, res) {
 
     const date = new Date;
 
-    await SafespotterManager.updateOne({id: lamp_id}, {
-        alert_id: alert_id,
-        anomaly_level: anomaly_level,
-        panel: panel,
-        date: date
-    }).then(
-        result => {
-            if (result.nModified) {
+    try {
+        await SafespotterManager.updateOne({id: lamp_id}, {
+            alert_id: alert_id,
+            anomaly_level: anomaly_level,
+            panel: panel,
+            date: date
+        }).then(
+            result => {
+                if (result.nModified) {
 
-                setTimeout(function () {
+                    setTimeout(function () {
 
-                    let doc = new LampStatus;
-                    doc.lamp_id = lamp_id;
-                    doc.alert_id = alert_id;
-                    doc.date = date;
-                    doc.save();
+                        let doc = new LampStatus;
+                        doc.lamp_id = lamp_id;
+                        doc.alert_id = alert_id;
+                        doc.date = date;
+                        doc.save();
 
-                    if (telegram) {
-                        bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id));
-                    }
-                    routes.dataUpdate(lamp_id);
-                }, 1000);
+                        if (telegram) {
+                            bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id));
+                        }
+                        routes.dataUpdate(lamp_id);
+                    }, 1000);
 
-                res.status(HttpStatus.OK).send({
-                    message: "Manual alert sent successfully"
-                });
+                    res.status(HttpStatus.OK).send({
+                        message: "Manual alert sent successfully"
+                    });
 
-                console.log("timer", timer);
+                    console.log("timer", timer);
 
-                setTimeout(async function () {
-                    await SafespotterManager.updateOne({id: lamp_id}, {
-                        alert_id: 0,
-                        anomaly_level: 0,
-                        panel: 0
-                    }).then(() => routes.dataUpdate(lamp_id));
+                    setTimeout(async function () {
+                        await SafespotterManager.updateOne({id: lamp_id, date: date}, {
+                            alert_id: 0,
+                            anomaly_level: 0,
+                            panel: 0
+                        }).then(() => routes.dataUpdate(lamp_id));
 
-                }, timer);
+                    }, timer);
 
-            } else
-                return res.status(HttpStatus.BAD_REQUEST).send({
-                    error: "lamppost id not detected or parameters are wrong"
-                });
-        }
-    ).catch(err => {
-        console.log(err);
-        return res.status(HttpStatus.BAD_REQUEST).send({
-            error: "lamppost id not detected"
+                } else
+                    return res.status(HttpStatus.BAD_REQUEST).send({
+                        error: "lamppost id not detected or parameters are wrong"
+                    });
+            }
+        ).catch(err => {
+            console.log(err);
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "lamppost id not detected"
+            });
         });
-    });
+    } catch (e) {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "Generic error"
+        });
+    }
+}
+
+async function prorogationAlert(req, res) {
+    const lamp_id = req.body.lamp_id;
+    const timer = req.body.timer;
+    const date = new Date();
+
+    try {
+        await SafespotterManager.updateOne({id: lamp_id}, {
+            date: date
+        })
+
+        res.status(HttpStatus.OK).send({
+            message: "Prorogation alert updated successfully"
+        });
+
+        setTimeout(async function () {
+            await SafespotterManager.updateOne({id: lamp_id, date: date}, {
+                alert_id: 0,
+                anomaly_level: 0,
+                panel: 0
+            }).then(() => routes.dataUpdate(lamp_id));
+        }, timer);
+
+    } catch (e) {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "Generic error"
+        });
+    }
+
 
 }
 
@@ -1013,5 +1060,6 @@ module.exports = {
     updateLamppost,
     updateActionRequiredAlert,
     updatePanel,
-    manualAlert
+    manualAlert,
+    prorogationAlert
 };

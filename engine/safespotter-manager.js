@@ -63,7 +63,6 @@ const download = (url, path, callback) => {
 
 /**Funzione che converte in stringa le condizioni di criticità*/
 function convertAlertType(input) {
-    console.log('input', input)
     switch (input) {
         case 1:
         case '1':
@@ -985,8 +984,6 @@ async function manualAlert(req, res) {
                     res.status(HttpStatus.OK).send({
                         message: "Manual alert sent successfully"
                     });
-
-                    console.log("timer", timer);
 
                     setTimeout(async function () {
                         await SafespotterManager.updateOne({id: lamp_id, date: date}, {

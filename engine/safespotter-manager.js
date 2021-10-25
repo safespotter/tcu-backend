@@ -377,7 +377,9 @@ async function updateLamppostStatus(req, res) {
 
             //path = getVideoPath(path);
 
-            const new_path = data.lamp_id.toString() + '_' + customDayDate(day) + '_' + customTimeDate(day) + '.mp4';
+            //const new_path = data.lamp_id.toString() + '_' + customDayDate(day) + '_' + customTimeDate(day) + '.mp4';
+            const new_path = 'video/' + data.lamp_id.toString() + '/' + customDayDate(day) + '/' + customTimeDate(day) + '.mp4';
+
 
             doc.videoURL = new_path;
         }

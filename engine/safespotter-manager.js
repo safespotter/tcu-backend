@@ -54,6 +54,10 @@ function uploadVideoFtp(id, day, datetime, path) {
     });
 }
 
+function storeLocalVideo(id, day, datetime, path) {
+
+}
+
 /**Metodo che avvia il download del file video*/
 const download = (url, path, callback) => {
     request.head(url, (err, res, body) => {
@@ -128,7 +132,7 @@ function pathCreator(id, day, datetime) {
     !fs.existsSync("video/" + id + "/" + day) && fs.mkdirSync("video/" + id + "/" + day);
 
     //restituisco il path
-    return "./video/" + id + "/" + day + "/" + datetime + ".mp4";
+    return config["videoBasePath"] + "video/" + id + "/" + day + "/" + datetime + ".mp4";
 }
 
 
@@ -363,11 +367,11 @@ async function updateLamppostStatus(req, res) {
             path = pathCreator(data.lamp_id.toString(), customDayDate(day), customTimeDate(day));
             //eseguo il download del video a partire dall'url
             download(data["videoURL"], path, () => {
-                uploadVideoFtp(data.lamp_id.toString(), customDayDate(day), customTimeDate(day), path);
-                setTimeout(function () {
-                    fs.unlinkSync(path);
-                    fs.rmdirSync('./video', {recursive: true});
-                }, 1000);
+                //uploadVideoFtp(data.lamp_id.toString(), customDayDate(day), customTimeDate(day), path);
+                // setTimeout(function () {
+                //     fs.unlinkSync(path);
+                //     fs.rmdirSync('./video', {recursive: true});
+                // }, 1000);
                 console.log('File salvato nella directory ' + path);
             });
 

@@ -122,14 +122,15 @@ function getVideoPath(path) {
 
 /**Metodo che crea il path*/
 function pathCreator(id, day, datetime) {
+
     //verifico che esista la cartella video
-    !fs.existsSync("video") && fs.mkdirSync("video");
+    !fs.existsSync(config["videoBasePath"]+ "video") && fs.mkdirSync(config["videoBasePath"]+ "video");
 
     //verifico che esista la cartella relativa al lampione
-    !fs.existsSync("video/" + id) && fs.mkdirSync("video/" + id);
+    !fs.existsSync(config["videoBasePath"] + "video/" + id) && fs.mkdirSync(config["videoBasePath"] + "video/" + id);
 
     //verifico che esista la cartella relativa al giorno
-    !fs.existsSync("video/" + id + "/" + day) && fs.mkdirSync("video/" + id + "/" + day);
+    !fs.existsSync(config["videoBasePath"] + "video/" + id + "/" + day) && fs.mkdirSync(config["videoBasePath"] + "video/" + id + "/" + day);
 
     //restituisco il path
     return config["videoBasePath"] + "video/" + id + "/" + day + "/" + datetime + ".mp4";

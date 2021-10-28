@@ -676,6 +676,7 @@ async function getLamppostTimers(req, res) {
  *  long *: number
  *  ip_cam_fix *: string
  *  ip_cam_brand *: string
+ *  platform: string
  *
  *  * Required parameters
  * */
@@ -695,6 +696,7 @@ async function addLamppost(req, res) {
         const longitude = req.body.long;
         const ip_cam_fix = req.body.ip_cam_fix;
         const ip_cam_brand = req.body.ip_cam_brand;
+        const platform = req.body.platform;
 
         if (street.length == 0) {
             return res.status(HttpStatus.BAD_REQUEST).send({
@@ -726,6 +728,12 @@ async function addLamppost(req, res) {
             })
         }
 
+        if (platform.length == 0) {
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                message: 'platform field empty. Required parameter'
+            })
+        }
+
         let doc = new SafespotterManager;
 
         doc.id = id;
@@ -734,6 +742,7 @@ async function addLamppost(req, res) {
         doc.long = longitude;
         doc.ip_cam_fix = ip_cam_fix;
         doc.ip_cam_brand = ip_cam_brand;
+        doc.platform = platform;
 
         doc = defaultLamppostConfiguration(doc);
 

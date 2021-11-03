@@ -124,7 +124,7 @@ function getVideoPath(path) {
 function pathCreator(id, day, datetime) {
 
     //verifico che esista la cartella video
-    !fs.existsSync(config["videoBasePath"]+ "video") && fs.mkdirSync(config["videoBasePath"]+ "video");
+    !fs.existsSync(config["videoBasePath"] + "video") && fs.mkdirSync(config["videoBasePath"] + "video");
 
     //verifico che esista la cartella relativa al lampione
     !fs.existsSync(config["videoBasePath"] + "video/" + id) && fs.mkdirSync(config["videoBasePath"] + "video/" + id);
@@ -1047,7 +1047,13 @@ async function prorogationAlert(req, res) {
                 alert_id: 0,
                 anomaly_level: 0,
                 panel: 0
-            }).then(() => routes.dataUpdate(lamp_id));
+            }).then(async () => {
+                const doc = await SafespotterManager.find({id: lamp_id});
+                await Notification.updateOne({notification_id: doc.notification_id}, {
+                    checked: true
+                }).then(() =>
+                    routes.dataUpdate(lamp_id))
+            });
         }, timer);
 
     } catch (e) {

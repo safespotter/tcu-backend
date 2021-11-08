@@ -1061,8 +1061,75 @@ async function prorogationAlert(req, res) {
             error: "Generic error"
         });
     }
+}
 
+async function editAlert(req, res) {
 
+    const notification_id = req.body.notification_id;
+    const lamp_id = req.body.lamp_id;
+    const alert_id = req.body.alert_id;
+    const anomaly_level = req.body.anomaly_level;
+    const panel = req.body.panel;
+    const timer = req.body.timer;
+    const telegram = req.body.telegram || false;
+
+    const date = new Date;
+
+    try {
+        await SafespotterManager.updateOne({id: lamp_id}, {
+            alert_id: alert_id,
+            anomaly_level: anomaly_level,
+            panel: panel,
+            date: date
+        }).then(
+            result => {
+                if (result.nModified) {
+
+                    setTimeout(async function () {
+                        await Notification.updateOne({notification_id: notification_id}, {
+                            alert_id: alert_id,
+                        });
+
+                        if (telegram) {
+                            await bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id));
+                        }
+
+                        await routes.dataUpdate(lamp_id);
+
+                    }, 1000);
+                    res.status(HttpStatus.OK).send({
+                        message: "Alert edited successfully"
+                    });
+
+                    console.log("timer:", timer)
+
+                    setTimeout(async function () {
+                        await SafespotterManager.updateOne({id: lamp_id, date: date}, {
+                            alert_id: 0,
+                            anomaly_level: 0,
+                            panel: 0
+                        }).then(() => {
+                            routes.dataUpdate(lamp_id)
+                        });
+
+                    }, timer);
+
+                } else
+                    return res.status(HttpStatus.BAD_REQUEST).send({
+                        error: "lamppost id not detected or parameters are wrong"
+                    });
+            }
+        ).catch(err => {
+            console.log(err);
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "lamppost id not detected"
+            });
+        });
+    } catch (e) {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "Generic error"
+        });
+    }
 }
 
 module.exports = {
@@ -1080,5 +1147,6 @@ module.exports = {
     updateActionRequiredAlert,
     updatePanel,
     manualAlert,
-    prorogationAlert
+    prorogationAlert,
+    editAlert
 };

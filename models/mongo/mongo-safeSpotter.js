@@ -7,6 +7,7 @@ module.exports = mongoose.model('SafeSpotter', new mongoose.Schema({
     alert_id: Number,
     anomaly_level: Number,
     notification_id: Number,
+    status_id: Number,
     lat: Number,
     long: Number,
     ip_cam_fix: String,

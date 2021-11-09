@@ -108,10 +108,11 @@ function convertAlertLevel(input) {
 }
 
 /**Metodo che inizializza lo status del lampione*/
-function initializeLampStatus(model, data, date) {
+function initializeLampStatus(model, data, date, status_id) {
     model.lamp_id = data.lamp_id;
     model.alert_id = data.alert_id;
     model.date = date;
+    model.status_id = status_id;
     return model;
 }
 
@@ -219,7 +220,7 @@ function defaultLamppostConfiguration(lamp) {
 }
 
 /**funzione che crea le notifiche e aggiorna il lampione*/
-async function createNotification(lamp_id, alert_id) {
+async function createNotification(lamp_id, alert_id, status_id) {
 
     try {
         let anomaly_level = 0;
@@ -268,7 +269,8 @@ async function createNotification(lamp_id, alert_id) {
                 await notification.save();
 
                 await SafespotterManager.updateOne({id: lamp_id}, {
-                    notification_id: not_id
+                    notification_id: not_id,
+                    status_id: status_id
                 });
 
                 //check della notifica
@@ -354,11 +356,17 @@ async function updateLamppostStatus(req, res) {
             })
         }
 
+        const lampStatus = await LampStatus.find({});
+        let lampStatus_id = 1;
 
-        doc = initializeLampStatus(doc, data, day);
+        if (lampStatus.length > 0)
+            //get the max id value and then add 1
+            lampStatus_id = _.maxBy(lampStatus, 'status_id').status_id + 1;
+
+        doc = initializeLampStatus(doc, data, day, lampStatus_id);
 
         //creo la notifica se l'anomalia che arriva è maggiore di quella già esistente e aggiorno il lampione
-        await createNotification(data.lamp_id, data.alert_id);
+        await createNotification(data.lamp_id, data.alert_id, lampStatus_id);
 
         //controllo se i dati ricevuti hanno l'attributo video ed eventualmente lo salvo
         if (_.has(data, "videoURL")) {
@@ -983,18 +991,30 @@ async function manualAlert(req, res) {
             result => {
                 if (result.nModified) {
 
-                    setTimeout(function () {
+                    setTimeout(async function () {
+
+                        const lampStatus = await LampStatus.find({});
+                        let lampStatus_id = 1;
+
+                        if (lampStatus.length > 0)
+                            //get the max id value and then add 1
+                            lampStatus_id = _.maxBy(lampStatus, 'status_id').status_id + 1;
 
                         let doc = new LampStatus;
                         doc.lamp_id = lamp_id;
                         doc.alert_id = alert_id;
                         doc.date = date;
+                        doc.status_id = lampStatus_id;
                         doc.save();
 
+                        await SafespotterManager.updateOne({id: lamp_id}, {
+                            status_id: lampStatus_id
+                        });
+
                         if (telegram) {
-                            bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id));
+                            await bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id));
                         }
-                        routes.dataUpdate(lamp_id);
+                        await routes.dataUpdate(lamp_id);
                     }, 1000);
 
                     res.status(HttpStatus.OK).send({
@@ -1065,7 +1085,8 @@ async function prorogationAlert(req, res) {
 
 async function editAlert(req, res) {
 
-    const notification_id = req.body.notification_id;
+    const notification_id = req.body.notification_id || null;
+    const status_id = req.body.status_id;
     const lamp_id = req.body.lamp_id;
     const alert_id = req.body.alert_id;
     const anomaly_level = req.body.anomaly_level;
@@ -1076,6 +1097,7 @@ async function editAlert(req, res) {
     const date = new Date;
 
     try {
+
         await SafespotterManager.updateOne({id: lamp_id}, {
             alert_id: alert_id,
             anomaly_level: anomaly_level,
@@ -1090,6 +1112,10 @@ async function editAlert(req, res) {
                             alert_id: alert_id,
                         });
 
+                        await LampStatus.updateOne({status_id: status_id}, {
+                            alert_id: alert_id,
+                        });
+
                         if (telegram) {
                             await bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id));
                         }
@@ -1100,8 +1126,6 @@ async function editAlert(req, res) {
                     res.status(HttpStatus.OK).send({
                         message: "Alert edited successfully"
                     });
-
-                    console.log("timer:", timer)
 
                     setTimeout(async function () {
                         await SafespotterManager.updateOne({id: lamp_id, date: date}, {

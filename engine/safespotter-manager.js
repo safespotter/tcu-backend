@@ -1156,6 +1156,53 @@ async function editAlert(req, res) {
     }
 }
 
+async function propagateAlert(req, res) {
+
+    const lamp_id = req.body.lamp_id;
+    const alert_id = req.body.alert_id;
+    const anomaly_level = req.body.anomaly_level;
+    const panel = req.body.panel;
+    const timer = req.body.timer;
+    const dest_lamp = req.body.dest_panel;
+
+
+    const date = new Date;
+
+    try {
+
+        for (const lamp of dest_lamp) {
+            const lampStatus = await LampStatus.find({});
+            let status = new LampStatus;
+            let lampStatus_id = 1;
+
+            if (lampStatus.length > 0)
+                //get the max id value and then add 1
+                lampStatus_id = _.maxBy(lampStatus, 'status_id').status_id + 1;
+
+            status.lamp_id = lamp.lamp_id;
+            status.alert_id = alert_id;
+            status.date = date;
+            status.status_id = lampStatus_id;
+            await status.save();
+
+            await SafespotterManager.updateOne({id: lamp_id}, {
+                alert_id: alert_id,
+                anomaly_level: anomaly_level,
+                panel: panel,
+                date: date,
+                status: lampStatus_id
+            }).then({
+
+            })
+        }
+
+
+    } catch (e) {
+        console.warn("err", e)
+    }
+
+}
+
 module.exports = {
     returnList,
     updateLamppostStatus,
@@ -1172,5 +1219,6 @@ module.exports = {
     updatePanel,
     manualAlert,
     prorogationAlert,
-    editAlert
+    editAlert,
+    propagateAlert
 };

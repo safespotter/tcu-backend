@@ -71,6 +71,7 @@ module.exports = function (app, passport, config, io) {
     app.post(`${safePath}/manualAlert`, reqAuth, AccMan.roleAuth(all), SafMan.manualAlert);
     app.put(`${safePath}/editAlert`, reqAuth, AccMan.roleAuth(all), SafMan.editAlert);
     app.post(`${safePath}/prorogationAlert`, reqAuth, AccMan.roleAuth(all), SafMan.prorogationAlert);
+    app.post(`${safePath}/propagateAlert`, reqAuth, AccMan.roleAuth(all), SafMan.propagateAlert);
 
     /****************** WEATHER SERVICE ********************/
     app.get(`${weatherPath}/getLive`, reqAuth, AccMan.roleAuth(all), InfoManager.requestWeatherLive);

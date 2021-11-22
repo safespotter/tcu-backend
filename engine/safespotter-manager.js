@@ -1169,36 +1169,56 @@ async function propagateAlert(req, res) {
     const date = new Date;
 
     try {
+        if (anomaly_level < 1 || anomaly_level > 4){
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "cant propagate alert in range outside 1 - 4"
+            });
+        } else{
+            for (const lamp of dest_lamp) {
+                const lampStatus = await LampStatus.find({});
+                let status = new LampStatus;
+                let lampStatus_id = 1;
 
-        for (const lamp of dest_lamp) {
-            const lampStatus = await LampStatus.find({});
-            let status = new LampStatus;
-            let lampStatus_id = 1;
+                if (lampStatus.length > 0)
+                    //get the max id value and then add 1
+                    lampStatus_id = _.maxBy(lampStatus, 'status_id').status_id + 1;
 
-            if (lampStatus.length > 0)
-                //get the max id value and then add 1
-                lampStatus_id = _.maxBy(lampStatus, 'status_id').status_id + 1;
+                status.lamp_id = lamp.lamp_id;
+                status.alert_id = alert_id;
+                status.date = date;
+                status.status_id = lampStatus_id;
+                await status.save();
 
-            status.lamp_id = lamp.lamp_id;
-            status.alert_id = alert_id;
-            status.date = date;
-            status.status_id = lampStatus_id;
-            await status.save();
+                await SafespotterManager.updateOne({id: lamp_id}, {
+                    alert_id: alert_id,
+                    anomaly_level: anomaly_level,
+                    panel: panel,
+                    date: date,
+                    status: lampStatus_id
+                });
+            }
 
-            await SafespotterManager.updateOne({id: lamp_id}, {
-                alert_id: alert_id,
-                anomaly_level: anomaly_level,
-                panel: panel,
-                date: date,
-                status: lampStatus_id
-            }).then({
+            await routes.dataUpdate(lamp_id);
 
-            })
+            res.status(HttpStatus.OK).send({
+                message: "Alert propagate successfully"
+            });
+
+            setTimeout(async function () {
+                for (const lamp of dest_lamp) {
+                    await SafespotterManager.updateOne({id: lamp.lamp_id, date: date}, {
+                        alert_id: 0,
+                        anomaly_level: 0,
+                        panel: 0
+                    });
+                }
+            }, timer);
         }
-
-
     } catch (e) {
-        console.warn("err", e)
+        console.log(err);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "lamppost id not detected"
+        });
     }
 
 }

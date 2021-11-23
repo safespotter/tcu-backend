@@ -1163,7 +1163,7 @@ async function propagateAlert(req, res) {
     const anomaly_level = req.body.anomaly_level;
     const panel = req.body.panel;
     const timer = req.body.timer;
-    const dest_lamp = req.body.dest_panel;
+    const dest_lamp = req.body.dest_lamp;
 
 
     const date = new Date;
@@ -1183,18 +1183,18 @@ async function propagateAlert(req, res) {
                     //get the max id value and then add 1
                     lampStatus_id = _.maxBy(lampStatus, 'status_id').status_id + 1;
 
-                status.lamp_id = lamp.lamp_id;
+                status.lamp_id = lamp;
                 status.alert_id = alert_id;
                 status.date = date;
                 status.status_id = lampStatus_id;
                 await status.save();
 
-                await SafespotterManager.updateOne({id: lamp_id}, {
+                await SafespotterManager.updateOne({id: lamp}, {
                     alert_id: alert_id,
                     anomaly_level: anomaly_level,
                     panel: panel,
                     date: date,
-                    status: lampStatus_id
+                    status_id: lampStatus_id
                 });
             }
 
@@ -1206,7 +1206,7 @@ async function propagateAlert(req, res) {
 
             setTimeout(async function () {
                 for (const lamp of dest_lamp) {
-                    await SafespotterManager.updateOne({id: lamp.lamp_id, date: date}, {
+                    await SafespotterManager.updateOne({id: lamp, date: date}, {
                         alert_id: 0,
                         anomaly_level: 0,
                         panel: 0
@@ -1214,7 +1214,7 @@ async function propagateAlert(req, res) {
                 }
             }, timer);
         }
-    } catch (e) {
+    } catch (err) {
         console.log(err);
         return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
             error: "lamppost id not detected"

@@ -1,6 +1,7 @@
 const SafespotterManager = require('../models/mongo/mongo-safeSpotter');
 const LampStatus = require('../models/mongo/mongo-lampStatus');
 const Notification = require('../models/mongo/mongo-notification');
+const Panel = require('../models/mongo/mongo-panels');
 const Push = require('../models/mongo/mongo-pushNotification');
 const HttpStatus = require('http-status-codes');
 const _ = require("lodash");
@@ -289,11 +290,14 @@ async function createNotification(lamp_id, alert_id, status_id) {
                 // notifica telegram
                 bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id) + ' in ' + lamp[0].street + ".");
 
-                //attivazione del pannello luminoso
-                await SafespotterManager.updateOne({id: lamp_id},
-                    {
-                        panel: 3
+                // attivazione del pannello luminoso
+                // mettere la chiamata al pannello
+                for (const panel of lamp[0]['panel_list']) {
+                    await Panel.updateOne({panel_id: panel}, {
+                        status: 3,
+                        date: timestamp
                     })
+                }
 
             }
 
@@ -302,15 +306,22 @@ async function createNotification(lamp_id, alert_id, status_id) {
 
             //check del lampione
             setTimeout(async () => {
+                const updatedDate = new Date();
                 await SafespotterManager.updateOne({id: lamp_id, date: timestamp},
                     {
                         alert_id: 0,
                         anomaly_level: 0,
-                        date: new Date(),
-                        checked: false,
-                        panel: 0
+                        date: updatedDate,
+                        checked: false
                     });
-                routes.dataUpdate(lamp_id);
+
+                for (const panel of lamp.panel_list) {
+                    await Panel.updateOne({panel_id: panel}, {
+                        status: 0,
+                        date: updatedDate
+                    })
+                }
+                await routes.dataUpdate(lamp_id);
             }, timer);
         }
     } catch (err) {
@@ -936,14 +947,21 @@ async function updateActionRequiredAlert(req, res) {
 
 async function updatePanel(req, res) {
     const lamp_id = req.body.lamp_id;
-    const panel = req.body.panel;
+    const status = req.body.panel;
 
     try {
-        await SafespotterManager.updateOne({id: lamp_id}, {
-            panel: panel
-        }).then(
+        await SafespotterManager.find({id: lamp_id}).then(
             result => {
-                if (result.nModified) {
+                if (result) {
+                    for (const panel of result[0]['panel_list']) {
+                        console.log("panel", panel);
+                        //inserire le chiamate ai pannelli
+                        Panel.update({panel_id: panel}, {
+                            status: status,
+                            date: new Date()
+                        }).then(result => {
+                        });
+                    }
 
                     setTimeout(function () {
                         routes.dataUpdate(lamp_id);
@@ -975,7 +993,7 @@ async function manualAlert(req, res) {
     const lamp_id = req.body.lamp_id;
     const alert_id = req.body.alert_id;
     const anomaly_level = req.body.anomaly_level;
-    const panel = req.body.panel;
+    const status = req.body.panel;
     const timer = req.body.timer;
     const telegram = req.body.telegram || false;
 
@@ -985,7 +1003,6 @@ async function manualAlert(req, res) {
         await SafespotterManager.updateOne({id: lamp_id}, {
             alert_id: alert_id,
             anomaly_level: anomaly_level,
-            panel: panel,
             date: date
         }).then(
             result => {
@@ -1007,6 +1024,22 @@ async function manualAlert(req, res) {
                         doc.status_id = lampStatus_id;
                         doc.save();
 
+                        setTimeout(async function () {
+                            await SafespotterManager.find({id: lamp_id}).then(
+                                result => {
+                                    if (result) {
+                                        for (const panel of result[0]['panel_list']) {
+                                            //inserire le chiamate ai pannelli
+                                            Panel.update({panel_id: panel}, {
+                                                status: status,
+                                                date: date
+                                            }).then(result => {
+                                            });
+                                        }
+                                    }
+                                })
+                        }, 1000);
+
                         await SafespotterManager.updateOne({id: lamp_id}, {
                             status_id: lampStatus_id
                         });
@@ -1022,10 +1055,23 @@ async function manualAlert(req, res) {
                     });
 
                     setTimeout(async function () {
+
+                        await SafespotterManager.find({id: lamp_id}).then(
+                            result => {
+                                if (result) {
+                                    for (const panel of result[0]['panel_list']) {
+                                        //inserire le chiamate ai pannelli
+                                        Panel.update({panel_id: panel}, {
+                                            status: 0
+                                        }).then(result => {
+                                        });
+                                    }
+                                }
+                            })
+
                         await SafespotterManager.updateOne({id: lamp_id, date: date}, {
                             alert_id: 0,
-                            anomaly_level: 0,
-                            panel: 0
+                            anomaly_level: 0
                         }).then(() => routes.dataUpdate(lamp_id));
 
                     }, timer);
@@ -1063,10 +1109,22 @@ async function prorogationAlert(req, res) {
         });
 
         setTimeout(async function () {
+            await SafespotterManager.find({id: lamp_id}).then(
+                result => {
+                    if (result) {
+                        for (const panel of result[0]['panel_list']) {
+                            //inserire le chiamate ai pannelli
+                            Panel.update({panel_id: panel}, {
+                                status: 0
+                            }).then(result => {
+                            });
+                        }
+                    }
+                })
+
             await SafespotterManager.updateOne({id: lamp_id, date: date}, {
                 alert_id: 0,
-                anomaly_level: 0,
-                panel: 0
+                anomaly_level: 0
             }).then(async () => {
                 const doc = await SafespotterManager.find({id: lamp_id});
                 await Notification.updateOne({notification_id: doc.notification_id}, {
@@ -1090,7 +1148,7 @@ async function editAlert(req, res) {
     const lamp_id = req.body.lamp_id;
     const alert_id = req.body.alert_id;
     const anomaly_level = req.body.anomaly_level;
-    const panel = req.body.panel;
+    const status = req.body.panel;
     const timer = req.body.timer;
     const telegram = req.body.telegram || false;
 
@@ -1101,7 +1159,6 @@ async function editAlert(req, res) {
         await SafespotterManager.updateOne({id: lamp_id}, {
             alert_id: alert_id,
             anomaly_level: anomaly_level,
-            panel: panel,
             date: date
         }).then(
             result => {
@@ -1116,6 +1173,20 @@ async function editAlert(req, res) {
                             alert_id: alert_id,
                         });
 
+                        await SafespotterManager.find({id: lamp_id}).then(
+                            result => {
+                                if (result) {
+                                    for (const panel of result[0]['panel_list']) {
+                                        //inserire le chiamate ai pannelli
+                                        Panel.update({panel_id: panel}, {
+                                            status: status,
+                                            date: date
+                                        }).then(result => {
+                                        });
+                                    }
+                                }
+                            })
+
                         if (telegram) {
                             await bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id));
                         }
@@ -1128,10 +1199,23 @@ async function editAlert(req, res) {
                     });
 
                     setTimeout(async function () {
+
+                        await SafespotterManager.find({id: lamp_id}).then(
+                            result => {
+                                if (result) {
+                                    for (const panel of result[0]['panel_list']) {
+                                        //inserire le chiamate ai pannelli
+                                        Panel.update({panel_id: panel}, {
+                                            status: 0
+                                        }).then(result => {
+                                        });
+                                    }
+                                }
+                            });
+
                         await SafespotterManager.updateOne({id: lamp_id, date: date}, {
                             alert_id: 0,
-                            anomaly_level: 0,
-                            panel: 0
+                            anomaly_level: 0
                         }).then(() => {
                             routes.dataUpdate(lamp_id)
                         });
@@ -1169,11 +1253,11 @@ async function propagateAlert(req, res) {
     const date = new Date;
 
     try {
-        if (anomaly_level < 1 || anomaly_level > 4){
+        if (anomaly_level < 1 || anomaly_level > 4) {
             return res.status(HttpStatus.BAD_REQUEST).send({
                 error: "cant propagate alert in range outside 1 - 4"
             });
-        } else{
+        } else {
             for (const lamp of dest_lamp) {
                 const lampStatus = await LampStatus.find({});
                 let status = new LampStatus;

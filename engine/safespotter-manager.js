@@ -221,7 +221,7 @@ function defaultLamppostConfiguration(lamp) {
 }
 
 /**funzione che crea le notifiche e aggiorna il lampione*/
-async function createNotification(lamp_id, alert_id, status_id) {
+async function  createNotification(lamp_id, alert_id, status_id) {
 
     try {
         let anomaly_level = 0;
@@ -289,7 +289,9 @@ async function createNotification(lamp_id, alert_id, status_id) {
             if (anomaly_level >= 4) {
                 // notifica telegram
                 bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id) + ' in ' + lamp[0].street + ".");
-
+                await SafespotterManager.updateOne({id: lamp_id}, {
+                    panel: true
+                });
                 // attivazione del pannello luminoso
                 // mettere la chiamata al pannello
                 for (const panel of lamp[0]['panel_list']) {
@@ -312,15 +314,23 @@ async function createNotification(lamp_id, alert_id, status_id) {
                         alert_id: 0,
                         anomaly_level: 0,
                         date: updatedDate,
-                        checked: false
+                        checked: false,
+                        panel: false
                     });
 
-                for (const panel of lamp.panel_list) {
-                    await Panel.updateOne({panel_id: panel}, {
-                        status: 0,
-                        date: updatedDate
-                    })
-                }
+                await SafespotterManager.find({id: lamp_id}).then(
+                    result => {
+                        if (result) {
+                            console.log("result dentro", result);
+                            for (const panel of result[0]['panel_list']) {
+                                //inserire le chiamate ai pannelli
+                                Panel.update({panel_id: panel}, {
+                                    status: 0
+                                }).then(result => {
+                                });
+                            }
+                        }
+                    });
                 await routes.dataUpdate(lamp_id);
             }, timer);
         }
@@ -907,13 +917,26 @@ async function updateActionRequiredAlert(req, res) {
     try {
         await SafespotterManager.updateOne({id: lamp_id}, {
             alert_id: 0,
-            anomaly_level: 0,
-            panel: 0
+            anomaly_level: 0
         }).then(
             result => {
                 if (result.nModified) {
 
                     setTimeout(async () => {
+
+                        await SafespotterManager.find({id: lamp_id}).then(
+                            result => {
+                                if (result) {
+                                    for (const panel of result[0]['panel_list']) {
+                                        //inserire le chiamate ai pannelli
+                                        Panel.update({panel_id: panel}, {
+                                            status: 0
+                                        }).then(result => {
+                                        });
+                                    }
+                                }
+                            });
+
                         await Notification.updateOne({$and: [{lamp_id: lamp_id}, {notification_id: notification_id}]}, {
                             checked: true
                         }).then(result => console.log("aggiorno notifica", result));

@@ -17,6 +17,8 @@ module.exports = mongoose.model('SafeSpotter', new mongoose.Schema({
     configuration: [],
     timers: [],
     panel_list: [],
+    panel: Boolean,
+    panel_status: Number,
     platform: String
 }, {
     versionKey: false

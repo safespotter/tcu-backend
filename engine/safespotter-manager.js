@@ -221,7 +221,7 @@ function defaultLamppostConfiguration(lamp) {
 }
 
 /**funzione che crea le notifiche e aggiorna il lampione*/
-async function  createNotification(lamp_id, alert_id, status_id) {
+async function createNotification(lamp_id, alert_id, status_id) {
 
     try {
         let anomaly_level = 0;
@@ -320,15 +320,35 @@ async function  createNotification(lamp_id, alert_id, status_id) {
 
                 await SafespotterManager.find({id: lamp_id}).then(
                     result => {
-                        if (result) {
-                            console.log("result dentro", result);
-                            for (const panel of result[0]['panel_list']) {
-                                //inserire le chiamate ai pannelli
-                                Panel.update({panel_id: panel}, {
-                                    status: 0
-                                }).then(result => {
-                                });
-                            }
+                        if (result.length > 0) {
+
+                            const panel_list = result[0].panel_list;
+                            SafespotterManager.find({
+                                id: {$ne: lamp_id},
+                                panel_list: panel_list,
+                                anomaly_level: {$gt: 1},
+                                panel: true
+                            })
+                                .then(res => {
+
+                                    if (res.length > 0) {
+                                        for (const panel of panel_list) {
+                                            //inserire le chiamate ai pannelli
+                                            Panel.update({panel_id: panel}, {
+                                                status: (res[0].anomaly_level - 1)
+                                            }).then(result => {
+                                            })
+                                        }
+                                    } else {
+                                        for (const panel of panel_list) {
+                                            //inserire le chiamate ai pannelli
+                                            Panel.update({panel_id: panel}, {
+                                                status: 0
+                                            }).then(result => {
+                                            })
+                                        }
+                                    }
+                                })
                         }
                     });
                 await routes.dataUpdate(lamp_id);

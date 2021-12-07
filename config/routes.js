@@ -72,7 +72,7 @@ module.exports = function (app, passport, config, io) {
     app.put(`${safePath}/editAlert`, reqAuth, AccMan.roleAuth(all), SafMan.editAlert);
     app.post(`${safePath}/prorogationAlert`, reqAuth, AccMan.roleAuth(all), SafMan.prorogationAlert);
     app.post(`${safePath}/propagateAlert`, reqAuth, AccMan.roleAuth(all), SafMan.propagateAlert);
-    app.get(`${safePath}/getPanelsStatus/`, reqAuth, AccMan.roleAuth(all), SafMan.getPanelsStatus);
+    app.get(`${safePath}/getPanelsStatus/:id`, reqAuth, AccMan.roleAuth(all), SafMan.getPanelsStatus);
 
     /****************** WEATHER SERVICE ********************/
     app.get(`${weatherPath}/getLive`, reqAuth, AccMan.roleAuth(all), InfoManager.requestWeatherLive);

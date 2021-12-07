@@ -1340,7 +1340,7 @@ async function panelsManagement(lamp_id, date) {
 
 async function getPanelsStatus(req, res) {
 
-    const lamp_id = req.body.lamp_id;
+    const lamp_id = req.params.id;
 
     try {
 

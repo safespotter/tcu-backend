@@ -318,7 +318,7 @@ async function createNotification(lamp_id, alert_id, status_id) {
                         panel: false
                     });
 
-                await panelsManagement(lamp_id, timestamp);
+                await panelsManagement(lamp_id, updatedDate);
 
                 await routes.dataUpdate(lamp_id);
             }, timer);
@@ -1338,6 +1338,50 @@ async function panelsManagement(lamp_id, date) {
         });
 }
 
+async function getPanelsStatus(req, res) {
+
+    const lamp_id = req.body.lamp_id;
+
+    try {
+
+        const lamp = await SafespotterManager.find({id: lamp_id});
+
+        if (lamp.length === 0) {
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "lamppost id not detected"
+            });
+        }
+
+        const panel_list = lamp[0].panel_list;
+
+        if (panel_list.length === 0) {
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "panels unsetted"
+            });
+        }
+
+        let status;
+
+        for (const panel_id of panel_list) {
+            //da modificare quando si possono usare più pannelli
+            let panel = await Panel.find({panel_id: panel_id})
+            status = panel[0]['status'];
+        }
+
+        return res.status(HttpStatus.OK).send({
+            "lamp_id": parseInt(lamp_id),
+            "panel_list": panel_list,
+            "status": status
+        });
+
+    } catch (err) {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "lamppost id not detected"
+        });
+    }
+
+}
+
 module.exports = {
     returnList,
     updateLamppostStatus,
@@ -1355,5 +1399,6 @@ module.exports = {
     manualAlert,
     prorogationAlert,
     editAlert,
-    propagateAlert
+    propagateAlert,
+    getPanelsStatus
 };

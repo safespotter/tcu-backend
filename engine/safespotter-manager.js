@@ -318,7 +318,7 @@ async function createNotification(lamp_id, alert_id, status_id) {
                         panel: false
                     });
 
-                await panelsManagement(lamp_id, updatedDate);
+                await panelsManagement(lamp_id, timestamp);
 
                 await routes.dataUpdate(lamp_id);
             }, timer);
@@ -1301,6 +1301,7 @@ async function propagateAlert(req, res) {
 }
 
 async function panelsManagement(lamp_id, date) {
+    const new_date = new Date;
     await SafespotterManager.find({id: lamp_id}).then(
         result => {
             if (result.length > 0) {
@@ -1313,22 +1314,21 @@ async function panelsManagement(lamp_id, date) {
                     panel: true
                 })
                     .then(res => {
-
                         if (res.length > 0) {
                             for (const panel of panel_list) {
                                 //inserire le chiamate ai pannelli
-                                Panel.update({panel_id: panel}, {
+                                Panel.update({panel_id: panel, date: date}, {
                                     status: (res[0].anomaly_level - 1),
-                                    date: date
+                                    date: new_date
                                 }).then(result => {
                                 })
                             }
                         } else {
                             for (const panel of panel_list) {
                                 //inserire le chiamate ai pannelli
-                                Panel.update({panel_id: panel}, {
+                                Panel.update({panel_id: panel, date: date}, {
                                     status: 0,
-                                    date: date
+                                    date: new_date
                                 }).then(result => {
                                 })
                             }

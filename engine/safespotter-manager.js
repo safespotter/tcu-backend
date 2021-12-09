@@ -1104,6 +1104,19 @@ async function prorogationAlert(req, res) {
             date: date
         })
 
+        await SafespotterManager.find({id: lamp_id, panel: true})
+            .then(result => {
+                if (result.length > 0){
+                    for (const panel of result[0]['panel_list']) {
+                        //inserire le chiamate ai pannelli
+                        Panel.update({panel_id: panel}, {
+                            date: date
+                        }).then(result => {
+                        });
+                    }
+                }
+            })
+
         res.status(HttpStatus.OK).send({
             message: "Prorogation alert updated successfully"
         });

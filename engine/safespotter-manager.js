@@ -959,14 +959,12 @@ async function updatePanel(req, res) {
                 if (result) {
 
                     if (status > 0){
-                        console.log("stato maggiore di 0")
                         SafespotterManager.updateOne({id: lamp_id}, {
                             panel: true,
                             date: new_date
                         }).then();
                     }
                     else{
-                        console.log("stato uguale 0")
                         SafespotterManager.updateOne({id: lamp_id}, {
                             panel: false,
                             date: new_date

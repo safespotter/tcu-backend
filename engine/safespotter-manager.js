@@ -952,18 +952,33 @@ async function updatePanel(req, res) {
     const lamp_id = req.body.lamp_id;
     const status = req.body.panel;
 
+    const new_date = new Date;
     try {
         await SafespotterManager.find({id: lamp_id}).then(
             result => {
                 if (result) {
+
+                    if (status > 0){
+                        console.log("stato maggiore di 0")
+                        SafespotterManager.updateOne({id: lamp_id}, {
+                            panel: true,
+                            date: new_date
+                        }).then();
+                    }
+                    else{
+                        console.log("stato uguale 0")
+                        SafespotterManager.updateOne({id: lamp_id}, {
+                            panel: false,
+                            date: new_date
+                        }).then();
+                    }
+
                     for (const panel of result[0]['panel_list']) {
-                        console.log("panel", panel);
                         //inserire le chiamate ai pannelli
                         Panel.update({panel_id: panel}, {
                             status: status,
-                            date: new Date()
-                        }).then(result => {
-                        });
+                            date: new_date
+                        }).then();
                     }
 
                     setTimeout(function () {
@@ -1107,7 +1122,7 @@ async function prorogationAlert(req, res) {
 
         await SafespotterManager.find({id: lamp_id, panel: true})
             .then(result => {
-                if (result.length > 0){
+                if (result.length > 0) {
                     for (const panel of result[0]['panel_list']) {
                         //inserire le chiamate ai pannelli
                         Panel.update({panel_id: panel}, {
@@ -1352,6 +1367,28 @@ async function panelsManagement(lamp_id, date) {
         });
 }
 
+async function getLamppost(req, res) {
+    const lamp_id = req.params.id;
+
+    try {
+
+        const lamp = await SafespotterManager.find({id: lamp_id});
+
+        if (lamp.length === 0) {
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "lamppost id not detected"
+            });
+        }
+
+        return res.status(HttpStatus.OK).send(lamp[0]);
+
+    } catch (err) {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "lamppost id not detected"
+        });
+    }
+}
+
 async function getPanelsStatus(req, res) {
 
     const lamp_id = req.params.id;
@@ -1414,5 +1451,6 @@ module.exports = {
     prorogationAlert,
     editAlert,
     propagateAlert,
-    getPanelsStatus
+    getPanelsStatus,
+    getLamppost
 };

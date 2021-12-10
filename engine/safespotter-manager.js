@@ -902,6 +902,7 @@ async function updateActionRequiredAlert(req, res) {
 
     const lamp_id = req.body.lamp_id;
     const notification_id = req.body.notification_id;
+    const last_update = req.body.date;
 
     try {
         await SafespotterManager.updateOne({id: lamp_id}, {
@@ -914,7 +915,7 @@ async function updateActionRequiredAlert(req, res) {
 
                     setTimeout(async () => {
 
-                        await panelsManagement(lamp_id, new Date());
+                        await panelsManagement(lamp_id, last_update);
 
                         await Notification.updateOne({$and: [{lamp_id: lamp_id}, {notification_id: notification_id}]}, {
                             checked: true

@@ -958,13 +958,12 @@ async function updatePanel(req, res) {
             result => {
                 if (result) {
 
-                    if (status > 0){
+                    if (status > 0) {
                         SafespotterManager.updateOne({id: lamp_id}, {
                             panel: true,
                             date: new_date
                         }).then();
-                    }
-                    else{
+                    } else {
                         SafespotterManager.updateOne({id: lamp_id}, {
                             panel: false,
                             date: new_date
@@ -1265,10 +1264,10 @@ async function propagateAlert(req, res) {
     const lamp_id = req.body.lamp_id;
     const alert_id = req.body.alert_id;
     const anomaly_level = req.body.anomaly_level;
-    const panel = req.body.panel;
+    const panel_level = req.body.panel;
     const timer = req.body.timer;
     const dest_lamp = req.body.dest_lamp;
-
+    let panel = false;
 
     const date = new Date;
 
@@ -1279,6 +1278,10 @@ async function propagateAlert(req, res) {
             });
         } else {
             for (const lamp of dest_lamp) {
+
+                if (panel_level > 0) {
+                    panel = true;
+                }
                 const lampStatus = await LampStatus.find({});
                 let status = new LampStatus;
                 let lampStatus_id = 1;
@@ -1296,27 +1299,42 @@ async function propagateAlert(req, res) {
                 await SafespotterManager.updateOne({id: lamp}, {
                     alert_id: alert_id,
                     anomaly_level: anomaly_level,
-                    panel: panel,
                     date: date,
+                    panel: panel,
                     status_id: lampStatus_id
+                }).then();
+
+                await SafespotterManager.find({id: lamp, date: date}).then(
+                    data => {
+                        const panel_list = data[0].panel_list;
+                        for (const panel of panel_list) {
+                            //inserire le chiamate ai pannelli
+                            Panel.update({panel_id: panel}, {
+                                status: panel_level,
+                                date: date
+                            }).then()
+                        }
+                    })
+
+                await routes.dataUpdate(lamp_id);
+
+                res.status(HttpStatus.OK).send({
+                    message: "Alert propagate successfully"
                 });
+
+                setTimeout(async function () {
+                    for (const lamp of dest_lamp) {
+                        await SafespotterManager.updateOne({id: lamp, date: date}, {
+                            alert_id: 0,
+                            anomaly_level: 0,
+                            panel: false
+                        });
+                        if (panel)
+                            await panelsManagement(lamp, date);
+                    }
+                    await routes.dataUpdate(lamp_id);
+                }, timer);
             }
-
-            await routes.dataUpdate(lamp_id);
-
-            res.status(HttpStatus.OK).send({
-                message: "Alert propagate successfully"
-            });
-
-            setTimeout(async function () {
-                for (const lamp of dest_lamp) {
-                    await SafespotterManager.updateOne({id: lamp, date: date}, {
-                        alert_id: 0,
-                        anomaly_level: 0,
-                        panel: 0
-                    });
-                }
-            }, timer);
         }
     } catch (err) {
         console.log(err);

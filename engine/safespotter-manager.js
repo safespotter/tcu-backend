@@ -61,7 +61,7 @@ function storeLocalVideo(id, day, datetime, path) {
 
 /**Metodo che avvia il download del file video*/
 const download = (url, path, callback) => {
-    request.get(url, (err, res, body) => {
+    request.head(url, (err, res, body) => {
         request(url).pipe(fs.createWriteStream(path)).on('close', callback)
     })
 };

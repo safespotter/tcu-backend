@@ -5,7 +5,8 @@ module.exports = mongoose.model('LampStatus', new mongoose.Schema({
     alert_id: Number,
     date: { type: Date, default: Date.now },
     videoURL: String,
-    status_id: Number
+    status_id: Number,
+    video_id: Number
 },{
     versionKey: false
 }));

@@ -62,7 +62,12 @@ function storeLocalVideo(id, day, datetime, path) {
 /**Metodo che avvia il download del file video*/
 const download = (url, path, callback) => {
     request.head(url, (err, res, body) => {
-        request(url).pipe(fs.createWriteStream(path)).on('close', callback)
+        // console.log('content-type:', res.headers['content-type']);
+        // console.log('content-length:', res.headers['content-length']);
+
+        if (res.headers['content-length'] > 0)
+            request(url).pipe(fs.createWriteStream(path)).on('close', callback)
+
     })
 };
 
@@ -348,6 +353,7 @@ async function returnList(req, res) {
  *      lamp_id: number,
  *      alert_id: number,
  *      videoURL: string
+ *      video_id: number
  *
  * */
 async function updateLamppostStatus(req, res) {
@@ -367,6 +373,7 @@ async function updateLamppostStatus(req, res) {
         }
 
         const lampStatus = await LampStatus.find({});
+
         let lampStatus_id = 1;
 
         if (lampStatus.length > 0)
@@ -381,28 +388,38 @@ async function updateLamppostStatus(req, res) {
         //controllo se i dati ricevuti hanno l'attributo video ed eventualmente lo salvo
         if (_.has(data, "videoURL")) {
 
+            let flag = false;
+            const videoCheck = await LampStatus.find({lamp_id: data.lamp_id, video_id: data.video_id})
+            if (videoCheck.length > 0){
+                flag = true;
+            }
 
-            //creo il path di salvataggio
-            path = pathCreator(data.lamp_id.toString(), customDayDate(day), customTimeDate(day));
-            //eseguo il download del video a partire dall'url
-            download(data["videoURL"], path, () => {
-                //uploadVideoFtp(data.lamp_id.toString(), customDayDate(day), customTimeDate(day), path);
-                // setTimeout(function () {
-                //     fs.unlinkSync(path);
-                //     fs.rmdirSync('./video', {recursive: true});
-                // }, 1000);
-                console.log('File salvato nella directory ' + path);
-            });
+            if (flag === false){
+                //creo il path di salvataggio
+                path = pathCreator(data.lamp_id.toString(), customDayDate(day), customTimeDate(day));
+                //eseguo il download del video a partire dall'url
+                download(data["videoURL"], path, () => {
+                    //uploadVideoFtp(data.lamp_id.toString(), customDayDate(day), customTimeDate(day), path);
+                    // setTimeout(function () {
+                    //     fs.unlinkSync(path);
+                    //     fs.rmdirSync('./video', {recursive: true});
+                    // }, 1);
+                    console.log('File salvato nella directory ' + path);
+                });
 
-            //path = getVideoPath(path);
+                //path = getVideoPath(path);
 
-            //const new_path = data.lamp_id.toString() + '_' + customDayDate(day) + '_' + customTimeDate(day) + '.mp4';
-            const new_path = 'video/' + data.lamp_id.toString() + '/' + customDayDate(day) + '/' + customTimeDate(day) + '.mp4';
+                //const new_path = data.lamp_id.toString() + '_' + customDayDate(day) + '_' + customTimeDate(day) + '.mp4';
+                const new_path = 'video/' + data.lamp_id.toString() + '/' + customDayDate(day) + '/' + customTimeDate(day) + '.mp4';
+                doc.videoURL = new_path;
+            }
+            else {
+                doc.videoURL = videoCheck[0].videoURL;
+            }
 
-
-            doc.videoURL = new_path;
         }
 
+        doc.video_id = data.video_id;
         //salvo su mongodb i dati ricevuti dal lampione (aggiungere altri se necessario)
         await doc.save();
 

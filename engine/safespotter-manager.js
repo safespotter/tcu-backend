@@ -363,6 +363,7 @@ async function updateLamppostStatus(req, res) {
         const data = req.body;
         let doc = new LampStatus;
         let path = "";
+        let flag = false;
         const day = Date.now();
 
         // controllo che siano stati passati dei dati
@@ -385,17 +386,20 @@ async function updateLamppostStatus(req, res) {
         //creo la notifica se l'anomalia che arriva è maggiore di quella già esistente e aggiorno il lampione
         await createNotification(data.lamp_id, data.alert_id, lampStatus_id);
 
-        //controllo se i dati ricevuti hanno l'attributo video ed eventualmente lo salvo
-        if (_.has(data, "videoURL")) {
+        if (_.has(data, "video_id")) {
 
-            let flag = false;
+            flag = true;
             const videoCheck = await LampStatus.find({lamp_id: data.lamp_id, video_id: data.video_id})
-            if (videoCheck.length > 0){
-                flag = true;
+            if (videoCheck.length > 0) {
+                doc.videoURL = videoCheck[0].videoURL;
+                doc.video_id = data.video_id;
+                await doc.save();
             }
-
-            if (flag === false){
-                //creo il path di salvataggio
+            else {
+                const new_path = 'video/' + data.lamp_id.toString() + '/' + customDayDate(day) + '/' + customTimeDate(day) + '.mp4';
+                doc.videoURL = new_path;
+                doc.video_id = data.video_id;
+                await doc.save();
                 path = pathCreator(data.lamp_id.toString(), customDayDate(day), customTimeDate(day));
                 //eseguo il download del video a partire dall'url
                 download(data["videoURL"], path, () => {
@@ -407,21 +411,12 @@ async function updateLamppostStatus(req, res) {
                     console.log('File salvato nella directory ' + path);
                 });
 
-                //path = getVideoPath(path);
-
-                //const new_path = data.lamp_id.toString() + '_' + customDayDate(day) + '_' + customTimeDate(day) + '.mp4';
-                const new_path = 'video/' + data.lamp_id.toString() + '/' + customDayDate(day) + '/' + customTimeDate(day) + '.mp4';
-                doc.videoURL = new_path;
             }
-            else {
-                doc.videoURL = videoCheck[0].videoURL;
-            }
-
         }
 
-        doc.video_id = data.video_id;
+        if (flag === false)
         //salvo su mongodb i dati ricevuti dal lampione (aggiungere altri se necessario)
-        await doc.save();
+            await doc.save();
 
         return res.status(HttpStatus.OK).send({
             message: "data saved successfully"

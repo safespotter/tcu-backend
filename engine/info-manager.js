@@ -2,8 +2,13 @@
 
 const WeatherService = require("./weather/weather-service")
 const TrafficService = require("./traffic/traffic-service")
+const Request = require('request-promise');
 const HttpStatus = require('http-status-codes')
+const sha256 = require('js-sha256');
 const {WeatherConditions} = require("../models/mongo/mongo-weather");
+const env = process.env.NODE_ENV || 'development';
+const config = require('./../config/config.json')[env];
+
 
 /**
  * Evaluates the risk index in a point based on weather conditions and traffic information
@@ -95,7 +100,34 @@ const convertServiceToRequest = (foo, serviceName) => async (req, res) => {
     }
 }
 
+async function getLiveWeather(req, res) {
+    try {
+        const timestamp = Math.floor(Date.now() / 1000);
+        const stringToHash = 'api-key' + config['WeatherLink']['key'] + 'station-id' + config['WeatherLink']['station'] + 't' + timestamp;
+        const apiSignature = sha256.sha256.hmac(config['WeatherLink']['secret'], stringToHash)
+
+        const option = {
+            method: 'GET',
+            uri: 'https://api.weatherlink.com/v2/current/' + config['WeatherLink']['station'] + '?api-key=' + config['WeatherLink']['key'] + '&t=' + timestamp + '&api-signature=' + apiSignature,
+            json: true
+        }
+
+        const result = await Request(option);
+
+        res.status(HttpStatus.OK).send({
+           result
+        });
+
+    } catch (e) {
+        res.status(HttpStatus.BAD_REQUEST).send({
+            error: 'something went wrong'
+        });
+    }
+
+}
+
 module.exports = {
+    getLiveWeather,
     requestWeatherLive: convertServiceToRequest(WeatherService.getLiveWeather, 'weather live'),
     requestWeatherForecast: convertServiceToRequest(WeatherService.getFutureWeather, 'weather forecast'),
     requestTraffic: convertServiceToRequest(TrafficService.getTraffic, 'traffic'),

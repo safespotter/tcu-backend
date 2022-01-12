@@ -76,6 +76,7 @@ module.exports = function (app, passport, config, io) {
     app.get(`${safePath}/getLamppost/:id`, reqAuth, AccMan.roleAuth(all), SafMan.getLamppost);
 
     /****************** WEATHER SERVICE ********************/
+    app.get(`${weatherPath}/getLiveWeather`, reqAuth, AccMan.roleAuth(all), InfoManager.getLiveWeather);
     app.get(`${weatherPath}/getLive`, reqAuth, AccMan.roleAuth(all), InfoManager.requestWeatherLive);
     app.get(`${weatherPath}/getForecast`, reqAuth, AccMan.roleAuth(all), InfoManager.requestWeatherForecast);
 

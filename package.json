@@ -40,7 +40,8 @@
     "web-push": "^3.4.4",
     "file-system": "2.2.2",
     "ftp": "0.3.10",
-    "node-telegram-bot-api": "^0.53.0"
+    "node-telegram-bot-api": "^0.53.0",
+    "js-sha256": "0.9.0"
   },
   "devDependencies": {
     "jasmine": "^3.6.3"

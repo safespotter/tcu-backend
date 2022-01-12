@@ -1027,6 +1027,36 @@ async function manualAlert(req, res) {
 
     const date = new Date;
 
+    if(lamp_id === undefined){
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "lamp id missing"
+        });
+    }
+
+    if(alert_id === undefined){
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "alert_id missing"
+        });
+    }
+
+    if(anomaly_level === undefined){
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "anomaly_level missing"
+        });
+    }
+
+    if(status === undefined){
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "panel status missing"
+        });
+    }
+
+    if(timer === undefined){
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "timer status missing"
+        });
+    }
+
     try {
         if (status == 0) {
             panel = false;
@@ -1124,6 +1154,18 @@ async function prorogationAlert(req, res) {
     const timer = req.body.timer;
     const date = new Date();
 
+    if(lamp_id === undefined){
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "lamp_id missing"
+        });
+    }
+
+    if(timer === undefined){
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "timer missing"
+        });
+    }
+
     try {
         await SafespotterManager.updateOne({id: lamp_id}, {
             date: date
@@ -1182,6 +1224,36 @@ async function editAlert(req, res) {
     const telegram = req.body.telegram || false;
 
     const date = new Date;
+
+    if(lamp_id === undefined){
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "lamp id missing"
+        });
+    }
+
+    if(alert_id === undefined){
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "alert_id missing"
+        });
+    }
+
+    if(anomaly_level === undefined){
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "anomaly_level missing"
+        });
+    }
+
+    if(status === undefined){
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "panel status missing"
+        });
+    }
+
+    if(timer === undefined){
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "timer status missing"
+        });
+    }
 
     try {
 
@@ -1280,6 +1352,42 @@ async function propagateAlert(req, res) {
     const timer = req.body.timer;
     const dest_lamp = req.body.dest_lamp;
     let panel = false;
+
+    if(lamp_id === undefined){
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "lamp id missing"
+        });
+    }
+
+    if(alert_id === undefined){
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "alert_id missing"
+        });
+    }
+
+    if(anomaly_level === undefined){
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "anomaly_level missing"
+        });
+    }
+
+    if(panel_level === undefined){
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "panel_level missing"
+        });
+    }
+
+    if(timer === undefined){
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "timer status missing"
+        });
+    }
+
+    if(dest_lamp === undefined){
+        return res.status(HttpStatus.BAD_REQUEST).send({
+            error: "lamppost missing"
+        });
+    }
 
     const date = new Date;
 

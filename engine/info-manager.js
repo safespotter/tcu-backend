@@ -114,8 +114,18 @@ async function getLiveWeather(req, res) {
 
         const result = await Request(option);
 
+        const humidity = result['sensors'][1]['data'][0]['hum'];
+        const temperature = parseFloat(((result['sensors'][1]['data'][0]['temp'] - 32) * 5 / 9).toFixed(1));
+        const wind_speed = result['sensors'][1]['data'][0]['wind_speed_hi_last_2_min'];
+        const rain = result['sensors'][1]['data'][0]['rainfall_daily_mm'];
+        const pressure = (result['sensors'][3]['data'][0]['bar_absolute']) + 1000 ;
+
         res.status(HttpStatus.OK).send({
-           result
+            humidity: humidity,
+            temperature: temperature,
+            wind_speed: wind_speed,
+            rain: rain,
+            pressure: pressure
         });
 
     } catch (e) {

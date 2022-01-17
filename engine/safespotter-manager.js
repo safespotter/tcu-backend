@@ -13,9 +13,11 @@ const webpush = require('web-push');
 const Client = require('ftp');
 const env = process.env.NODE_ENV || 'development';
 const config = require('./../config/config')[env];
+const tetralertToken = config['Tetralert'];
 const telegramToken = config['TelegramToken'];
 const telegramChatID = config['TelegramChatID'];
 const TelegramBot = require('node-telegram-bot-api');
+const Request = require("request-promise");
 const bot = new TelegramBot(telegramToken, {polling: true});
 
 
@@ -57,6 +59,43 @@ function uploadVideoFtp(id, day, datetime, path) {
 
 function storeLocalVideo(id, day, datetime, path) {
 
+}
+
+async function tetralertAPI (title, text, startTimestamp, panels, anomalyLevel, resetTimestamp){
+ try {
+
+     let lampAlert = 0;
+
+     switch (anomalyLevel){
+         case 1:
+             lampAlert = 10;
+             break;
+         case 2:
+             lampAlert = 15;
+             break;
+         case 3:
+             lampAlert = 20;
+             break;
+     }
+
+     const body = {"comunicazione": {"titolo": title,"testo": text,"ora_invio": startTimestamp,"destinatari": {"semafori": [ panels ],"bandi":[ panels ]},"canali":["semafori", "bandi"],"allerta_semafori": lampAlert,"ora_reset":resetTimestamp}};
+     const option = {
+         method: 'POST',
+         uri: 'https://safespotter-api.tetralert.it/comunicazioni/create?tk=' + tetralertToken,
+         auth: {
+             bearer: tetralertToken
+         },
+         body: body,
+         json: true
+     }
+
+     const result = await Request(option);
+
+     console.log ("result tetralert", result)
+
+  } catch (e) {
+     console.warn("Errore API Tetralert")
+ }
 }
 
 /**Metodo che avvia il download del file video*/
@@ -303,9 +342,10 @@ async function createNotification(lamp_id, alert_id, status_id) {
                     await Panel.updateOne({panel_id: panel}, {
                         status: 3,
                         date: timestamp
+                    }).then( async ()=>{
                     })
                 }
-
+                await tetralertAPI('ALLERTA AUTOMATICA', convertAlertType(alert_id) , Math.floor(timestamp / 1000), lamp[0]['panel_group'], 3, Math.floor(timestamp / 1000) + timer);
             }
 
             //dati su mongo
@@ -1100,6 +1140,7 @@ async function manualAlert(req, res) {
                                             }).then(result => {
                                             });
                                         }
+                                        tetralertAPI('ALLERTA MANUALE', convertAlertType(alert_id), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer).then();
                                     }
                                 })
                         }, 1000);

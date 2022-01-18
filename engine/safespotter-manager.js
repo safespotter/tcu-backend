@@ -94,7 +94,7 @@ async function tetralertAPI (title, text, startTimestamp, panels, anomalyLevel, 
 
      const result = await Request(option);
 
-     //console.log ("result tetralert", result)
+     console.log ("result tetralert", result)
 
   } catch (e) {
      console.warn("Errore API Tetralert")
@@ -348,7 +348,7 @@ async function createNotification(lamp_id, alert_id, status_id) {
                     }).then( async ()=>{
                     })
                 }
-                //await tetralertAPI('ALLERTA AUTOMATICA', convertAlertType(alert_id) , Math.floor(timestamp / 1000), lamp[0]['panel_group'], 3, Math.floor(timestamp / 1000) + timer);
+                await tetralertAPI('ALLERTA AUTOMATICA', convertAlertType(alert_id) , Math.floor(timestamp / 1000), lamp[0]['panel_group'], 3, Math.floor(timestamp / 1000) + timer);
             }
 
             //dati su mongo
@@ -1143,7 +1143,7 @@ async function manualAlert(req, res) {
                                             }).then(result => {
                                             });
                                         }
-                                        //tetralertAPI('ALLERTA MANUALE', convertAlertType(alert_id), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer).then();
+                                        tetralertAPI('ALLERTA MANUALE', convertAlertType(alert_id), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer).then();
                                     }
                                 })
                         }, 1000);
@@ -1225,6 +1225,7 @@ async function prorogationAlert(req, res) {
                         }).then(result => {
                         });
                     }
+                    tetralertAPI('ALLERTA PROROGATA', convertAlertType(result[0]['alert_id']), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer).then();
                 }
             })
 
@@ -1330,6 +1331,7 @@ async function editAlert(req, res) {
                                         }).then(result => {
                                         });
                                     }
+                                    tetralertAPI('ALLERTA MODIFICATA', convertAlertType(result[0]['alert_id']), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer).then();
                                 }
                             })
 
@@ -1478,6 +1480,7 @@ async function propagateAlert(req, res) {
                                 date: date
                             }).then()
                         }
+                        tetralertAPI('ALLERTA PROPAGATA', convertAlertType(data[0]['alert_id']), Math.floor(date / 1000), data[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer).then();
                     })
 
                 await routes.dataUpdate(lamp_id);

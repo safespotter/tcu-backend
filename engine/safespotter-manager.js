@@ -68,12 +68,15 @@ async function tetralertAPI (title, text, startTimestamp, panels, anomalyLevel, 
 
      switch (anomalyLevel){
          case 1:
+             //allerta gialla
              lampAlert = 10;
              break;
          case 2:
+             //allerta arancione
              lampAlert = 15;
              break;
          case 3:
+             //allerta rossa
              lampAlert = 20;
              break;
      }
@@ -91,7 +94,7 @@ async function tetralertAPI (title, text, startTimestamp, panels, anomalyLevel, 
 
      const result = await Request(option);
 
-     console.log ("result tetralert", result)
+     //console.log ("result tetralert", result)
 
   } catch (e) {
      console.warn("Errore API Tetralert")
@@ -327,7 +330,7 @@ async function createNotification(lamp_id, alert_id, status_id) {
 
             if (anomaly_level >= 2) {
                 // notifiche push
-                routes.pushNotification(convertAlertLevel(anomaly_level), convertAlertType(alert_id), timestamp);
+                //routes.pushNotification(convertAlertLevel(anomaly_level), convertAlertType(alert_id), timestamp);
             }
 
             if (anomaly_level >= 4) {
@@ -345,7 +348,7 @@ async function createNotification(lamp_id, alert_id, status_id) {
                     }).then( async ()=>{
                     })
                 }
-                await tetralertAPI('ALLERTA AUTOMATICA', convertAlertType(alert_id) , Math.floor(timestamp / 1000), lamp[0]['panel_group'], 3, Math.floor(timestamp / 1000) + timer);
+                //await tetralertAPI('ALLERTA AUTOMATICA', convertAlertType(alert_id) , Math.floor(timestamp / 1000), lamp[0]['panel_group'], 3, Math.floor(timestamp / 1000) + timer);
             }
 
             //dati su mongo
@@ -1140,7 +1143,7 @@ async function manualAlert(req, res) {
                                             }).then(result => {
                                             });
                                         }
-                                        tetralertAPI('ALLERTA MANUALE', convertAlertType(alert_id), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer).then();
+                                        //tetralertAPI('ALLERTA MANUALE', convertAlertType(alert_id), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer).then();
                                     }
                                 })
                         }, 1000);

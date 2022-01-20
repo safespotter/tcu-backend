@@ -58,6 +58,7 @@ module.exports = function (app, passport, config, io) {
     app.get(`${safePath}/getData`, reqAuth, AccMan.roleAuth(all), SafMan.returnList);
     app.post(`${safePath}/updateLamppostStatus`, SafMan.updateLamppostStatus);
     app.get(`${safePath}/getStreetLampStatus/:lamp_id`, reqAuth, AccMan.roleAuth(all), SafMan.getStreetLampStatus);
+    app.get(`${safePath}/getHistory`, SafMan.getHystoryLamp);
     app.post(`${safePath}/checkNotification`, reqAuth, AccMan.roleAuth(all), SafMan.checkNotification);
     app.put(`${safePath}/updateLamppostConfiguration/:id`, reqAuth, AccMan.roleAuth(all), SafMan.updateLamppostConfiguration);
     app.get(`${safePath}/getLamppostConfiguration/:id`, reqAuth, AccMan.roleAuth(all), SafMan.getLamppostConfiguration);

@@ -13,6 +13,7 @@ const webpush = require('web-push');
 const Client = require('ftp');
 const env = process.env.NODE_ENV || 'development';
 const config = require('./../config/config')[env];
+const historyTkn = config['historyTkn'];
 const tetralertToken = config['Tetralert'];
 const telegramToken = config['TelegramToken'];
 const telegramChatID = config['TelegramChatID'];
@@ -574,6 +575,35 @@ async function getStreetLampStatus(req, res) {
     try {
         let data;
         let lamp_id = req.params.lamp_id;
+
+        data = await LampStatus.find({
+            'lamp_id': lamp_id
+        }).sort({"date": "desc"});
+
+        return res.status(HttpStatus.OK).send({
+            data
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "something went wrong"
+        });
+    }
+}
+
+async function getHystoryLamp(req, res) {
+
+    try {
+        let data;
+        let lamp_id = req.query.lamp_id;
+        let token = req.query.tkn;
+
+        if (token !== historyTkn){
+            return res.status(HttpStatus.UNAUTHORIZED).send({
+                error: "UNAUTHORIZED"
+            });
+        }
 
         data = await LampStatus.find({
             'lamp_id': lamp_id
@@ -1724,5 +1754,6 @@ module.exports = {
     editAlert,
     propagateAlert,
     getPanelsStatus,
-    getLamppost
+    getLamppost,
+    getHystoryLamp
 };

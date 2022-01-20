@@ -61,44 +61,102 @@ function storeLocalVideo(id, day, datetime, path) {
 
 }
 
-async function tetralertAPI (title, text, startTimestamp, panels, anomalyLevel, resetTimestamp){
- try {
+function wazeFileCreator(lamp_id, street, latitude, longitude, alert_id, status_id, starttime, endtime) {
 
-     let lampAlert = 0;
+    let type;
+    let polyline;
 
-     switch (anomalyLevel){
-         case 1:
-             //allerta gialla
-             lampAlert = 10;
-             break;
-         case 2:
-             //allerta arancione
-             lampAlert = 15;
-             break;
-         case 3:
-             //allerta rossa
-             lampAlert = 20;
-             break;
-     }
+    try {
+        switch (alert_id) {
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 6:
+            case 7:
+                type = 'HAZARD';
+                break;
+            case 5:
+                type = 'ACCIDENT';
+                break;
+        }0
 
-     const body = {"comunicazione": {"titolo": title,"testo": text,"ora_invio": startTimestamp,"destinatari": {"semafori": [ panels ],"bandi":[ panels ]},"canali":["semafori", "bandi"],"allerta_semafori": lampAlert,"ora_reset":resetTimestamp}};
-     const option = {
-         method: 'POST',
-         uri: 'https://safespotter-api.tetralert.it/comunicazioni/create?tk=' + tetralertToken,
-         auth: {
-             bearer: tetralertToken
-         },
-         body: body,
-         json: true
-     }
+        const jsonToSave = {
+            "id": status_id,
+            "type": type,
+            "polyline": '0 0',
+            "street": street,
+            "starttime": starttime,
+            "endtime": endtime,
+            "description": convertAlertType(alert_id),
+            "direction": "BOTH_DIRECTIONS"
+        }
 
-     const result = await Request(option);
+        // stringify JSON Object
+        let jsonContent = JSON.stringify(jsonToSave);
 
-     console.log ("result tetralert", result)
+        fs.writeFileSync("waze.json", jsonContent, 'utf8', function (err) {
+            if (err) {
+                console.warn("An error occured while writing JSON Object to File.");
+                // return console.log(err);
+            }
+            console.log("JSON file has been saved.");
+        });
 
-  } catch (e) {
-     console.warn("Errore API Tetralert")
- }
+    } catch (e) {
+        console.warn(e);
+    }
+
+}
+
+async function tetralertAPI(title, text, startTimestamp, panels, anomalyLevel, resetTimestamp) {
+    try {
+
+        let lampAlert = 0;
+
+        switch (anomalyLevel) {
+            case 1:
+                //allerta gialla
+                lampAlert = 10;
+                break;
+            case 2:
+                //allerta arancione
+                lampAlert = 15;
+                break;
+            case 3:
+                //allerta rossa
+                lampAlert = 20;
+                break;
+        }
+
+        const body = {
+            "comunicazione": {
+                "titolo": title,
+                "testo": text,
+                "ora_invio": startTimestamp,
+                "destinatari": {"semafori": [panels], "bandi": [panels]},
+                "canali": ["semafori", "bandi"],
+                "allerta_semafori": lampAlert,
+                "ora_reset": resetTimestamp
+            }
+        };
+        const option = {
+            method: 'POST',
+            uri: 'https://safespotter-api.tetralert.it/comunicazioni/create?tk=' + tetralertToken,
+            auth: {
+                bearer: tetralertToken
+            },
+            body: body,
+            json: true
+        }
+
+        const result = await Request(option);
+
+        console.log("result tetralert", result)
+
+    } catch (e) {
+        console.warn("Errore API Tetralert")
+    }
 }
 
 /**Metodo che avvia il download del file video*/
@@ -134,8 +192,39 @@ function convertAlertType(input) {
         case 6:
         case '6':
             return 'Veicolo in sosta vietata';
+        case 7:
+        case '7':
+            return 'Guida spericolata';
         default:
             return 'Errore anomalia';
+    }
+}
+
+function convertAlertTypePath(input) {
+    switch (input) {
+        case 1:
+        case '1':
+            return 'cambio';
+        case 2:
+        case '2':
+            return 'traffico';
+        case 3:
+        case '3':
+            return 'persona';
+        case 4:
+        case '4':
+            return 'invasione';
+        case 5:
+        case '5':
+            return 'incidente';
+        case 6:
+        case '6':
+            return 'sosta';
+        case 7:
+        case '7':
+            return 'spericolata';
+        default:
+            return 'errore';
     }
 }
 
@@ -170,7 +259,7 @@ function getVideoPath(path) {
 }
 
 /**Metodo che crea il path*/
-function pathCreator(id, day, datetime) {
+function pathCreator(id, day, datetime, alert) {
 
     //verifico che esista la cartella video
     !fs.existsSync(config["videoBasePath"] + "video") && fs.mkdirSync(config["videoBasePath"] + "video");
@@ -182,7 +271,7 @@ function pathCreator(id, day, datetime) {
     !fs.existsSync(config["videoBasePath"] + "video/" + id + "/" + day) && fs.mkdirSync(config["videoBasePath"] + "video/" + id + "/" + day);
 
     //restituisco il path
-    return config["videoBasePath"] + "video/" + id + "/" + day + "/" + datetime + ".mp4";
+    return config["videoBasePath"] + "video/" + id + "/" + day + "/" + datetime + '_' + convertAlertTypePath(alert) + ".mp4";
 }
 
 
@@ -335,6 +424,7 @@ async function createNotification(lamp_id, alert_id, status_id) {
 
             if (anomaly_level >= 4) {
                 // notifica telegram
+                //wazeFileCreator(lamp[0]['id'], lamp[0]['street'], lamp[0]['lat'], lamp[0]['long'], alert_id, status_id, Math.floor(timestamp / 1000), Math.floor(timestamp / 1000) + timer);
                 bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id) + ' in ' + lamp[0].street + ".");
                 await SafespotterManager.updateOne({id: lamp_id}, {
                     panel: true
@@ -345,10 +435,10 @@ async function createNotification(lamp_id, alert_id, status_id) {
                     await Panel.updateOne({panel_id: panel}, {
                         status: 3,
                         date: timestamp
-                    }).then( async ()=>{
+                    }).then(async () => {
                     })
                 }
-                await tetralertAPI('ALLERTA AUTOMATICA', convertAlertType(alert_id) , Math.floor(timestamp / 1000), lamp[0]['panel_group'], 3, Math.floor(timestamp / 1000) + timer);
+                //await tetralertAPI('ALLERTA AUTOMATICA', convertAlertType(alert_id), Math.floor(timestamp / 1000), lamp[0]['panel_group'], 3, Math.floor(timestamp / 1000) + timer);
             }
 
             //dati su mongo
@@ -437,13 +527,12 @@ async function updateLamppostStatus(req, res) {
                 doc.videoURL = videoCheck[0].videoURL;
                 doc.video_id = data.video_id;
                 await doc.save();
-            }
-            else {
-                const new_path = 'video/' + data.lamp_id.toString() + '/' + customDayDate(day) + '/' + customTimeDate(day) + '.mp4';
+            } else {
+                const new_path = 'video/' + data.lamp_id.toString() + '/' + customDayDate(day) + '/' + customTimeDate(day) + '_' + convertAlertTypePath(req.body.alert_id) +'.mp4';
                 doc.videoURL = new_path;
                 doc.video_id = data.video_id;
                 await doc.save();
-                path = pathCreator(data.lamp_id.toString(), customDayDate(day), customTimeDate(day));
+                path = pathCreator(data.lamp_id.toString(), customDayDate(day), customTimeDate(day), req.body.alert_id);
                 //eseguo il download del video a partire dall'url
                 download(data["videoURL"], path, () => {
                     //uploadVideoFtp(data.lamp_id.toString(), customDayDate(day), customTimeDate(day), path);
@@ -458,7 +547,7 @@ async function updateLamppostStatus(req, res) {
         }
 
         if (flag === false)
-        //salvo su mongodb i dati ricevuti dal lampione (aggiungere altri se necessario)
+            //salvo su mongodb i dati ricevuti dal lampione (aggiungere altri se necessario)
             await doc.save();
 
         return res.status(HttpStatus.OK).send({
@@ -1070,31 +1159,31 @@ async function manualAlert(req, res) {
 
     const date = new Date;
 
-    if(lamp_id === undefined){
+    if (lamp_id === undefined) {
         return res.status(HttpStatus.BAD_REQUEST).send({
             error: "lamp id missing"
         });
     }
 
-    if(alert_id === undefined){
+    if (alert_id === undefined) {
         return res.status(HttpStatus.BAD_REQUEST).send({
             error: "alert_id missing"
         });
     }
 
-    if(anomaly_level === undefined){
+    if (anomaly_level === undefined) {
         return res.status(HttpStatus.BAD_REQUEST).send({
             error: "anomaly_level missing"
         });
     }
 
-    if(status === undefined){
+    if (status === undefined) {
         return res.status(HttpStatus.BAD_REQUEST).send({
             error: "panel status missing"
         });
     }
 
-    if(timer === undefined){
+    if (timer === undefined) {
         return res.status(HttpStatus.BAD_REQUEST).send({
             error: "timer status missing"
         });
@@ -1143,7 +1232,7 @@ async function manualAlert(req, res) {
                                             }).then(result => {
                                             });
                                         }
-                                        tetralertAPI('ALLERTA MANUALE', convertAlertType(alert_id), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer).then();
+                                        //tetralertAPI('ALLERTA MANUALE', convertAlertType(alert_id), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer).then();
                                     }
                                 })
                         }, 1000);
@@ -1198,13 +1287,13 @@ async function prorogationAlert(req, res) {
     const timer = req.body.timer;
     const date = new Date();
 
-    if(lamp_id === undefined){
+    if (lamp_id === undefined) {
         return res.status(HttpStatus.BAD_REQUEST).send({
             error: "lamp_id missing"
         });
     }
 
-    if(timer === undefined){
+    if (timer === undefined) {
         return res.status(HttpStatus.BAD_REQUEST).send({
             error: "timer missing"
         });
@@ -1225,7 +1314,7 @@ async function prorogationAlert(req, res) {
                         }).then(result => {
                         });
                     }
-                    tetralertAPI('ALLERTA PROROGATA', convertAlertType(result[0]['alert_id']), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer).then();
+                    //tetralertAPI('ALLERTA PROROGATA', convertAlertType(result[0]['alert_id']), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer).then();
                 }
             })
 
@@ -1270,31 +1359,31 @@ async function editAlert(req, res) {
 
     const date = new Date;
 
-    if(lamp_id === undefined){
+    if (lamp_id === undefined) {
         return res.status(HttpStatus.BAD_REQUEST).send({
             error: "lamp id missing"
         });
     }
 
-    if(alert_id === undefined){
+    if (alert_id === undefined) {
         return res.status(HttpStatus.BAD_REQUEST).send({
             error: "alert_id missing"
         });
     }
 
-    if(anomaly_level === undefined){
+    if (anomaly_level === undefined) {
         return res.status(HttpStatus.BAD_REQUEST).send({
             error: "anomaly_level missing"
         });
     }
 
-    if(status === undefined){
+    if (status === undefined) {
         return res.status(HttpStatus.BAD_REQUEST).send({
             error: "panel status missing"
         });
     }
 
-    if(timer === undefined){
+    if (timer === undefined) {
         return res.status(HttpStatus.BAD_REQUEST).send({
             error: "timer status missing"
         });
@@ -1331,7 +1420,7 @@ async function editAlert(req, res) {
                                         }).then(result => {
                                         });
                                     }
-                                    tetralertAPI('ALLERTA MODIFICATA', convertAlertType(result[0]['alert_id']), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer).then();
+                                    //tetralertAPI('ALLERTA MODIFICATA', convertAlertType(result[0]['alert_id']), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer).then();
                                 }
                             })
 
@@ -1399,37 +1488,37 @@ async function propagateAlert(req, res) {
     const dest_lamp = req.body.dest_lamp;
     let panel = false;
 
-    if(lamp_id === undefined){
+    if (lamp_id === undefined) {
         return res.status(HttpStatus.BAD_REQUEST).send({
             error: "lamp id missing"
         });
     }
 
-    if(alert_id === undefined){
+    if (alert_id === undefined) {
         return res.status(HttpStatus.BAD_REQUEST).send({
             error: "alert_id missing"
         });
     }
 
-    if(anomaly_level === undefined){
+    if (anomaly_level === undefined) {
         return res.status(HttpStatus.BAD_REQUEST).send({
             error: "anomaly_level missing"
         });
     }
 
-    if(panel_level === undefined){
+    if (panel_level === undefined) {
         return res.status(HttpStatus.BAD_REQUEST).send({
             error: "panel_level missing"
         });
     }
 
-    if(timer === undefined){
+    if (timer === undefined) {
         return res.status(HttpStatus.BAD_REQUEST).send({
             error: "timer status missing"
         });
     }
 
-    if(dest_lamp === undefined){
+    if (dest_lamp === undefined) {
         return res.status(HttpStatus.BAD_REQUEST).send({
             error: "lamppost missing"
         });
@@ -1480,7 +1569,7 @@ async function propagateAlert(req, res) {
                                 date: date
                             }).then()
                         }
-                        tetralertAPI('ALLERTA PROPAGATA', convertAlertType(data[0]['alert_id']), Math.floor(date / 1000), data[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer).then();
+                        //tetralertAPI('ALLERTA PROPAGATA', convertAlertType(data[0]['alert_id']), Math.floor(date / 1000), data[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer).then();
                     })
 
                 await routes.dataUpdate(lamp_id);

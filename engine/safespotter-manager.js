@@ -14,6 +14,7 @@ const Client = require('ftp');
 const env = process.env.NODE_ENV || 'development';
 const config = require('./../config/config')[env];
 const historyTkn = config['historyTkn'];
+const moment = require('moment');
 const wazePath = config['wazePath'];
 const tetralertToken = config['Tetralert'];
 const telegramToken = config['TelegramToken'];
@@ -59,10 +60,6 @@ function uploadVideoFtp(id, day, datetime, path) {
     });
 }
 
-function storeLocalVideo(id, day, datetime, path) {
-
-}
-
 function wazeFileCreator(lamp_id, street, latitude, longitude, alert_id, status_id, starttime, endtime) {
 
     let type;
@@ -88,19 +85,19 @@ function wazeFileCreator(lamp_id, street, latitude, longitude, alert_id, status_
             "type": type,
             "polyline": '0 0',
             "street": street,
-            "starttime": starttime,
-            "endtime": endtime,
+            "starttime": moment(new Date(starttime)).format(),
+            "endtime": moment(new Date(endtime)).format(),
             "description": convertAlertType(alert_id),
             "direction": "BOTH_DIRECTIONS"
         }
 
         if (!fs.existsSync(wazePath)) {
             fs.writeFileSync(wazePath, JSON.stringify({incidents: [jsonToSave]}), 'utf8');
-        } else{
+        } else {
             let data = fs.readFileSync(wazePath);
             let json = JSON.parse(data)['incidents'];
             json.push(jsonToSave);
-            fs.writeFileSync(wazePath, JSON.stringify({incidents:json}),'utf8');
+            fs.writeFileSync(wazePath, JSON.stringify({incidents: json}), 'utf8');
         }
 
     } catch (e) {
@@ -424,7 +421,7 @@ async function createNotification(lamp_id, alert_id, status_id) {
 
             if (anomaly_level >= 4) {
                 // notifica telegram
-                //wazeFileCreator(lamp[0]['id'], lamp[0]['street'], lamp[0]['lat'], lamp[0]['long'], alert_id, status_id, Math.floor(timestamp / 1000), Math.floor(timestamp / 1000) + timer);
+                //wazeFileCreator(lamp[0]['id'], lamp[0]['street'], lamp[0]['lat'], lamp[0]['long'], alert_id, status_id, timestamp, timestamp + timer);
                 bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id) + ' in ' + lamp[0].street + ".");
                 await SafespotterManager.updateOne({id: lamp_id}, {
                     panel: true

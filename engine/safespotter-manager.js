@@ -14,6 +14,7 @@ const Client = require('ftp');
 const env = process.env.NODE_ENV || 'development';
 const config = require('./../config/config')[env];
 const historyTkn = config['historyTkn'];
+const wazePath = config['wazePath'];
 const tetralertToken = config['Tetralert'];
 const telegramToken = config['TelegramToken'];
 const telegramChatID = config['TelegramChatID'];
@@ -80,7 +81,7 @@ function wazeFileCreator(lamp_id, street, latitude, longitude, alert_id, status_
             case 5:
                 type = 'ACCIDENT';
                 break;
-        }0
+        }
 
         const jsonToSave = {
             "id": status_id,
@@ -93,16 +94,14 @@ function wazeFileCreator(lamp_id, street, latitude, longitude, alert_id, status_
             "direction": "BOTH_DIRECTIONS"
         }
 
-        // stringify JSON Object
-        let jsonContent = JSON.stringify(jsonToSave);
-
-        fs.writeFileSync("waze.json", jsonContent, 'utf8', function (err) {
-            if (err) {
-                console.warn("An error occured while writing JSON Object to File.");
-                // return console.log(err);
-            }
-            console.log("JSON file has been saved.");
-        });
+        if (!fs.existsSync(wazePath)) {
+            fs.writeFileSync(wazePath, JSON.stringify({incidents: [jsonToSave]}), 'utf8');
+        } else{
+            let data = fs.readFileSync(wazePath);
+            let json = JSON.parse(data)['incidents'];
+            json.push(jsonToSave);
+            fs.writeFileSync(wazePath, JSON.stringify({incidents:json}),'utf8');
+        }
 
     } catch (e) {
         console.warn(e);
@@ -529,7 +528,7 @@ async function updateLamppostStatus(req, res) {
                 doc.video_id = data.video_id;
                 await doc.save();
             } else {
-                const new_path = 'video/' + data.lamp_id.toString() + '/' + customDayDate(day) + '/' + customTimeDate(day) + '_' + convertAlertTypePath(req.body.alert_id) +'.mp4';
+                const new_path = 'video/' + data.lamp_id.toString() + '/' + customDayDate(day) + '/' + customTimeDate(day) + '_' + convertAlertTypePath(req.body.alert_id) + '.mp4';
                 doc.videoURL = new_path;
                 doc.video_id = data.video_id;
                 await doc.save();
@@ -599,7 +598,7 @@ async function getHystoryLamp(req, res) {
         let lamp_id = req.query.lamp_id;
         let token = req.query.tkn;
 
-        if (token !== historyTkn){
+        if (token !== historyTkn) {
             return res.status(HttpStatus.UNAUTHORIZED).send({
                 error: "UNAUTHORIZED"
             });

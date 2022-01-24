@@ -83,12 +83,12 @@ function wazeFileCreator(lamp_id, street, latitude, longitude, alert_id, status_
         const jsonToSave = {
             "id": status_id,
             "type": type,
-            "polyline": '0 0',
+            "polyline": latitude + ' ' + longitude + ' ' + latitude + ' ' + longitude,
             "street": street,
             "starttime": moment(new Date(starttime)).format(),
             "endtime": moment(new Date(endtime)).format(),
             "description": convertAlertType(alert_id),
-            "direction": "BOTH_DIRECTIONS"
+            "direction": "ONE_DIRECTION"
         }
 
         if (!fs.existsSync(wazePath)) {

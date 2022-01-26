@@ -165,6 +165,8 @@ async function tetralertAPI(title, text, startTimestamp, panels, anomalyLevel, r
 
         const result = await Request(option);
 
+        console.log("Emessa comunicazione Tetralert id ref", result['id_ref']);
+
     } catch (e) {
         console.warn("Errore API Tetralert")
     }
@@ -397,6 +399,7 @@ async function createNotification(lamp_id, alert_id, status_id) {
                     anomaly_level: anomaly_level,
                     date: timestamp,
                     checked: false,
+                    alert_endtime: new Date(timestamp.valueOf() + timer)
                 });
 
             if (anomaly_level >= 1) {
@@ -449,7 +452,7 @@ async function createNotification(lamp_id, alert_id, status_id) {
                     }).then(async () => {
                     })
                 }
-                //await tetralertAPI('ALLERTA AUTOMATICA', convertAlertType(alert_id), Math.floor(timestamp / 1000), lamp[0]['panel_group'], 3, Math.floor(timestamp / 1000) + timer, 'semafori');
+                //await tetralertAPI('ALLERTA AUTOMATICA PANNELLO', convertAlertType(alert_id), Math.floor(timestamp / 1000), lamp[0]['panel_group'], 3, Math.floor( (timestamp.valueOf() + timer)/ 1000), 'semafori');
             }
 
             //dati su mongo
@@ -1091,6 +1094,7 @@ async function updateActionRequiredAlert(req, res) {
         await SafespotterManager.updateOne({id: lamp_id}, {
             alert_id: 0,
             anomaly_level: 0,
+            alert_endtime: new Date(),
             panel: false
         }).then(
             result => {
@@ -1238,7 +1242,8 @@ async function manualAlert(req, res) {
             alert_id: alert_id,
             anomaly_level: anomaly_level,
             date: date,
-            panel: panel
+            panel: panel,
+            alert_endtime: new Date (date.valueOf() + timer)
         }).then(
             result => {
                 if (result.nModified) {
@@ -1271,7 +1276,7 @@ async function manualAlert(req, res) {
                                             }).then(result => {
                                             });
                                         }
-                                        //tetralertAPI('ALLERTA MANUALE', convertAlertType(alert_id), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer, 'semafori').then();
+                                        //tetralertAPI('ALLERTA MANUALE PANNELLO', convertAlertType(alert_id), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(result[0]['alert_endtime'] / 1000), 'semafori').then();
                                     }
                                 })
                         }, 1000);
@@ -1340,11 +1345,12 @@ async function prorogationAlert(req, res) {
 
     try {
         await SafespotterManager.updateOne({id: lamp_id}, {
-            date: date
+            date: date,
+            alert_endtime: new Date (date.valueOf() + timer)
         })
 
         await SafespotterManager.find({id: lamp_id, panel: true})
-            .then(result => {
+            .then(async result => {
                 if (result.length > 0) {
                     for (const panel of result[0]['panel_list']) {
                         //inserire le chiamate ai pannelli
@@ -1353,7 +1359,9 @@ async function prorogationAlert(req, res) {
                         }).then(result => {
                         });
                     }
-                    //tetralertAPI('ALLERTA PROROGATA', convertAlertType(result[0]['alert_id']), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer, 'semafori').then();
+                    const panel = await Panel.findOne({panel_group: result[0]['panel_group']}).then();
+
+                    //tetralertAPI('ALLERTA PROROGATA PANNELLO', convertAlertType(result[0]['alert_id']), Math.floor(date / 1000), result[0]['panel_group'], parseInt(panel['status']), Math.floor(result[0]['alert_endtime'] / 1000), 'semafori').then();
                 }
             })
 
@@ -1434,7 +1442,8 @@ async function editAlert(req, res) {
             alert_id: alert_id,
             anomaly_level: anomaly_level,
             date: date,
-            panel: true
+            panel: true,
+            alert_endtime: new Date (date.valueOf() + timer)
         }).then(
             result => {
                 if (result.nModified) {
@@ -1462,7 +1471,7 @@ async function editAlert(req, res) {
                                     // if (anomaly_level == 4){
                                     //     wazeFileCreator(result[0]['id'], result[0]['street'], result[0]['lat'], result[0]['long'], alert_id, status_id, date, date + timer);
                                     // }
-                                    //tetralertAPI('ALLERTA MODIFICATA', convertAlertType(result[0]['alert_id']), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer, 'semafori').then();
+                                    //tetralertAPI('ALLERTA MODIFICATA PANNELLO', convertAlertType(result[0]['alert_id']), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(result[0]['alert_endtime'] / 1000), 'semafori').then();
                                 }
                             })
 
@@ -1598,7 +1607,8 @@ async function propagateAlert(req, res) {
                     anomaly_level: anomaly_level,
                     date: date,
                     panel: panel,
-                    status_id: lampStatus_id
+                    status_id: lampStatus_id,
+                    alert_endtime: new Date (date.valueOf() + timer)
                 }).then();
 
                 await SafespotterManager.find({id: lamp, date: date}).then(
@@ -1611,7 +1621,7 @@ async function propagateAlert(req, res) {
                                 date: date
                             }).then()
                         }
-                        //tetralertAPI('ALLERTA PROPAGATA', convertAlertType(data[0]['alert_id']), Math.floor(date / 1000), data[0]['panel_group'], parseInt(status), Math.floor(date / 1000) + timer, 'semafori').then();
+                        //tetralertAPI('ALLERTA PROPAGATA PANNELLO', convertAlertType(data[0]['alert_id']), Math.floor(date / 1000), data[0]['panel_group'], parseInt(status), Math.floor(data[0]['alert_endtime'] / 1000), 'semafori').then();
                     })
 
                 await routes.dataUpdate(lamp_id);
@@ -1666,6 +1676,7 @@ async function panelsManagement(lamp_id, date) {
                                 }).then(result => {
                                 })
                             }
+                            //tetralertAPI('ALLERTA AUTOMATICA PANNELLO', convertAlertType(res[0]['alert_id']), Math.floor(new_date / 1000), res[0]['panel_group'], res[0].anomaly_level - 1, Math.floor(res[0]['alert_endtime']/1000), 'semafori').then();
                         } else {
                             for (const panel of panel_list) {
                                 //inserire le chiamate ai pannelli
@@ -1771,7 +1782,7 @@ async function alternativeRoutes(req, res) {
             data => {
                 text = '';
                 bot.sendMessage(telegramChatID, text);
-                tetralertAPI('SUGGERIMENTO PERCORSO ALTERNATIVO', text, Math.floor(date / 1000), data[0]['panel_group'], parseInt(status), Math.floor(date / 1000), 'bandi').then();
+                //tetralertAPI('SUGGERIMENTO PERCORSO ALTERNATIVO BANDO', text, Math.floor(date / 1000), data[0]['panel_group'], 0, Math.floor(data[0]['alert_endtime'] / 1000), 'bandi').then();
             })
 
 

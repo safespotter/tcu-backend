@@ -1783,7 +1783,10 @@ async function alternativeRoutes(req, res) {
             data => {
                 text = "Attenzione, rilevato " + convertAlertType(alert_id) + ' in ' + data[0]['street'] + ". Si consigliano pertanto i seguenti percorsi: ";
                 for (const route of data[0]['alternativeRoutes']) {
-                    routes = routes + "<b>" + route + "</b> ";
+                    if (routes === '')
+                        routes = routes + "<b>" + route + "</b> ";
+                    else
+                        routes = routes + ', ' + "<b>" + route + "</b> ";
                 }
 
                 bot.sendMessage(telegramChatID, text + routes, {parse_mode: 'HTML'});

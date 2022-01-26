@@ -1243,7 +1243,7 @@ async function manualAlert(req, res) {
             anomaly_level: anomaly_level,
             date: date,
             panel: panel,
-            alert_endtime: new Date (date.valueOf() + timer)
+            alert_endtime: new Date(date.valueOf() + timer)
         }).then(
             result => {
                 if (result.nModified) {
@@ -1346,7 +1346,7 @@ async function prorogationAlert(req, res) {
     try {
         await SafespotterManager.updateOne({id: lamp_id}, {
             date: date,
-            alert_endtime: new Date (date.valueOf() + timer)
+            alert_endtime: new Date(date.valueOf() + timer)
         })
 
         await SafespotterManager.find({id: lamp_id, panel: true})
@@ -1443,7 +1443,7 @@ async function editAlert(req, res) {
             anomaly_level: anomaly_level,
             date: date,
             panel: true,
-            alert_endtime: new Date (date.valueOf() + timer)
+            alert_endtime: new Date(date.valueOf() + timer)
         }).then(
             result => {
                 if (result.nModified) {
@@ -1608,7 +1608,7 @@ async function propagateAlert(req, res) {
                     date: date,
                     panel: panel,
                     status_id: lampStatus_id,
-                    alert_endtime: new Date (date.valueOf() + timer)
+                    alert_endtime: new Date(date.valueOf() + timer)
                 }).then();
 
                 await SafespotterManager.find({id: lamp, date: date}).then(
@@ -1763,7 +1763,8 @@ async function alternativeRoutes(req, res) {
 
         const lamp_id = req.body.lamp_id;
         const alert_id = req.body.alert_id;
-        let text;
+        let text = '';
+        let routes = '';
         const date = new Date();
 
         if (lamp_id === undefined) {
@@ -1780,14 +1781,26 @@ async function alternativeRoutes(req, res) {
 
         await SafespotterManager.find({id: lamp_id}).then(
             data => {
-                text = '';
-                bot.sendMessage(telegramChatID, text);
-                //tetralertAPI('SUGGERIMENTO PERCORSO ALTERNATIVO BANDO', text, Math.floor(date / 1000), data[0]['panel_group'], 0, Math.floor(data[0]['alert_endtime'] / 1000), 'bandi').then();
-            })
+                text = "Attenzione, rilevato " + convertAlertType(alert_id) + ' in ' + data[0]['street'] + ". Si consigliano pertanto i seguenti percorsi: ";
+                for (const route of data[0]['alternativeRoutes']) {
+                    routes = routes + "<b>" + route + "</b> ";
+                }
 
+                bot.sendMessage(telegramChatID, text + routes, {parse_mode: 'HTML'});
+                //tetralertAPI('SUGGERIMENTO PERCORSO ALTERNATIVO BANDO', text, Math.floor(date / 1000), data[0]['panel_group'], 0, Math.floor(data[0]['alert_endtime'] / 1000), 'bandi').then();
+                res.status(HttpStatus.OK).send({
+                    message: "Alternative routes properly communicated"
+                });
+            }).catch( e => {
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "lamppost id not detected or parameters are wrong"
+            });
+        })
 
     } catch (e) {
-
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "Generic error"
+        });
     }
 }
 
@@ -1811,5 +1824,6 @@ module.exports = {
     propagateAlert,
     getPanelsStatus,
     getLamppost,
-    getHystoryLamp
+    getHystoryLamp,
+    alternativeRoutes
 };

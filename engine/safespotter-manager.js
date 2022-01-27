@@ -792,7 +792,7 @@ async function getAlternativeRoutes(req, res) {
 
         alternativeRoutes = doc.alternativeRoutes;
 
-        if (alternativeRoutes.length == 0){
+        if (alternativeRoutes.length == 0) {
             return res.status(HttpStatus.BAD_REQUEST).send({
                 error: "Percorso alternativo non impostato"
             })
@@ -1818,6 +1818,13 @@ async function alternativeRoutes(req, res) {
 
         await SafespotterManager.find({id: lamp_id}).then(
             data => {
+
+                if (data[0]['alternativeRoutes'].length == 0) {
+                    return res.status(HttpStatus.BAD_REQUEST).send({
+                        error: "Percorso alternativo non impostato"
+                    })
+                }
+
                 text = "Attenzione, rilevato " + convertAlertType(alert_id) + ' in ' + data[0]['street'] + ". Si consigliano pertanto i seguenti percorsi: ";
                 for (const route of data[0]['alternativeRoutes']) {
                     if (routes === '')
@@ -1831,7 +1838,7 @@ async function alternativeRoutes(req, res) {
                 res.status(HttpStatus.OK).send({
                     message: "Alternative routes properly communicated"
                 });
-            }).catch( e => {
+            }).catch(e => {
             return res.status(HttpStatus.BAD_REQUEST).send({
                 error: "lamppost id not detected or parameters are wrong"
             });

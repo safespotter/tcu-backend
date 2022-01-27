@@ -58,7 +58,7 @@ module.exports = function (app, passport, config, io) {
     app.get(`${safePath}/getData`, reqAuth, AccMan.roleAuth(all), SafMan.returnList);
     app.post(`${safePath}/updateLamppostStatus`, SafMan.updateLamppostStatus);
     app.get(`${safePath}/getStreetLampStatus/:lamp_id`, reqAuth, AccMan.roleAuth(all), SafMan.getStreetLampStatus);
-    app.get(`${safePath}/getHistory`, SafMan.getHystoryLamp);
+    app.get(`${safePath}/getHistory`, SafMan.getHistoryLamp);
     app.post(`${safePath}/checkNotification`, reqAuth, AccMan.roleAuth(all), SafMan.checkNotification);
     app.put(`${safePath}/updateLamppostConfiguration/:id`, reqAuth, AccMan.roleAuth(all), SafMan.updateLamppostConfiguration);
     app.get(`${safePath}/getLamppostConfiguration/:id`, reqAuth, AccMan.roleAuth(all), SafMan.getLamppostConfiguration);
@@ -75,6 +75,7 @@ module.exports = function (app, passport, config, io) {
     app.post(`${safePath}/propagateAlert`, reqAuth, AccMan.roleAuth(all), SafMan.propagateAlert);
     app.get(`${safePath}/getPanelsStatus/:id`, reqAuth, AccMan.roleAuth(all), SafMan.getPanelsStatus);
     app.get(`${safePath}/getLamppost/:id`, reqAuth, AccMan.roleAuth(all), SafMan.getLamppost);
+    app.get(`${safePath}/getAlternativeRoutes/:id`, reqAuth, AccMan.roleAuth(all), SafMan.getAlternativeRoutes);
     app.post(`${safePath}/alternativeRoutes`, reqAuth, AccMan.roleAuth(all), SafMan.alternativeRoutes)
 
     /****************** WEATHER SERVICE ********************/

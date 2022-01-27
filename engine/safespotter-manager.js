@@ -605,7 +605,7 @@ async function getStreetLampStatus(req, res) {
     }
 }
 
-async function getHystoryLamp(req, res) {
+async function getHistoryLamp(req, res) {
 
     try {
         let data;
@@ -770,6 +770,43 @@ async function getLamppostConfiguration(req, res) {
         console.log(error);
         return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
             error: "something went wrong updating lamppost configuration"
+        });
+    }
+
+
+}
+
+async function getAlternativeRoutes(req, res) {
+
+    try {
+
+        const lamp_id = req.params.id;
+        let alternativeRoutes;
+        let doc = await SafespotterManager.findOne({id: lamp_id});
+
+        if (doc == null) {
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "Lampione non presente nella lista"
+            })
+        }
+
+        alternativeRoutes = doc.alternativeRoutes;
+
+        if (alternativeRoutes.length == 0){
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "Percorso alternativo non impostato"
+            })
+        }
+
+        return res.status(HttpStatus.OK).send({
+            lamp_id: lamp_id,
+            alternativeRoutes: alternativeRoutes
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "something went while get alternative route"
         });
     }
 
@@ -1827,6 +1864,7 @@ module.exports = {
     propagateAlert,
     getPanelsStatus,
     getLamppost,
-    getHystoryLamp,
-    alternativeRoutes
+    getHistoryLamp,
+    alternativeRoutes,
+    getAlternativeRoutes
 };

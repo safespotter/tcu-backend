@@ -22,7 +22,8 @@ module.exports = mongoose.model('SafeSpotter', new mongoose.Schema({
     alert_endtime: Date,
     panel_status: Number,
     alternativeRoutes: [],
-    platform: String
+    platform: String,
+    keepAlive: Date
 }, {
     versionKey: false
 }));

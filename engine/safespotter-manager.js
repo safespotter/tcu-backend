@@ -399,7 +399,8 @@ async function createNotification(lamp_id, alert_id, status_id) {
                     anomaly_level: anomaly_level,
                     date: timestamp,
                     checked: false,
-                    alert_endtime: new Date(timestamp.valueOf() + timer)
+                    alert_endtime: new Date(timestamp.valueOf() + timer),
+                    keepAlive: timestamp
                 });
 
             if (anomaly_level >= 1) {
@@ -1834,7 +1835,7 @@ async function alternativeRoutes(req, res) {
                 }
 
                 bot.sendMessage(telegramChatID, text + routes, {parse_mode: 'HTML'});
-                //tetralertAPI('SUGGERIMENTO PERCORSO ALTERNATIVO BANDO', text, Math.floor(date / 1000), data[0]['panel_group'], 0, Math.floor(data[0]['alert_endtime'] / 1000), 'bandi').then();
+                tetralertAPI('SUGGERIMENTO PERCORSO ALTERNATIVO BANDO', text, Math.floor(date / 1000), data[0]['panel_group'], 0, Math.floor(data[0]['alert_endtime'] / 1000), 'bandi').then();
                 res.status(HttpStatus.OK).send({
                     message: "Alternative routes properly communicated"
                 });
@@ -1845,6 +1846,32 @@ async function alternativeRoutes(req, res) {
         })
 
     } catch (e) {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "Generic error"
+        });
+    }
+}
+
+async function keepAlive(req, res){
+    try{
+        const lamp_id = req.body.lamp_id;
+        const date = new Date();
+
+        await SafespotterManager.updateOne({id: lamp_id}, {
+            keepAlive: date
+        }).then(()=>{
+            routes.dataUpdate(lamp_id);
+            res.status(HttpStatus.OK).send({
+                lamp_id: lamp_id,
+                keepAlive: date
+            });
+        }).catch(()=>{
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "lamppost id not detected or parameters are wrong"
+            });
+        })
+
+    }catch (e) {
         return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
             error: "Generic error"
         });
@@ -1873,5 +1900,6 @@ module.exports = {
     getLamppost,
     getHistoryLamp,
     alternativeRoutes,
-    getAlternativeRoutes
+    getAlternativeRoutes,
+    keepAlive
 };

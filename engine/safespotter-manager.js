@@ -14,6 +14,7 @@ const Client = require('ftp');
 const env = process.env.NODE_ENV || 'development';
 const config = require('./../config/config')[env];
 const historyTkn = config['historyTkn'];
+const apiSecret = config['apiSecret'];
 const moment = require('moment');
 const wazePath = config['wazePath'];
 const tetralertToken = config['Tetralert'];
@@ -21,6 +22,7 @@ const telegramToken = config['TelegramToken'];
 const telegramChatID = config['TelegramChatID'];
 const TelegramBot = require('node-telegram-bot-api');
 const Request = require("request-promise");
+const sha256 = require("js-sha256");
 const bot = new TelegramBot(telegramToken, {polling: true});
 
 
@@ -177,11 +179,11 @@ const download = (url, path, callback) => {
     request.head(url, (err, res, body) => {
         // console.log('content-type:', res.headers['content-type']);
         // console.log('content-length:', res.headers['content-length']);
-
-        if (res.headers['content-length'] > 0)
-            request(url).pipe(fs.createWriteStream(path)).on('close', callback)
-
-    })
+        request(url).pipe(fs.createWriteStream(path)).on('close', callback)});
+    //     if (res.headers['content-length'] > 0)
+    //         request(url).pipe(fs.createWriteStream(path)).on('close', callback)
+    //
+    // })
 };
 
 /**Funzione che converte in stringa le condizioni di criticità*/
@@ -1855,7 +1857,52 @@ async function alternativeRoutes(req, res) {
 async function keepAlive(req, res){
     try{
         const lamp_id = req.body.lamp_id;
+        const timestamp = req.body.timestamp;
+        const command = req.body.command;
+        const signature = req.body.signature;
         const date = new Date();
+        const timestamp_date = Math.floor(date.getTime()/1000);
+
+
+        if (lamp_id === undefined) {
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "lamp id missing"
+            });
+        }
+
+        if (timestamp === undefined || timestamp.length === 0) {
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "timestamp missing"
+            });
+        }
+
+        if ((timestamp_date - timestamp) > 300 ||  (timestamp_date - timestamp) < -300){
+            return res.status(HttpStatus.UNAUTHORIZED).send({
+                error: "Il timestamp fornito deve essere nell'intervallo di più o meno 300 secondi del clock interno del server"
+            });
+        }
+        //controllare se timestamp +/- 5 minuti da ora
+
+        if (command === undefined || command.length === 0) {
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "command missing"
+            });
+        }
+
+        if (signature === undefined || signature.length === 0) {
+            return res.status(HttpStatus.BAD_REQUEST).send({
+                error: "signature missing"
+            });
+        }
+
+        const stringToHash = timestamp + command;
+        const apiSignature = sha256.sha256.hmac(apiSecret, stringToHash)
+
+        if (apiSignature !== signature){
+            return res.status(HttpStatus.UNAUTHORIZED).send({
+                error: "Wrong signature"
+            });
+        }
 
         await SafespotterManager.updateOne({id: lamp_id}, {
             keepAlive: date

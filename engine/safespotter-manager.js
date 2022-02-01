@@ -14,7 +14,8 @@ const Client = require('ftp');
 const env = process.env.NODE_ENV || 'development';
 const config = require('./../config/config')[env];
 const historyTkn = config['historyTkn'];
-const apiSecret = config['apiSecret'];
+const apiSecret = config['apiSecret']['key'];
+const commandSecret = config['apiSecret']['command'];
 const moment = require('moment');
 const wazePath = config['wazePath'];
 const tetralertToken = config['Tetralert'];
@@ -191,7 +192,7 @@ function convertAlertType(input) {
     switch (input) {
         case 1:
         case '1':
-            return 'Cambio di corsia illegale';
+            return 'Violaz. carreggiata o senso di marcia';
         case 2:
         case '2':
             return 'Traffico congestionato';
@@ -200,16 +201,16 @@ function convertAlertType(input) {
             return 'Oggetto o persona in strada';
         case 4:
         case '4':
-            return 'Invasione di area pedonale';
+            return 'Invasione isola di traffico/marciapiede';
         case 5:
         case '5':
-            return 'Possible incidente';
+            return 'Potenziale sinistro';
         case 6:
         case '6':
-            return 'Veicolo in sosta vietata';
+            return 'Sosta o fermata vietata';
         case 7:
         case '7':
-            return 'Guida spericolata';
+            return 'Guida imprudente';
         default:
             return 'Errore anomalia';
     }
@@ -1837,7 +1838,7 @@ async function alternativeRoutes(req, res) {
                 }
 
                 bot.sendMessage(telegramChatID, text + routes, {parse_mode: 'HTML'});
-                tetralertAPI('SUGGERIMENTO PERCORSO ALTERNATIVO BANDO', text, Math.floor(date / 1000), data[0]['panel_group'], 0, Math.floor(data[0]['alert_endtime'] / 1000), 'bandi').then();
+                //tetralertAPI('SUGGERIMENTO PERCORSO ALTERNATIVO BANDO', text, Math.floor(date / 1000), data[0]['panel_group'], 0, Math.floor(data[0]['alert_endtime'] / 1000), 'bandi').then();
                 res.status(HttpStatus.OK).send({
                     message: "Alternative routes properly communicated"
                 });
@@ -1889,16 +1890,22 @@ async function keepAlive(req, res){
             });
         }
 
+        if (command !== commandSecret){
+            return res.status(HttpStatus.UNAUTHORIZED).send({
+                error: "Wrong command"
+            });
+        }
+
         if (signature === undefined || signature.length === 0) {
             return res.status(HttpStatus.BAD_REQUEST).send({
                 error: "signature missing"
             });
         }
 
-        const stringToHash = timestamp + command;
-        const apiSignature = sha256.sha256.hmac(apiSecret, stringToHash)
+        const internalHash = timestamp + commandSecret;
+        const internalSignature = sha256.sha256.hmac(apiSecret, internalHash);
 
-        if (apiSignature !== signature){
+        if (internalSignature !== signature){
             return res.status(HttpStatus.UNAUTHORIZED).send({
                 error: "Wrong signature"
             });

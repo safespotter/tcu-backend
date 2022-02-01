@@ -1859,7 +1859,7 @@ async function keepAlive(req, res){
     try{
         const lamp_id = req.body.lamp_id;
         const timestamp = req.body.timestamp;
-        const command = req.body.command;
+        //const command = req.body.command;
         const signature = req.body.signature;
         const date = new Date();
         const timestamp_date = Math.floor(date.getTime()/1000);
@@ -1884,17 +1884,17 @@ async function keepAlive(req, res){
         }
         //controllare se timestamp +/- 5 minuti da ora
 
-        if (command === undefined || command.length === 0) {
-            return res.status(HttpStatus.BAD_REQUEST).send({
-                error: "command missing"
-            });
-        }
-
-        if (command !== commandSecret){
-            return res.status(HttpStatus.UNAUTHORIZED).send({
-                error: "Wrong command"
-            });
-        }
+        // if (command === undefined || command.length === 0) {
+        //     return res.status(HttpStatus.BAD_REQUEST).send({
+        //         error: "command missing"
+        //     });
+        // }
+        //
+        // if (command !== commandSecret){
+        //     return res.status(HttpStatus.UNAUTHORIZED).send({
+        //         error: "Wrong command"
+        //     });
+        // }
 
         if (signature === undefined || signature.length === 0) {
             return res.status(HttpStatus.BAD_REQUEST).send({
@@ -1902,7 +1902,8 @@ async function keepAlive(req, res){
             });
         }
 
-        const internalHash = timestamp + commandSecret;
+        const internalHash = timestamp + "" + lamp_id;
+
         const internalSignature = sha256.sha256.hmac(apiSecret, internalHash);
 
         if (internalSignature !== signature){

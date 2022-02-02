@@ -595,7 +595,7 @@ async function getStreetLampStatus(req, res) {
 
         data = await LampStatus.find({
             'lamp_id': lamp_id
-        }).sort({"date": "desc"});
+        }).sort({"date": "desc"}).limit(10000);
 
         return res.status(HttpStatus.OK).send({
             data

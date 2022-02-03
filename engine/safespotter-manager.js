@@ -632,7 +632,7 @@ async function getHistoryLamp(req, res) {
 
         data = await LampStatus.find({
             'lamp_id': lamp_id
-        }).sort({"date": "desc"});
+        }).select('_id date lamp_id alert_id status_id videoURL video_id').sort({"date": "desc"});
 
         return res.status(HttpStatus.OK).send({
             data

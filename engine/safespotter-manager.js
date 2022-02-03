@@ -441,10 +441,13 @@ async function createNotification(lamp_id, alert_id, status_id) {
                 //routes.pushNotification(convertAlertLevel(anomaly_level), convertAlertType(alert_id), timestamp);
             }
 
+            if (anomaly_level >= 3) {
+                bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id) + ' in ' + lamp[0].street + ".");
+            }
+
             if (anomaly_level >= 4) {
                 // notifica telegram
                 //wazeFileCreator(lamp[0]['id'], lamp[0]['street'], lamp[0]['lat'], lamp[0]['long'], alert_id, status_id, timestamp, timestamp + timer);
-                bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id) + ' in ' + lamp[0].street + ".");
                 await SafespotterManager.updateOne({id: lamp_id}, {
                     panel: true
                 });

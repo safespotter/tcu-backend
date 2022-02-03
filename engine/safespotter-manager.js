@@ -266,6 +266,7 @@ function initializeLampStatus(model, data, date, status_id) {
     model.alert_id = data.alert_id;
     model.date = date;
     model.status_id = status_id;
+
     return model;
 }
 
@@ -536,6 +537,10 @@ async function updateLamppostStatus(req, res) {
 
         //creo la notifica se l'anomalia che arriva è maggiore di quella già esistente e aggiorno il lampione
         await createNotification(data.lamp_id, data.alert_id, lampStatus_id);
+
+        if (_.has(data, "drawables")) {
+            doc.drawables = data.drawables;
+        }
 
         if (_.has(data, "video_id")) {
 

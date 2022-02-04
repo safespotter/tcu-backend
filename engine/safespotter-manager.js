@@ -180,7 +180,8 @@ const download = (url, path, callback) => {
     request.head(url, (err, res, body) => {
         // console.log('content-type:', res.headers['content-type']);
         // console.log('content-length:', res.headers['content-length']);
-        request(url).pipe(fs.createWriteStream(path)).on('close', callback)});
+        request(url).pipe(fs.createWriteStream(path)).on('close', callback)
+    });
     //     if (res.headers['content-length'] > 0)
     //         request(url).pipe(fs.createWriteStream(path)).on('close', callback)
     //
@@ -538,22 +539,23 @@ async function updateLamppostStatus(req, res) {
 
         doc = initializeLampStatus(doc, data, day, lampStatus_id);
 
-        //creo la notifica se l'anomalia che arriva è maggiore di quella già esistente e aggiorno il lampione
-        await createNotification(data.lamp_id, data.alert_id, lampStatus_id);
-
-        if (_.has(data, "drawables")) {
-            doc.drawables = data.drawables;
-        }
-
         if (_.has(data, "video_id")) {
-
-            flag = true;
-            const videoCheck = await LampStatus.find({lamp_id: data.lamp_id, video_id: data.video_id})
+            let videoCheck = await LampStatus.find({
+                lamp_id: data.lamp_id,
+                video_id: data.video_id,
+                alert_id: data.alert_id
+            })
             if (videoCheck.length > 0) {
-                doc.videoURL = videoCheck[0].videoURL;
-                doc.video_id = data.video_id;
-                await doc.save();
+                flag = true;
+                if (_.has(data, "drawables")) {
+                    await LampStatus.update({lamp_id: data.lamp_id, video_id: data.video_id, alert_id: data.alert_id}, {
+                        $push: {drawables: data['drawables']}
+                    })
+                }
             } else {
+                if (_.has(data, "drawables")) {
+                    doc.drawables = data['drawables'];
+                }
                 const new_path = 'video/' + data.lamp_id.toString() + '/' + customDayDate(day) + '/' + customTimeDate(day) + '_' + convertAlertTypePath(req.body.alert_id) + '.mp4';
                 doc.videoURL = new_path;
                 doc.video_id = data.video_id;
@@ -568,24 +570,33 @@ async function updateLamppostStatus(req, res) {
                     // }, 1);
                     console.log('File salvato nella directory ' + path);
                 });
-
             }
         }
 
-        if (flag === false)
-            //salvo su mongodb i dati ricevuti dal lampione (aggiungere altri se necessario)
-            await doc.save();
 
-        return res.status(HttpStatus.OK).send({
-            message: "data saved successfully"
-        });
 
-    } catch (error) {
-        console.log(error);
-        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
-            error: "something went wrong"
-        });
+    if (flag === false) {
+        //creo la notifica se l'anomalia che arriva è maggiore di quella già esistente e aggiorno il lampione
+        await createNotification(data.lamp_id, data.alert_id, lampStatus_id);
+        //salvo su mongodb i dati ricevuti dal lampione (aggiungere altri se necessario)
+        await doc.save();
     }
+
+
+    return res.status(HttpStatus.OK).send({
+        message: "data saved successfully"
+    });
+
+}
+
+catch
+(error)
+{
+    console.log(error);
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+        error: "something went wrong"
+    });
+}
 
 }
 
@@ -1863,14 +1874,14 @@ async function alternativeRoutes(req, res) {
     }
 }
 
-async function keepAlive(req, res){
-    try{
+async function keepAlive(req, res) {
+    try {
         const lamp_id = req.body.lamp_id;
         const timestamp = req.body.timestamp;
         //const command = req.body.command;
         const signature = req.body.signature;
         const date = new Date();
-        const timestamp_date = Math.floor(date.getTime()/1000);
+        const timestamp_date = Math.floor(date.getTime() / 1000);
 
 
         if (lamp_id === undefined) {
@@ -1885,7 +1896,7 @@ async function keepAlive(req, res){
             });
         }
 
-        if ((timestamp_date - timestamp) > 300 ||  (timestamp_date - timestamp) < -300){
+        if ((timestamp_date - timestamp) > 300 || (timestamp_date - timestamp) < -300) {
             return res.status(HttpStatus.UNAUTHORIZED).send({
                 error: "Il timestamp fornito deve essere nell'intervallo di più o meno 300 secondi del clock interno del server"
             });
@@ -1914,7 +1925,7 @@ async function keepAlive(req, res){
 
         const internalSignature = sha256.sha256.hmac(apiSecret, internalHash);
 
-        if (internalSignature !== signature){
+        if (internalSignature !== signature) {
             return res.status(HttpStatus.UNAUTHORIZED).send({
                 error: "Wrong signature"
             });
@@ -1922,19 +1933,19 @@ async function keepAlive(req, res){
 
         await SafespotterManager.updateOne({id: lamp_id}, {
             keepAlive: date
-        }).then(()=>{
+        }).then(() => {
             routes.dataUpdate(lamp_id);
             res.status(HttpStatus.OK).send({
                 lamp_id: lamp_id,
                 keepAlive: date
             });
-        }).catch(()=>{
+        }).catch(() => {
             return res.status(HttpStatus.BAD_REQUEST).send({
                 error: "lamppost id not detected or parameters are wrong"
             });
         })
 
-    }catch (e) {
+    } catch (e) {
         return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
             error: "Generic error"
         });

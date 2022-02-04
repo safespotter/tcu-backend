@@ -540,17 +540,31 @@ async function updateLamppostStatus(req, res) {
         doc = initializeLampStatus(doc, data, day, lampStatus_id);
 
         if (_.has(data, "video_id")) {
-            let videoCheck = await LampStatus.find({
+            const videoCheck = await LampStatus.find({
                 lamp_id: data.lamp_id,
-                video_id: data.video_id,
-                alert_id: data.alert_id
-            })
+                video_id: data.video_id
+            });
             if (videoCheck.length > 0) {
                 flag = true;
-                if (_.has(data, "drawables")) {
-                    await LampStatus.update({lamp_id: data.lamp_id, video_id: data.video_id, alert_id: data.alert_id}, {
-                        $push: {drawables: data['drawables']}
-                    })
+                const alert_videoCheck = await LampStatus.find({
+                    lamp_id: data.lamp_id,
+                    video_id: data.video_id,
+                    alert_id: data.alert_id
+                });
+
+                if (alert_videoCheck.length > 0){
+                    if (_.has(data, "drawables")) {
+                        await LampStatus.update({lamp_id: data.lamp_id, video_id: data.video_id, alert_id: data.alert_id}, {
+                            $push: {drawables: data['drawables']}
+                        })
+                    }
+                } else {
+                    if (_.has(data, "drawables")) {
+                        doc.drawables = data['drawables'];
+                    }
+                    doc.videoURL = videoCheck[0]["videoURL"];
+                    doc.video_id = data.video_id;
+                    await doc.save();
                 }
             } else {
                 if (_.has(data, "drawables")) {
@@ -563,17 +577,10 @@ async function updateLamppostStatus(req, res) {
                 path = pathCreator(data.lamp_id.toString(), customDayDate(day), customTimeDate(day), req.body.alert_id);
                 //eseguo il download del video a partire dall'url
                 download(data["videoURL"], path, () => {
-                    //uploadVideoFtp(data.lamp_id.toString(), customDayDate(day), customTimeDate(day), path);
-                    // setTimeout(function () {
-                    //     fs.unlinkSync(path);
-                    //     fs.rmdirSync('./video', {recursive: true});
-                    // }, 1);
                     console.log('File salvato nella directory ' + path);
                 });
             }
         }
-
-
 
     if (flag === false) {
         //creo la notifica se l'anomalia che arriva è maggiore di quella già esistente e aggiorno il lampione

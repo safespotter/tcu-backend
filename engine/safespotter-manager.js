@@ -552,9 +552,13 @@ async function updateLamppostStatus(req, res) {
                     alert_id: data.alert_id
                 });
 
-                if (alert_videoCheck.length > 0){
+                if (alert_videoCheck.length > 0) {
                     if (_.has(data, "drawables")) {
-                        await LampStatus.update({lamp_id: data.lamp_id, video_id: data.video_id, alert_id: data.alert_id}, {
+                        await LampStatus.update({
+                            lamp_id: data.lamp_id,
+                            video_id: data.video_id,
+                            alert_id: data.alert_id
+                        }, {
                             $push: {drawables: data['drawables']}
                         })
                     }
@@ -582,28 +586,25 @@ async function updateLamppostStatus(req, res) {
             }
         }
 
-    if (flag === false) {
-        //creo la notifica se l'anomalia che arriva è maggiore di quella già esistente e aggiorno il lampione
-        await createNotification(data.lamp_id, data.alert_id, lampStatus_id);
-        //salvo su mongodb i dati ricevuti dal lampione (aggiungere altri se necessario)
-        await doc.save();
+        if (flag === false) {
+            //creo la notifica se l'anomalia che arriva è maggiore di quella già esistente e aggiorno il lampione
+            await createNotification(data.lamp_id, data.alert_id, lampStatus_id);
+            //salvo su mongodb i dati ricevuti dal lampione (aggiungere altri se necessario)
+            await doc.save();
+        }
+
+
+        return res.status(HttpStatus.OK).send({
+            message: "data saved successfully"
+        });
+
+    } catch
+        (error) {
+        console.log(error);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "something went wrong"
+        });
     }
-
-
-    return res.status(HttpStatus.OK).send({
-        message: "data saved successfully"
-    });
-
-}
-
-catch
-(error)
-{
-    console.log(error);
-    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
-        error: "something went wrong"
-    });
-}
 
 }
 
@@ -649,7 +650,8 @@ async function getHistoryLamp(req, res) {
         }
 
         data = await LampStatus.find({
-            'lamp_id': lamp_id
+            'lamp_id': lamp_id,
+            'alert_id': {$ne: 5}
         }).select('_id date lamp_id alert_id status_id videoURL video_id').sort({"date": "desc"});
 
         return res.status(HttpStatus.OK).send({

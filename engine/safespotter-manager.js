@@ -515,6 +515,50 @@ async function returnList(req, res) {
 async function updateLamppostStatus(req, res) {
 
     try {
+        //signature
+        if(env !== "development"){
+            const lamp_id = req.body.lamp_id;
+            const timestamp = req.body.timestamp;
+            const signature = req.body.signature;
+            const date = new Date();
+            const timestamp_date = Math.floor(date.getTime() / 1000);
+
+
+            if (lamp_id === undefined) {
+                return res.status(HttpStatus.BAD_REQUEST).send({
+                    error: "lamp id missing"
+                });
+            }
+
+            if (timestamp === undefined || timestamp.length === 0) {
+                return res.status(HttpStatus.BAD_REQUEST).send({
+                    error: "timestamp missing"
+                });
+            }
+
+            if ((timestamp_date - timestamp) > 300 || (timestamp_date - timestamp) < -300) {
+                return res.status(HttpStatus.UNAUTHORIZED).send({
+                    error: "Il timestamp fornito deve essere nell'intervallo di più o meno 300 secondi del clock interno del server"
+                });
+            }
+
+            if (signature === undefined || signature.length === 0) {
+                return res.status(HttpStatus.BAD_REQUEST).send({
+                    error: "signature missing"
+                });
+            }
+
+            const internalHash = timestamp + "" + lamp_id;
+
+            const internalSignature = sha256.sha256.hmac(apiSecret, internalHash);
+
+            if (internalSignature !== signature) {
+                return res.status(HttpStatus.UNAUTHORIZED).send({
+                    error: "Wrong signature"
+                });
+            }
+        }
+
         //salvo su variabile il contenuto del body
         const data = req.body;
         let doc = new LampStatus;

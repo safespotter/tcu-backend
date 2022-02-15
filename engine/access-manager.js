@@ -211,6 +211,7 @@ const basicLogin = (req, res, next) => {
         } else {
             const token = jwt.sign(user.dataValues, 'your_jwt_secret');
 
+            const ip = (req.headers['x-forwarded-for'] || '').split(',').pop().trim() || req.socket.remoteAddress;
             //autorizzazione ip
             if (env !== "development") {
                 const command = ipWhiteList + req.ip;
@@ -223,7 +224,7 @@ const basicLogin = (req, res, next) => {
                         console.log(stderr);
                         // res.send(stderr);
                     } else if (stdout) {
-                        console.log("ip ", req.ip, " aggiunto alla whitelist");
+                        console.log("ip ", ip, " aggiunto alla whitelist");
                         //res.json(stdout);
                     }
                 });
@@ -238,7 +239,7 @@ const basicLogin = (req, res, next) => {
                     'user_type': user.user_type
                 },
                 'token': token,
-                'ip': req.ip
+                'ip': ip
             });
         }
     })(req, res, next);

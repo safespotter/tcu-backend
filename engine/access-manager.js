@@ -9,7 +9,10 @@ const passport = require('../app').passport;
 const bcrypt = require('bcrypt-nodejs');
 const crypto = require('crypto-random-string');
 const jwt = require('jsonwebtoken');
-
+const {exec} = require('child_process');
+const env = process.env.NODE_ENV || 'development';
+const config = require('./../config/config')[env];
+const ipWhiteList = config['ipWhiteListCommand'];
 const HttpStatus = require('http-status-codes');
 
 /** USER CRUD **/
@@ -60,35 +63,35 @@ const createUser = async (req, res) => {
                     .then(newUser => {
 
                         const user_id = newUser.get('id');
-                    //     DashboardManager.internalCreateDefaultDashboards(user_id)
-                    //         .then(() => {
-                    //             //if (!is_verified)
-                    //             try {
-                    //                 // TODO FIX: ripristinare sendmail
-                    //                 //sendMail(res, user.email, token);
-                    //             }
-                    //             catch (err) {
-                    //                 console.error("Cannot send the email. Probably, the SMTP server is not active in this machine.");
-                    //                 //console.log(err);
-                    //             }
-                    //
-                    //             return res.status(HttpStatus.CREATED).send({
-                    //                 created: true,
-                    //                 first_name: newUser.get('first_name'),
-                    //                 last_name: newUser.get('last_name')
-                    //             });
-                    //         })
-                    //         .catch(err => {
-                    //             User.destroy({where: {id: user_id}}); // Deletes the new db row
-                    //
-                    //             console.log('ACCESS_MANAGER ERROR. Details below:');
-                    //             console.error(err);
-                    //             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
-                    //                 created: false,
-                    //                 message: 'Cannot create the new user',
-                    //                 username: user.username
-                    //             });
-                    //         });
+                        //     DashboardManager.internalCreateDefaultDashboards(user_id)
+                        //         .then(() => {
+                        //             //if (!is_verified)
+                        //             try {
+                        //                 // TODO FIX: ripristinare sendmail
+                        //                 //sendMail(res, user.email, token);
+                        //             }
+                        //             catch (err) {
+                        //                 console.error("Cannot send the email. Probably, the SMTP server is not active in this machine.");
+                        //                 //console.log(err);
+                        //             }
+                        //
+                        //             return res.status(HttpStatus.CREATED).send({
+                        //                 created: true,
+                        //                 first_name: newUser.get('first_name'),
+                        //                 last_name: newUser.get('last_name')
+                        //             });
+                        //         })
+                        //         .catch(err => {
+                        //             User.destroy({where: {id: user_id}}); // Deletes the new db row
+                        //
+                        //             console.log('ACCESS_MANAGER ERROR. Details below:');
+                        //             console.error(err);
+                        //             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+                        //                 created: false,
+                        //                 message: 'Cannot create the new user',
+                        //                 username: user.username
+                        //             });
+                        //         });
                         return res.status(HttpStatus.CREATED).send({
                             created: true,
                             username: newUser.get('username')
@@ -208,24 +211,35 @@ const basicLogin = (req, res, next) => {
         } else {
             const token = jwt.sign(user.dataValues, 'your_jwt_secret');
 
-            if(user.is_verified) {
-                return res.status(HttpStatus.OK).send({
-                    'User': {
-                        'id': user.id,
-                        'username': user.username,
-                        'email': user.email,
-                        'first_name': user.first_name,
-                        'last_name': user.last_name,
-                        'user_type': user.user_type
-                    },
-                    'token': token
+            //autorizzazione ip
+            if (env !== "development") {
+                const command = ipWhiteList + req.ip;
+
+                exec(command, function (error, stdout, stderr) {
+                    if (error) {
+                        console.log(error);
+                        //res.send(error);
+                    } else if (stderr) {
+                        console.log(stderr);
+                        // res.send(stderr);
+                    } else if (stdout) {
+                        console.log("ip ", req.ip, " aggiunto alla whitelist");
+                        //res.json(stdout);
+                    }
                 });
-            } else {
-                return res.status(HttpStatus.FORBIDDEN).send({
-                    logged: false,
-                    error: 'Account not verified'
-                })
             }
+            return res.status(HttpStatus.OK).send({
+                'User': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'user_type': user.user_type
+                },
+                'token': token,
+                'ip': req.ip
+            });
         }
     })(req, res, next);
 };

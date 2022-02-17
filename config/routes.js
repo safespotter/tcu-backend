@@ -89,6 +89,7 @@ module.exports = function (app, passport, config, io) {
     var SafeSpotter = require('../models/mongo/mongo-safeSpotter');
     var Notification = require('../models/mongo/mongo-notification');
     var Push = require('../models/mongo/mongo-pushNotification');
+    var Panels = require('../models/mongo/mongo-panels');
 
     var socketMap = [];
 
@@ -99,14 +100,15 @@ module.exports = function (app, passport, config, io) {
     });
 
     async function dataUpdate(num, alert = 0) {
-        console.log('Socket Emmit');
+        console.log('Socket Emit');
         const safespotter = await SafeSpotter.find().sort({date: -1});
         const notification = await Notification.find({checked: false});
         const count = await Notification.countDocuments({checked: false});
+        const panels = await Panels.find();
         for (let socketMapObj of socketMap) {
             if (safespotter.length > 0) {
                 socketMapObj.emit('dataUpdate', [
-                    safespotter, num, alert, notification, count]);
+                    safespotter, num, alert, notification, count, panels]);
             }
         }
 

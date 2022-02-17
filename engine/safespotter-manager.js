@@ -1801,7 +1801,6 @@ async function panelsManagement(lamp_id, date) {
                                 }).then(result => {
                                 })
                             }
-                            tetralertAPI('ALLERTA AUTOMATICA PANNELLO', convertAlertType(res[0]['alert_id']), Math.floor(new_date / 1000), res[0]['panel_group'], 0, Math.floor(res[0]['alert_endtime']/1000), 'semafori').then();
                         }
                     })
             }

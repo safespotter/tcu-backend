@@ -211,7 +211,8 @@ const basicLogin = (req, res, next) => {
         } else {
             const token = jwt.sign(user.dataValues, 'your_jwt_secret');
 
-            const ip = (req.headers['x-forwarded-for'] || '').split(',').pop().trim() || req.socket.remoteAddress;
+            let ip = (req.headers['x-forwarded-for'] || '').split(',').pop().trim() || req.socket.remoteAddress;
+            ip = ip.toString().replace('::ffff:', '');
             //autorizzazione ip
             if (env !== "development") {
                 const command = ipWhiteList + req.ip;

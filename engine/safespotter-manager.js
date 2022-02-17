@@ -1394,7 +1394,7 @@ async function manualAlert(req, res) {
                                         tetralertAPI('ALLERTA MANUALE PANNELLO', convertAlertType(alert_id), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(result[0]['alert_endtime'] / 1000), 'semafori').then();
                                     }
                                 })
-                        }, 1000);
+                        }, 1500);
 
                         await SafespotterManager.updateOne({id: lamp_id}, {
                             status_id: lampStatus_id
@@ -1403,9 +1403,9 @@ async function manualAlert(req, res) {
                         if (telegram) {
                             await bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id));
                         }
-                        await routes.dataUpdate(lamp_id);
-                    }, 1000);
 
+                    }, 1000);
+                    routes.dataUpdate(lamp_id);
                     res.status(HttpStatus.OK).send({
                         message: "Manual alert sent successfully"
                     });

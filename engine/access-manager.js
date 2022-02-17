@@ -215,7 +215,7 @@ const basicLogin = (req, res, next) => {
             ip = ip.toString().replace('::ffff:', '');
             //autorizzazione ip
             if (env !== "development") {
-                const command = ipWhiteList + req.ip;
+                const command = ipWhiteList + ip;
 
                 exec(command, function (error, stdout, stderr) {
                     if (error) {

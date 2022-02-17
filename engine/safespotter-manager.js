@@ -18,7 +18,8 @@ const apiSecret = config['apiSecret']['key'];
 const commandSecret = config['apiSecret']['command'];
 const moment = require('moment');
 const wazePath = config['wazePath'];
-const tetralertToken = config['Tetralert'];
+const tetralertActive = config['Tetralert']['active'];
+const tetralertToken = config['Tetralert']['key'];
 const telegramToken = config['TelegramToken'];
 const telegramChatID = config['TelegramChatID'];
 const TelegramBot = require('node-telegram-bot-api');
@@ -35,14 +36,7 @@ function uploadVideoFtp(id, day, datetime, path) {
         c.cwd('/', function (err) {
 
             if (!err) {
-                // 1. percorso dove prendere il file
-                // 2. nuovo nome file
-                //c.put('C://Users/Stefano/WebstormProjects/tcu-backend/prova.txt', 'message.txt', function(err) {
-                // c.mkdir('provalamp', false, function (err) {
-                //     if (err) throw err;
-                // });
                 c.put(path, id + '_' + day + '_' + datetime + '.mp4', function (err) {
-                    // c.put(path, 'prova.mp4', function (err) {
                     if (err) throw err;
                     c.end();
                 });
@@ -110,68 +104,73 @@ function wazeFileCreator(lamp_id, street, latitude, longitude, alert_id, status_
 }
 
 async function tetralertAPI(title, text, startTimestamp, panels, anomalyLevel, resetTimestamp, type) {
-    try {
+    if (tetralertActive){
+        try {
+            let lampAlert = 0;
+            let body;
+            switch (anomalyLevel) {
+                case 0:
+                    //spegnimento pannello
+                    lampAlert = 0;
+                    break;
+                case 1:
+                    //allerta gialla
+                    lampAlert = 10;
+                    break;
+                case 2:
+                    //allerta arancione
+                    lampAlert = 15;
+                    break;
+                case 3:
+                    //allerta rossa
+                    lampAlert = 20;
+                    break;
+            }
 
-        let lampAlert = 0;
-        let body;
-        switch (anomalyLevel) {
-            case 1:
-                //allerta gialla
-                lampAlert = 10;
-                break;
-            case 2:
-                //allerta arancione
-                lampAlert = 15;
-                break;
-            case 3:
-                //allerta rossa
-                lampAlert = 20;
-                break;
+            switch (type) {
+                case 'semafori':
+                    body = {
+                        "comunicazione": {
+                            "titolo": title,
+                            "testo": text,
+                            "ora_invio": startTimestamp,
+                            "destinatari": {"semafori": [panels]},
+                            "canali": ["semafori"],
+                            "allerta_semafori": lampAlert,
+                            "ora_reset": resetTimestamp
+                        }
+                    };
+                    break;
+                case 'bandi':
+                    body = {
+                        "comunicazione": {
+                            "titolo": title,
+                            "testo": text,
+                            "ora_invio": startTimestamp,
+                            "destinatari": {"bandi": [panels]},
+                            "canali": ["bandi"],
+                            "ora_reset": resetTimestamp
+                        }
+                    };
+            }
+
+            const option = {
+                method: 'POST',
+                uri: 'https://safespotter-api.tetralert.it/comunicazioni/create?tk=' + tetralertToken,
+                auth: {
+                    bearer: tetralertToken
+                },
+                body: body,
+                json: true
+            }
+
+            const result = await Request(option);
+
+            console.log("Emessa comunicazione Tetralert id ref", result['id_ref']);
+
+        } catch (e) {
+            console.warn("Errore API Tetralert")
         }
-
-        switch (type) {
-            case 'semafori':
-                body = {
-                    "comunicazione": {
-                        "titolo": title,
-                        "testo": text,
-                        "ora_invio": startTimestamp,
-                        "destinatari": {"semafori": [panels]},
-                        "canali": ["semafori"],
-                        "allerta_semafori": lampAlert,
-                        "ora_reset": resetTimestamp
-                    }
-                };
-                break;
-            case 'bandi':
-                body = {
-                    "comunicazione": {
-                        "titolo": title,
-                        "testo": text,
-                        "ora_invio": startTimestamp,
-                        "destinatari": {"bandi": [panels]},
-                        "canali": ["bandi"],
-                        "ora_reset": resetTimestamp
-                    }
-                };
-        }
-
-        const option = {
-            method: 'POST',
-            uri: 'https://safespotter-api.tetralert.it/comunicazioni/create?tk=' + tetralertToken,
-            auth: {
-                bearer: tetralertToken
-            },
-            body: body,
-            json: true
-        }
-
-        const result = await Request(option);
-
-        console.log("Emessa comunicazione Tetralert id ref", result['id_ref']);
-
-    } catch (e) {
-        console.warn("Errore API Tetralert")
     }
 }
 
@@ -461,7 +460,7 @@ async function createNotification(lamp_id, alert_id, status_id) {
                     }).then(async () => {
                     })
                 }
-                //await tetralertAPI('ALLERTA AUTOMATICA PANNELLO', convertAlertType(alert_id), Math.floor(timestamp / 1000), lamp[0]['panel_group'], 3, Math.floor( (timestamp.valueOf() + timer)/ 1000), 'semafori');
+                await tetralertAPI('ALLERTA AUTOMATICA PANNELLO', convertAlertType(alert_id), Math.floor(timestamp / 1000), lamp[0]['panel_group'], 3, Math.floor( (timestamp.valueOf() + timer)/ 1000), 'semafori');
             }
 
             //dati su mongo
@@ -1258,24 +1257,27 @@ async function updatePanel(req, res) {
             result => {
                 if (result) {
 
-                    if (status > 0) {
-                        SafespotterManager.updateOne({id: lamp_id}, {
-                            panel: true,
-                            date: new_date
-                        }).then();
-                    } else {
-                        SafespotterManager.updateOne({id: lamp_id}, {
-                            panel: false,
-                            date: new_date
-                        }).then();
-                    }
-
                     for (const panel of result[0]['panel_list']) {
                         //inserire le chiamate ai pannelli
                         Panel.update({panel_id: panel}, {
                             status: status,
                             date: new_date
                         }).then();
+                    }
+
+                    if (status > 0) {
+                        SafespotterManager.updateOne({id: lamp_id}, {
+                            panel: true,
+                            date: new_date
+                        }).then();
+                        tetralertAPI('AGGIORNAMENTO PANNELLO', convertAlertType(result[0]['alert_id']), Math.floor(new_date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(result[0]['alert_endtime'] / 1000), 'semafori').then();
+                    } else {
+                        SafespotterManager.updateOne({id: lamp_id}, {
+                            panel: false,
+                            date: new_date
+                        }).then();
+                        tetralertAPI('SPEGNIMENTO PANNELLO', convertAlertType(result[0]['alert_id']), Math.floor(new_date / 1000), result[0]['panel_group'], 0, Math.floor(result[0]['alert_endtime'] / 1000), 'semafori').then();
+
                     }
 
                     setTimeout(function () {
@@ -1389,7 +1391,7 @@ async function manualAlert(req, res) {
                                             }).then(result => {
                                             });
                                         }
-                                        //tetralertAPI('ALLERTA MANUALE PANNELLO', convertAlertType(alert_id), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(result[0]['alert_endtime'] / 1000), 'semafori').then();
+                                        tetralertAPI('ALLERTA MANUALE PANNELLO', convertAlertType(alert_id), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(result[0]['alert_endtime'] / 1000), 'semafori').then();
                                     }
                                 })
                         }, 1000);
@@ -1474,7 +1476,7 @@ async function prorogationAlert(req, res) {
                     }
                     const panel = await Panel.findOne({panel_group: result[0]['panel_group']}).then();
 
-                    //tetralertAPI('ALLERTA PROROGATA PANNELLO', convertAlertType(result[0]['alert_id']), Math.floor(date / 1000), result[0]['panel_group'], parseInt(panel['status']), Math.floor(result[0]['alert_endtime'] / 1000), 'semafori').then();
+                    tetralertAPI('ALLERTA PROROGATA PANNELLO', convertAlertType(result[0]['alert_id']), Math.floor(date / 1000), result[0]['panel_group'], parseInt(panel['status']), Math.floor(result[0]['alert_endtime'] / 1000), 'semafori').then();
                 }
             })
 
@@ -1584,7 +1586,7 @@ async function editAlert(req, res) {
                                     // if (anomaly_level == 4){
                                     //     wazeFileCreator(result[0]['id'], result[0]['street'], result[0]['lat'], result[0]['long'], alert_id, status_id, date, date + timer);
                                     // }
-                                    //tetralertAPI('ALLERTA MODIFICATA PANNELLO', convertAlertType(result[0]['alert_id']), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(result[0]['alert_endtime'] / 1000), 'semafori').then();
+                                    tetralertAPI('ALLERTA MODIFICATA PANNELLO', convertAlertType(result[0]['alert_id']), Math.floor(date / 1000), result[0]['panel_group'], parseInt(status), Math.floor(result[0]['alert_endtime'] / 1000), 'semafori').then();
                                 }
                             })
 
@@ -1734,7 +1736,7 @@ async function propagateAlert(req, res) {
                                 date: date
                             }).then()
                         }
-                        //tetralertAPI('ALLERTA PROPAGATA PANNELLO', convertAlertType(data[0]['alert_id']), Math.floor(date / 1000), data[0]['panel_group'], parseInt(status), Math.floor(data[0]['alert_endtime'] / 1000), 'semafori').then();
+                        tetralertAPI('ALLERTA PROPAGATA PANNELLO', convertAlertType(data[0]['alert_id']), Math.floor(date / 1000), data[0]['panel_group'], parseInt(status), Math.floor(data[0]['alert_endtime'] / 1000), 'semafori').then();
                     })
 
                 await routes.dataUpdate(lamp_id);
@@ -1789,7 +1791,7 @@ async function panelsManagement(lamp_id, date) {
                                 }).then(result => {
                                 })
                             }
-                            //tetralertAPI('ALLERTA AUTOMATICA PANNELLO', convertAlertType(res[0]['alert_id']), Math.floor(new_date / 1000), res[0]['panel_group'], res[0].anomaly_level - 1, Math.floor(res[0]['alert_endtime']/1000), 'semafori').then();
+                            tetralertAPI('ALLERTA AUTOMATICA PANNELLO', convertAlertType(res[0]['alert_id']), Math.floor(new_date / 1000), res[0]['panel_group'], res[0].anomaly_level - 1, Math.floor(res[0]['alert_endtime']/1000), 'semafori').then();
                         } else {
                             for (const panel of panel_list) {
                                 //inserire le chiamate ai pannelli
@@ -1799,6 +1801,7 @@ async function panelsManagement(lamp_id, date) {
                                 }).then(result => {
                                 })
                             }
+                            tetralertAPI('ALLERTA AUTOMATICA PANNELLO', convertAlertType(res[0]['alert_id']), Math.floor(new_date / 1000), res[0]['panel_group'], 0, Math.floor(res[0]['alert_endtime']/1000), 'semafori').then();
                         }
                     })
             }
@@ -1910,7 +1913,7 @@ async function alternativeRoutes(req, res) {
                 }
 
                 bot.sendMessage(telegramChatID, text + routes, {parse_mode: 'HTML'});
-                //tetralertAPI('SUGGERIMENTO PERCORSO ALTERNATIVO BANDO', text, Math.floor(date / 1000), data[0]['panel_group'], 0, Math.floor(data[0]['alert_endtime'] / 1000), 'bandi').then();
+                tetralertAPI('SUGGERIMENTO PERCORSO ALTERNATIVO BANDO', text, Math.floor(date / 1000), data[0]['panel_group'], 0, Math.floor(data[0]['alert_endtime'] / 1000), 'bandi').then();
                 res.status(HttpStatus.OK).send({
                     message: "Alternative routes properly communicated"
                 });
@@ -1954,19 +1957,6 @@ async function keepAlive(req, res) {
                 error: "Il timestamp fornito deve essere nell'intervallo di più o meno 300 secondi del clock interno del server"
             });
         }
-        //controllare se timestamp +/- 5 minuti da ora
-
-        // if (command === undefined || command.length === 0) {
-        //     return res.status(HttpStatus.BAD_REQUEST).send({
-        //         error: "command missing"
-        //     });
-        // }
-        //
-        // if (command !== commandSecret){
-        //     return res.status(HttpStatus.UNAUTHORIZED).send({
-        //         error: "Wrong command"
-        //     });
-        // }
 
         if (signature === undefined || signature.length === 0) {
             return res.status(HttpStatus.BAD_REQUEST).send({

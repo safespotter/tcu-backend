@@ -104,7 +104,7 @@ function wazeFileCreator(lamp_id, street, latitude, longitude, alert_id, status_
 }
 
 async function tetralertAPI(title, text, startTimestamp, panels, anomalyLevel, resetTimestamp, type) {
-    if (tetralertActive){
+    if (tetralertActive) {
         try {
             let lampAlert = 0;
             let body;
@@ -460,7 +460,7 @@ async function createNotification(lamp_id, alert_id, status_id) {
                     }).then(async () => {
                     })
                 }
-                await tetralertAPI('ALLERTA AUTOMATICA PANNELLO', convertAlertType(alert_id), Math.floor(timestamp / 1000), lamp[0]['panel_group'], 3, Math.floor( (timestamp.valueOf() + timer)/ 1000), 'semafori');
+                await tetralertAPI('ALLERTA AUTOMATICA PANNELLO', convertAlertType(alert_id), Math.floor(timestamp / 1000), lamp[0]['panel_group'], 3, Math.floor((timestamp.valueOf() + timer) / 1000), 'semafori');
             }
 
             //dati su mongo
@@ -515,13 +515,20 @@ async function updateLamppostStatus(req, res) {
 
     try {
         //signature
-        if(env !== "development"){
+
+        if (env !== "development") {
             const lamp_id = req.body.lamp_id;
             const timestamp = req.body.timestamp;
             const signature = req.body.signature;
             const date = new Date();
             const timestamp_date = Math.floor(date.getTime() / 1000);
 
+            //temp fix
+            if (lamp_id == 2) {
+                return res.status(HttpStatus.BAD_REQUEST).send({
+                    error: "temp fix"
+                });
+            }
 
             if (lamp_id === undefined) {
                 return res.status(HttpStatus.BAD_REQUEST).send({
@@ -1791,7 +1798,7 @@ async function panelsManagement(lamp_id, date) {
                                 }).then(result => {
                                 })
                             }
-                            tetralertAPI('ALLERTA AUTOMATICA PANNELLO', convertAlertType(res[0]['alert_id']), Math.floor(new_date / 1000), res[0]['panel_group'], res[0].anomaly_level - 1, Math.floor(res[0]['alert_endtime']/1000), 'semafori').then();
+                            tetralertAPI('ALLERTA AUTOMATICA PANNELLO', convertAlertType(res[0]['alert_id']), Math.floor(new_date / 1000), res[0]['panel_group'], res[0].anomaly_level - 1, Math.floor(res[0]['alert_endtime'] / 1000), 'semafori').then();
                         } else {
                             for (const panel of panel_list) {
                                 //inserire le chiamate ai pannelli

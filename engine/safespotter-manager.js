@@ -176,11 +176,16 @@ async function tetralertAPI(title, text, startTimestamp, panels, anomalyLevel, r
 
 /**Metodo che avvia il download del file video*/
 const download = (url, path, callback) => {
-    request.head(url, (err, res, body) => {
-        // console.log('content-type:', res.headers['content-type']);
-        // console.log('content-length:', res.headers['content-length']);
-        request(url).pipe(fs.createWriteStream(path)).on('close', callback)
-    });
+    try{
+        request.head(url, (err, res, body) => {
+            // console.log('content-type:', res.headers['content-type']);
+            // console.log('content-length:', res.headers['content-length']);
+            request(url).pipe(fs.createWriteStream(path)).on('close', callback)
+        });
+    } catch (e) {
+        console.log(e);
+    }
+
     //     if (res.headers['content-length'] > 0)
     //         request(url).pipe(fs.createWriteStream(path)).on('close', callback)
     //
@@ -523,12 +528,12 @@ async function updateLamppostStatus(req, res) {
             const date = new Date();
             const timestamp_date = Math.floor(date.getTime() / 1000);
 
-            //temp fix
-            if (lamp_id == 2) {
-                return res.status(HttpStatus.BAD_REQUEST).send({
-                    error: "temp fix"
-                });
-            }
+            // //temp fix
+            // if (lamp_id == 2) {
+            //     return res.status(HttpStatus.BAD_REQUEST).send({
+            //         error: "temp fix"
+            //     });
+            // }
 
             if (lamp_id === undefined) {
                 return res.status(HttpStatus.BAD_REQUEST).send({

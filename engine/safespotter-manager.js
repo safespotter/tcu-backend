@@ -18,6 +18,7 @@ const apiSecret = config['apiSecret']['key'];
 const commandSecret = config['apiSecret']['command'];
 const moment = require('moment');
 const wazePath = config['wazePath'];
+const keepAlivePath = config['keepAlivePath'];
 const tetralertActive = config['Tetralert']['active'];
 const tetralertToken = config['Tetralert']['key'];
 const telegramToken = config['TelegramToken'];
@@ -399,6 +400,9 @@ async function createNotification(lamp_id, alert_id, status_id) {
             }
         });
 
+        const pathToSave = keepAlivePath + 'lampId_' + lamp_id;
+        fs.writeFileSync(pathToSave, timestamp.valueOf().toString(), 'utf8');
+
         //se l'anomalia che arriva è minimo di livello 1 e maggiore uguale a quella già esistente
         if (anomaly_level >= lamp[0].anomaly_level || lamp[0].anomaly_level === undefined) {
 
@@ -568,6 +572,7 @@ async function updateLamppostStatus(req, res) {
                     error: "Wrong signature"
                 });
             }
+
         }
 
         //salvo su variabile il contenuto del body
@@ -1950,44 +1955,46 @@ async function keepAlive(req, res) {
         const date = new Date();
         const timestamp_date = Math.floor(date.getTime() / 1000);
 
+        if (env !== "development") {
+            if (lamp_id === undefined) {
+                return res.status(HttpStatus.BAD_REQUEST).send({
+                    error: "lamp id missing"
+                });
+            }
 
-        if (lamp_id === undefined) {
-            return res.status(HttpStatus.BAD_REQUEST).send({
-                error: "lamp id missing"
-            });
+            if (timestamp === undefined || timestamp.length === 0) {
+                return res.status(HttpStatus.BAD_REQUEST).send({
+                    error: "timestamp missing"
+                });
+            }
+
+            if ((timestamp_date - timestamp) > 300 || (timestamp_date - timestamp) < -300) {
+                return res.status(HttpStatus.UNAUTHORIZED).send({
+                    error: "Il timestamp fornito deve essere nell'intervallo di più o meno 300 secondi del clock interno del server"
+                });
+            }
+
+            if (signature === undefined || signature.length === 0) {
+                return res.status(HttpStatus.BAD_REQUEST).send({
+                    error: "signature missing"
+                });
+            }
+
+            const internalHash = timestamp + "" + lamp_id;
+
+            const internalSignature = sha256.sha256.hmac(apiSecret, internalHash);
+
+            if (internalSignature !== signature) {
+                return res.status(HttpStatus.UNAUTHORIZED).send({
+                    error: "Wrong signature"
+                });
+            }
         }
-
-        if (timestamp === undefined || timestamp.length === 0) {
-            return res.status(HttpStatus.BAD_REQUEST).send({
-                error: "timestamp missing"
-            });
-        }
-
-        if ((timestamp_date - timestamp) > 300 || (timestamp_date - timestamp) < -300) {
-            return res.status(HttpStatus.UNAUTHORIZED).send({
-                error: "Il timestamp fornito deve essere nell'intervallo di più o meno 300 secondi del clock interno del server"
-            });
-        }
-
-        if (signature === undefined || signature.length === 0) {
-            return res.status(HttpStatus.BAD_REQUEST).send({
-                error: "signature missing"
-            });
-        }
-
-        const internalHash = timestamp + "" + lamp_id;
-
-        const internalSignature = sha256.sha256.hmac(apiSecret, internalHash);
-
-        if (internalSignature !== signature) {
-            return res.status(HttpStatus.UNAUTHORIZED).send({
-                error: "Wrong signature"
-            });
-        }
-
         await SafespotterManager.updateOne({id: lamp_id}, {
             keepAlive: date
         }).then(() => {
+            const pathToSave = keepAlivePath + 'lampId_' + lamp_id;
+            fs.writeFileSync(pathToSave, date.valueOf().toString(), 'utf8');
             routes.dataUpdate(lamp_id);
             res.status(HttpStatus.OK).send({
                 lamp_id: lamp_id,

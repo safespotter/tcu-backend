@@ -176,12 +176,20 @@ async function tetralertAPI(title, text, startTimestamp, panels, anomalyLevel, r
 }
 
 /**Metodo che avvia il download del file video*/
-const download = (url, path, callback) => {
+const download = (url, path, doc, callback) => {
     try {
         request.head(url, (err, res, body) => {
             // console.log('content-type:', res.headers['content-type']);
             // console.log('content-length:', res.headers['content-length']);
             if (err) {
+                LampStatus.update({
+                    lamp_id: doc.lamp_id,
+                    date: doc.date,
+                    alert_id: doc.alert_id,
+                    status_id: doc.status_id
+                }, {
+                    videoURL: ''
+                }).then();
                 console.log(err);
             } else {
                 request(url).pipe(fs.createWriteStream(path)).on('close', callback)
@@ -645,7 +653,7 @@ async function updateLamppostStatus(req, res) {
                 await doc.save();
                 path = pathCreator(data.lamp_id.toString(), customDayDate(day), customTimeDate(day), req.body.alert_id);
                 //eseguo il download del video a partire dall'url
-                download(data["videoURL"], path, () => {
+                download(data["videoURL"], path, doc, () => {
                     console.log('File salvato nella directory ' + path);
                 });
             }

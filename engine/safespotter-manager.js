@@ -177,11 +177,16 @@ async function tetralertAPI(title, text, startTimestamp, panels, anomalyLevel, r
 
 /**Metodo che avvia il download del file video*/
 const download = (url, path, callback) => {
-    try{
+    try {
         request.head(url, (err, res, body) => {
             // console.log('content-type:', res.headers['content-type']);
             // console.log('content-length:', res.headers['content-length']);
-            request(url).pipe(fs.createWriteStream(path)).on('close', callback)
+            if (err) {
+                console.log(err);
+            } else {
+                request(url).pipe(fs.createWriteStream(path)).on('close', callback)
+            }
+
         });
     } catch (e) {
         console.log(e);

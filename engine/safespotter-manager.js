@@ -285,7 +285,7 @@ function initializeLampStatus(model, data, date, status_id) {
     model.alert_id = data.alert_id;
     model.date = date;
     model.status_id = status_id;
-
+    model.manualAlert = 0;
     return model;
 }
 
@@ -426,7 +426,8 @@ async function createNotification(lamp_id, alert_id, status_id) {
                     date: timestamp,
                     checked: false,
                     alert_endtime: new Date(timestamp.valueOf() + timer),
-                    keepAlive: timestamp
+                    keepAlive: timestamp,
+                    manualAlert: 0
                 });
 
             if (anomaly_level >= 1) {
@@ -1394,7 +1395,8 @@ async function manualAlert(req, res) {
             anomaly_level: anomaly_level,
             date: date,
             panel: panel,
-            alert_endtime: new Date(date.valueOf() + timer)
+            alert_endtime: new Date(date.valueOf() + timer),
+            manualAlert: 1
         }).then(
             result => {
                 if (result.nModified) {
@@ -1413,6 +1415,7 @@ async function manualAlert(req, res) {
                         doc.alert_id = alert_id;
                         doc.date = date;
                         doc.status_id = lampStatus_id;
+                        doc.manualAlert = 1;
                         doc.save();
 
                         setTimeout(async function () {
@@ -1751,6 +1754,7 @@ async function propagateAlert(req, res) {
                 status.alert_id = alert_id;
                 status.date = date;
                 status.status_id = lampStatus_id;
+                status.manualAlert = 1;
                 await status.save();
 
                 await SafespotterManager.updateOne({id: lamp}, {
@@ -1759,7 +1763,8 @@ async function propagateAlert(req, res) {
                     date: date,
                     panel: panel,
                     status_id: lampStatus_id,
-                    alert_endtime: new Date(date.valueOf() + timer)
+                    alert_endtime: new Date(date.valueOf() + timer),
+                    manualAlert: 1
                 }).then();
 
                 await SafespotterManager.find({id: lamp, date: date}).then(

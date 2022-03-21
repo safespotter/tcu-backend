@@ -430,32 +430,33 @@ async function createNotification(lamp_id, alert_id, status_id) {
                 });
 
             if (anomaly_level >= 1) {
+                if (alert_id !== 5) {
+                    const not = await Notification.find({});
+                    let not_id = 1;
 
-                const not = await Notification.find({});
-                let not_id = 1;
+                    if (not.length > 0)
+                        //get the max id value and then add 1
+                        not_id = _.maxBy(not, 'notification_id').notification_id + 1;
 
-                if (not.length > 0)
-                    //get the max id value and then add 1
-                    not_id = _.maxBy(not, 'notification_id').notification_id + 1;
-
-                let notification = new Notification;
-                notification.notification_id = not_id;
-                notification.lamp_id = lamp_id;
-                notification.alert_id = alert_id;
-                notification.street = lamp[0].street;
-                notification.checked = false;
-                await notification.save();
-
-                await SafespotterManager.updateOne({id: lamp_id}, {
-                    notification_id: not_id,
-                    status_id: status_id
-                });
-
-                //check della notifica
-                setTimeout(async () => {
-                    notification.checked = true;
+                    let notification = new Notification;
+                    notification.notification_id = not_id;
+                    notification.lamp_id = lamp_id;
+                    notification.alert_id = alert_id;
+                    notification.street = lamp[0].street;
+                    notification.checked = false;
                     await notification.save();
-                }, timer);
+
+                    await SafespotterManager.updateOne({id: lamp_id}, {
+                        notification_id: not_id,
+                        status_id: status_id
+                    });
+
+                    //check della notifica
+                    setTimeout(async () => {
+                        notification.checked = true;
+                        await notification.save();
+                    }, timer);
+                }
             }
 
             if (anomaly_level >= 2) {
@@ -464,25 +465,30 @@ async function createNotification(lamp_id, alert_id, status_id) {
             }
 
             if (anomaly_level >= 3) {
-                bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id) + ' in ' + lamp[0].street + ".");
+                if (alert_id !== 5) {
+                    bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id) + ' in ' + lamp[0].street + ".");
+                }
+
             }
 
             if (anomaly_level >= 4) {
                 // notifica telegram
                 //wazeFileCreator(lamp[0]['id'], lamp[0]['street'], lamp[0]['lat'], lamp[0]['long'], alert_id, status_id, timestamp, timestamp + timer);
-                await SafespotterManager.updateOne({id: lamp_id}, {
-                    panel: true
-                });
-                // attivazione del pannello luminoso
-                // mettere la chiamata al pannello
-                for (const panel of lamp[0]['panel_list']) {
-                    await Panel.updateOne({panel_id: panel}, {
-                        status: 3,
-                        date: timestamp
-                    }).then(async () => {
-                    })
+                if (alert_id !== 5) {
+                    await SafespotterManager.updateOne({id: lamp_id}, {
+                        panel: true
+                    });
+                    // attivazione del pannello luminoso
+                    // mettere la chiamata al pannello
+                    for (const panel of lamp[0]['panel_list']) {
+                        await Panel.updateOne({panel_id: panel}, {
+                            status: 3,
+                            date: timestamp
+                        }).then(async () => {
+                        })
+                    }
+                    await tetralertAPI('ALLERTA AUTOMATICA PANNELLO', convertAlertType(alert_id), Math.floor(timestamp / 1000), lamp[0]['panel_group'], 3, Math.floor((timestamp.valueOf() + timer) / 1000), 'semafori');
                 }
-                await tetralertAPI('ALLERTA AUTOMATICA PANNELLO', convertAlertType(alert_id), Math.floor(timestamp / 1000), lamp[0]['panel_group'], 3, Math.floor((timestamp.valueOf() + timer) / 1000), 'semafori');
             }
 
             //dati su mongo

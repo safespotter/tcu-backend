@@ -431,7 +431,7 @@ async function createNotification(lamp_id, alert_id, status_id) {
                 });
 
             if (anomaly_level >= 1) {
-                if (alert_id !== 5) {
+                // if (alert_id !== 5) {
                     const not = await Notification.find({});
                     let not_id = 1;
 
@@ -457,7 +457,7 @@ async function createNotification(lamp_id, alert_id, status_id) {
                         notification.checked = true;
                         await notification.save();
                     }, timer);
-                }
+                // }
             }
 
             if (anomaly_level >= 2) {
@@ -466,16 +466,16 @@ async function createNotification(lamp_id, alert_id, status_id) {
             }
 
             if (anomaly_level >= 3) {
-                if (alert_id !== 5) {
+                // if (alert_id !== 5) {
                     bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id) + ' in ' + lamp[0].street + ".");
-                }
+                // }
 
             }
 
             if (anomaly_level >= 4) {
                 // notifica telegram
                 //wazeFileCreator(lamp[0]['id'], lamp[0]['street'], lamp[0]['lat'], lamp[0]['long'], alert_id, status_id, timestamp, timestamp + timer);
-                if (alert_id !== 5) {
+                // if (alert_id !== 5) {
                     await SafespotterManager.updateOne({id: lamp_id}, {
                         panel: true
                     });
@@ -489,7 +489,7 @@ async function createNotification(lamp_id, alert_id, status_id) {
                         })
                     }
                     await tetralertAPI('ALLERTA AUTOMATICA PANNELLO', convertAlertType(alert_id), Math.floor(timestamp / 1000), lamp[0]['panel_group'], 3, Math.floor((timestamp.valueOf() + timer) / 1000), 'semafori');
-                }
+                // }
             }
 
             //dati su mongo
@@ -730,8 +730,7 @@ async function getHistoryLamp(req, res) {
         }
 
         data = await LampStatus.find({
-            'lamp_id': lamp_id,
-            'alert_id': {$ne: 5}
+            'lamp_id': lamp_id
         }).select('_id date lamp_id alert_id status_id videoURL video_id').sort({"date": "desc"});
 
         return res.status(HttpStatus.OK).send({

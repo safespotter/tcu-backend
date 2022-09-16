@@ -559,6 +559,13 @@ async function updateLamppostStatus(req, res) {
             //     });
             // }
 
+            // //temp fix
+            if (req.body.alert_id == 7 || req.body.alert_id == '7') {
+                return res.status(HttpStatus.BAD_REQUEST).send({
+                    error: "temp fix"
+                });
+            }
+
             if (lamp_id === undefined) {
                 return res.status(HttpStatus.BAD_REQUEST).send({
                     error: "lamp id missing"

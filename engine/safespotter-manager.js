@@ -298,16 +298,16 @@ function getVideoPath(path) {
 function pathCreator(id, day, datetime, alert) {
 
     //verifico che esista la cartella video
-    !fs.existsSync(config["videoBasePath"] + "video") && fs.mkdirSync(config["videoBasePath"] + "video");
+    !fs.existsSync(config["videoBasePath"] + "video1") && fs.mkdirSync(config["videoBasePath"] + "video1");
 
     //verifico che esista la cartella relativa al lampione
-    !fs.existsSync(config["videoBasePath"] + "video/" + id) && fs.mkdirSync(config["videoBasePath"] + "video/" + id);
+    !fs.existsSync(config["videoBasePath"] + "video1/" + id) && fs.mkdirSync(config["videoBasePath"] + "video1/" + id);
 
     //verifico che esista la cartella relativa al giorno
-    !fs.existsSync(config["videoBasePath"] + "video/" + id + "/" + day) && fs.mkdirSync(config["videoBasePath"] + "video/" + id + "/" + day);
+    !fs.existsSync(config["videoBasePath"] + "video1/" + id + "/" + day) && fs.mkdirSync(config["videoBasePath"] + "video1/" + id + "/" + day);
 
     //restituisco il path
-    return config["videoBasePath"] + "video/" + id + "/" + day + "/" + datetime + '_' + convertAlertTypePath(alert) + ".mp4";
+    return config["videoBasePath"] + "video1/" + id + "/" + day + "/" + datetime + '_' + convertAlertTypePath(alert) + ".mp4";
 }
 
 
@@ -661,7 +661,7 @@ async function updateLamppostStatus(req, res) {
                 if (_.has(data, "drawables")) {
                     doc.drawables = data['drawables'];
                 }
-                const new_path = 'video/' + data.lamp_id.toString() + '/' + customDayDate(day) + '/' + customTimeDate(day) + '_' + convertAlertTypePath(req.body.alert_id) + '.mp4';
+                const new_path = 'video1/' + data.lamp_id.toString() + '/' + customDayDate(day) + '/' + customTimeDate(day) + '_' + convertAlertTypePath(req.body.alert_id) + '.mp4';
                 doc.videoURL = new_path;
                 doc.video_id = data.video_id;
                 await doc.save();

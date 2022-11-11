@@ -281,7 +281,7 @@ function convertAlertLevel(input) {
 }
 
 /**Metodo che inizializza lo status del lampione*/
-function initializeLampStatus(model, data, date, status_id) {
+function initializeLampStatus(model, data, date, status_id, anomaly_level) {
     model.lamp_id = data.lamp_id;
     model.alert_id = data.alert_id;
     model.date = date;
@@ -468,23 +468,23 @@ async function createNotification(lamp_id, alert_id, status_id) {
 
             if (anomaly_level >= 3) {
                 // if (alert_id !== 5) {
-                if(lamp_id == 1 ){
+                if (lamp_id == 1) {
                     bot.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Caracalla. ' +
                         'Si suggerisce il percorso alternativo in Via Fonni o Via Porto Rotondo  per chi proviene da Via Porto Botte, ' +
                         'in Via Argentina o Via Decio Mure per chi proviene da Via San Fulgenzio o da Via Dell’Argine.');
                 }
-                if(lamp_id == 2 ){
+                if (lamp_id == 2) {
                     bot.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Caracalla.' +
                         ' Si suggerisce il percorso alternativo in Via Fonni o Via Porto Rotondo  per chi proviene da Via Porto Botte, ' +
                         'in Via Argentina o Via Decio Mure per chi proviene da Via San Fulgenzio o da Via Dell’Argine.');
                 }
-                if(lamp_id == 3){
+                if (lamp_id == 3) {
                     bot.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Riu Mortu. ' +
                         'Si suggerisce il percorso alternativo in Via Deroma o Via Terralba  ' +
                         'per chi proviene da Via San Valeriano, in Via Monte Arci per chi proviene da Viale Trieste, ' +
                         'in Via Del Redentore per chi proviene da Via Zuddas.');
                 }
-                if(lamp_id == 4){
+                if (lamp_id == 4) {
                     bot.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Riu Mortu. ' +
                         'Si suggerisce il percorso alternativo in Via San Silvestro per chi proviene da Via Cabras, ' +
                         'in Via Monte Arci per chi proviene da Viale Trieste, in Via Del Redentore per chi proviene da Via Zuddas.');
@@ -2070,10 +2070,67 @@ async function getLastAnomalies(req, res) {
     try {
         let data;
 
-        data = await LampStatus.find({}).select('_id date lamp_id alert_id').sort({"date": "desc"}).limit(30);
+        let lamp1 = await SafespotterManager.find({id: 1});
+        let lamp2 = await SafespotterManager.find({id: 2});
+        let lamp3 = await SafespotterManager.find({id: 3});
+        let lamp4 = await SafespotterManager.find({id: 4});
+
+        let data_fix = [];
+
+        let anomaly_level_1 = 0;
+        let anomaly_level_2 = 0;
+        let anomaly_level_3 = 0;
+        let anomaly_level_4 = 0;
+
+        data = await LampStatus.find({}).select('_id date lamp_id alert_id').sort({"date": "desc"}).limit(100);
+
+        for (const dt of data){
+            switch (dt.lamp_id){
+                case 1:
+                    _.find(lamp1[0].configuration, function (el) {
+                        if (el.alert_id == dt.alert_id) {
+                            anomaly_level_1 = el.configuration_type;
+                        }
+                    });
+                    break;
+                case 2:
+                    _.find(lamp2[0].configuration, function (el) {
+                        if (el.alert_id == dt.alert_id) {
+                            anomaly_level_2 = el.configuration_type;
+                        }
+                    });
+                    break;
+                case 3:
+                    _.find(lamp3[0].configuration, function (el) {
+                        if (el.alert_id == dt.alert_id) {
+                            anomaly_level_3 = dt.configuration_type;
+                        }
+                    });
+                    break;
+                case 4:
+                    _.find(lamp4[0].configuration, function (el) {
+                        if (el.alert_id == dt.alert_id) {
+                            anomaly_level_4 = dt.configuration_type;
+                        }
+                    });
+                    break;
+            }
+
+            if ((anomaly_level_1 >= 3 && anomaly_level_1 != undefined) ||
+                (anomaly_level_2 >= 3 && anomaly_level_2 != undefined) ||
+                (anomaly_level_3 >= 3 && anomaly_level_3 != undefined) ||
+                (anomaly_level_4 >= 3 && anomaly_level_4 != undefined)) {
+                data_fix.push(dt);
+            }
+
+            anomaly_level_1 = 0;
+            anomaly_level_2 = 0;
+            anomaly_level_3 = 0;
+            anomaly_level_4 = 0;
+        }
 
         return res.status(HttpStatus.OK).send({
-            data
+            data_fix
         });
 
     } catch (error) {

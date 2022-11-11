@@ -2082,7 +2082,7 @@ async function getLastAnomalies(req, res) {
         let anomaly_level_3 = 0;
         let anomaly_level_4 = 0;
 
-        data = await LampStatus.find({}).select('_id date lamp_id alert_id').sort({"date": "desc"}).limit(100);
+        data = await LampStatus.find({}).select('_id date lamp_id alert_id').sort({"date": "desc"}).limit(50);
 
         for (const dt of data){
             switch (dt.lamp_id){
@@ -2129,8 +2129,10 @@ async function getLastAnomalies(req, res) {
             anomaly_level_4 = 0;
         }
 
+        const data_limit = data_fix.slice(0,50)
+
         return res.status(HttpStatus.OK).send({
-            data_fix
+            data_limit
         });
 
     } catch (error) {

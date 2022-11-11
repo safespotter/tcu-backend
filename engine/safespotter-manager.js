@@ -23,6 +23,7 @@ const tetralertActive = config['Tetralert']['active'];
 const tetralertToken = config['Tetralert']['key'];
 const telegramToken = config['TelegramToken'];
 const telegramChatID = config['TelegramChatID'];
+const TelegramChatIDPublic = config['TelegramChatIDPublic'];
 const TelegramBot = require('node-telegram-bot-api');
 const Request = require("request-promise");
 const sha256 = require("js-sha256");
@@ -432,31 +433,31 @@ async function createNotification(lamp_id, alert_id, status_id) {
 
             if (anomaly_level >= 1) {
                 // if (alert_id !== 5) {
-                    const not = await Notification.find({});
-                    let not_id = 1;
+                const not = await Notification.find({});
+                let not_id = 1;
 
-                    if (not.length > 0)
-                        //get the max id value and then add 1
-                        not_id = _.maxBy(not, 'notification_id').notification_id + 1;
+                if (not.length > 0)
+                    //get the max id value and then add 1
+                    not_id = _.maxBy(not, 'notification_id').notification_id + 1;
 
-                    let notification = new Notification;
-                    notification.notification_id = not_id;
-                    notification.lamp_id = lamp_id;
-                    notification.alert_id = alert_id;
-                    notification.street = lamp[0].street;
-                    notification.checked = false;
+                let notification = new Notification;
+                notification.notification_id = not_id;
+                notification.lamp_id = lamp_id;
+                notification.alert_id = alert_id;
+                notification.street = lamp[0].street;
+                notification.checked = false;
+                await notification.save();
+
+                await SafespotterManager.updateOne({id: lamp_id}, {
+                    notification_id: not_id,
+                    status_id: status_id
+                });
+
+                //check della notifica
+                setTimeout(async () => {
+                    notification.checked = true;
                     await notification.save();
-
-                    await SafespotterManager.updateOne({id: lamp_id}, {
-                        notification_id: not_id,
-                        status_id: status_id
-                    });
-
-                    //check della notifica
-                    setTimeout(async () => {
-                        notification.checked = true;
-                        await notification.save();
-                    }, timer);
+                }, timer);
                 // }
             }
 
@@ -467,7 +468,28 @@ async function createNotification(lamp_id, alert_id, status_id) {
 
             if (anomaly_level >= 3) {
                 // if (alert_id !== 5) {
-                    bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id) + ' in ' + lamp[0].street + ".");
+                if(lamp_id == 1 ){
+                    bot.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Caracalla. ' +
+                        'Si suggerisce il percorso alternativo in Via Fonni o Via Porto Rotondo  per chi proviene da Via Porto Botte, ' +
+                        'in Via Argentina o Via Decio Mure per chi proviene da Via San Fulgenzio o da Via Dell’Argine.');
+                }
+                if(lamp_id == 2 ){
+                    bot.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Caracalla.' +
+                        ' Si suggerisce il percorso alternativo in Via Fonni o Via Porto Rotondo  per chi proviene da Via Porto Botte, ' +
+                        'in Via Argentina o Via Decio Mure per chi proviene da Via San Fulgenzio o da Via Dell’Argine.');
+                }
+                if(lamp_id == 3){
+                    bot.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Riu Mortu. ' +
+                        'Si suggerisce il percorso alternativo in Via Deroma o Via Terralba  ' +
+                        'per chi proviene da Via San Valeriano, in Via Monte Arci per chi proviene da Viale Trieste, ' +
+                        'in Via Del Redentore per chi proviene da Via Zuddas.');
+                }
+                if(lamp_id == 4){
+                    bot.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Riu Mortu. ' +
+                        'Si suggerisce il percorso alternativo in Via San Silvestro per chi proviene da Via Cabras, ' +
+                        'in Via Monte Arci per chi proviene da Viale Trieste, in Via Del Redentore per chi proviene da Via Zuddas.');
+                }
+                bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id) + ' in ' + lamp[0].street + ".");
                 // }
 
             }
@@ -476,19 +498,19 @@ async function createNotification(lamp_id, alert_id, status_id) {
                 // notifica telegram
                 //wazeFileCreator(lamp[0]['id'], lamp[0]['street'], lamp[0]['lat'], lamp[0]['long'], alert_id, status_id, timestamp, timestamp + timer);
                 // if (alert_id !== 5) {
-                    await SafespotterManager.updateOne({id: lamp_id}, {
-                        panel: true
-                    });
-                    // attivazione del pannello luminoso
-                    // mettere la chiamata al pannello
-                    for (const panel of lamp[0]['panel_list']) {
-                        await Panel.updateOne({panel_id: panel}, {
-                            status: 3,
-                            date: timestamp
-                        }).then(async () => {
-                        })
-                    }
-                    await tetralertAPI('ALLERTA AUTOMATICA PANNELLO', convertAlertType(alert_id), Math.floor(timestamp / 1000), lamp[0]['panel_group'], 3, Math.floor((timestamp.valueOf() + timer) / 1000), 'semafori');
+                await SafespotterManager.updateOne({id: lamp_id}, {
+                    panel: true
+                });
+                // attivazione del pannello luminoso
+                // mettere la chiamata al pannello
+                for (const panel of lamp[0]['panel_list']) {
+                    await Panel.updateOne({panel_id: panel}, {
+                        status: 3,
+                        date: timestamp
+                    }).then(async () => {
+                    })
+                }
+                await tetralertAPI('ALLERTA AUTOMATICA PANNELLO', convertAlertType(alert_id), Math.floor(timestamp / 1000), lamp[0]['panel_group'], 3, Math.floor((timestamp.valueOf() + timer) / 1000), 'semafori');
                 // }
             }
 
@@ -2043,6 +2065,25 @@ async function keepAlive(req, res) {
     }
 }
 
+async function getLastAnomalies(req, res) {
+
+    try {
+        let data;
+
+        data = await LampStatus.find({}).select('_id date lamp_id alert_id').sort({"date": "desc"}).limit(30);
+
+        return res.status(HttpStatus.OK).send({
+            data
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+            error: "something went wrong"
+        });
+    }
+}
+
 module.exports = {
     returnList,
     updateLamppostStatus,
@@ -2066,5 +2107,6 @@ module.exports = {
     getHistoryLamp,
     alternativeRoutes,
     getAlternativeRoutes,
-    keepAlive
+    keepAlive,
+    getLastAnomalies
 };

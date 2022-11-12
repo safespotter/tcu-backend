@@ -2082,7 +2082,7 @@ async function getLastAnomalies(req, res) {
         let anomaly_level_3 = 0;
         let anomaly_level_4 = 0;
 
-        data = await LampStatus.find({}).select('_id date lamp_id alert_id').sort({"date": "desc"}).limit(50);
+        data = await LampStatus.find({}).select('_id date lamp_id alert_id').sort({"date": "desc"}).limit(1000);
 
         for (const dt of data){
             switch (dt.lamp_id){
@@ -2103,14 +2103,14 @@ async function getLastAnomalies(req, res) {
                 case 3:
                     _.find(lamp3[0].configuration, function (el) {
                         if (el.alert_id == dt.alert_id) {
-                            anomaly_level_3 = dt.configuration_type;
+                            anomaly_level_3 = el.configuration_type;
                         }
                     });
                     break;
                 case 4:
                     _.find(lamp4[0].configuration, function (el) {
                         if (el.alert_id == dt.alert_id) {
-                            anomaly_level_4 = dt.configuration_type;
+                            anomaly_level_4 = el.configuration_type;
                         }
                     });
                     break;
@@ -2123,13 +2123,13 @@ async function getLastAnomalies(req, res) {
                 data_fix.push(dt);
             }
 
+
             anomaly_level_1 = 0;
             anomaly_level_2 = 0;
             anomaly_level_3 = 0;
             anomaly_level_4 = 0;
         }
-
-        const data_limit = data_fix.slice(0,50)
+        const data_limit = data_fix.slice(0,30)
 
         return res.status(HttpStatus.OK).send({
             data_limit

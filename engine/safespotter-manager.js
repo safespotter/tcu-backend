@@ -22,12 +22,14 @@ const keepAlivePath = config['keepAlivePath'];
 const tetralertActive = config['Tetralert']['active'];
 const tetralertToken = config['Tetralert']['key'];
 const telegramToken = config['TelegramToken'];
+const telegramTokenPublic = config['TelegramTokenPublic'];
 const telegramChatID = config['TelegramChatID'];
 const TelegramChatIDPublic = config['TelegramChatIDPublic'];
 const TelegramBot = require('node-telegram-bot-api');
 const Request = require("request-promise");
 const sha256 = require("js-sha256");
 const bot = new TelegramBot(telegramToken, {polling: true});
+const botPublic = new TelegramBot(telegramTokenPublic, {polling: true});
 
 
 function uploadVideoFtp(id, day, datetime, path) {
@@ -469,23 +471,23 @@ async function createNotification(lamp_id, alert_id, status_id) {
             if (anomaly_level >= 3) {
                 // if (alert_id !== 5) {
                 if (lamp_id == 1) {
-                    bot.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Caracalla. ' +
+                    botPublic.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Caracalla. ' +
                         'Si suggerisce il percorso alternativo in Via Fonni o Via Porto Rotondo  per chi proviene da Via Porto Botte, ' +
                         'in Via Argentina o Via Decio Mure per chi proviene da Via San Fulgenzio o da Via Dell’Argine.');
                 }
                 if (lamp_id == 2) {
-                    bot.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Caracalla.' +
+                    botPublic.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Caracalla.' +
                         ' Si suggerisce il percorso alternativo in Via Fonni o Via Porto Rotondo  per chi proviene da Via Porto Botte, ' +
                         'in Via Argentina o Via Decio Mure per chi proviene da Via San Fulgenzio o da Via Dell’Argine.');
                 }
                 if (lamp_id == 3) {
-                    bot.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Riu Mortu. ' +
+                    botPublic.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Riu Mortu. ' +
                         'Si suggerisce il percorso alternativo in Via Deroma o Via Terralba  ' +
                         'per chi proviene da Via San Valeriano, in Via Monte Arci per chi proviene da Viale Trieste, ' +
                         'in Via Del Redentore per chi proviene da Via Zuddas.');
                 }
                 if (lamp_id == 4) {
-                    bot.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Riu Mortu. ' +
+                    botPublic.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Riu Mortu. ' +
                         'Si suggerisce il percorso alternativo in Via San Silvestro per chi proviene da Via Cabras, ' +
                         'in Via Monte Arci per chi proviene da Viale Trieste, in Via Del Redentore per chi proviene da Via Zuddas.');
                 }

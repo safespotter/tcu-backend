@@ -471,23 +471,27 @@ async function createNotification(lamp_id, alert_id, status_id) {
             if (anomaly_level >= 3) {
                 // if (alert_id !== 5) {
                 if (lamp_id == 1) {
-                    botPublic.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Caracalla. ' +
+                    botPublic.sendMessage(TelegramChatIDPublic, 'Si avvisano i cittadini che in prossimità della rotatoria di via Caracalla ' +
+                        'il sistema Safespotter ha rilevato un/a ' + convertAlertType(alert_id) + '. Si prega di prestare la massima attenzione. ' +
                         'Si suggerisce il percorso alternativo in Via Fonni o Via Porto Rotondo  per chi proviene da Via Porto Botte, ' +
                         'in Via Argentina o Via Decio Mure per chi proviene da Via San Fulgenzio o da Via Dell’Argine.');
                 }
                 if (lamp_id == 2) {
-                    botPublic.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Caracalla.' +
-                        ' Si suggerisce il percorso alternativo in Via Fonni o Via Porto Rotondo  per chi proviene da Via Porto Botte, ' +
+                    botPublic.sendMessage(TelegramChatIDPublic, 'Si avvisano i cittadini che in prossimità della rotatoria di via Caracalla ' +
+                        'il sistema Safespotter ha rilevato un/a ' + convertAlertType(alert_id) + '. Si prega di prestare la massima attenzione. ' +
+                        'Si suggerisce il percorso alternativo in Via Fonni o Via Porto Rotondo  per chi proviene da Via Porto Botte, ' +
                         'in Via Argentina o Via Decio Mure per chi proviene da Via San Fulgenzio o da Via Dell’Argine.');
                 }
                 if (lamp_id == 3) {
-                    botPublic.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Riu Mortu. ' +
+                    botPublic.sendMessage(TelegramChatIDPublic, 'Si avvisano i cittadini che in prossimità della rotatoria di via Riu Mortu ' +
+                        'il sistema Safespotter ha rilevato un/a ' + convertAlertType(alert_id) + '. Si prega di prestare la massima attenzione. ' +
                         'Si suggerisce il percorso alternativo in Via Deroma o Via Terralba  ' +
                         'per chi proviene da Via San Valeriano, in Via Monte Arci per chi proviene da Viale Trieste, ' +
                         'in Via Del Redentore per chi proviene da Via Zuddas.');
                 }
                 if (lamp_id == 4) {
-                    botPublic.sendMessage(TelegramChatIDPublic, 'Si raccomanda di evitare temporaneamente il transito sulla Rotatoria Riu Mortu. ' +
+                    botPublic.sendMessage(TelegramChatIDPublic, 'Si avvisano i cittadini che in prossimità della rotatoria di via Riu Mortu ' +
+                        'il sistema Safespotter ha rilevato un/a ' + convertAlertType(alert_id) + '. Si prega di prestare la massima attenzione. ' +
                         'Si suggerisce il percorso alternativo in Via San Silvestro per chi proviene da Via Cabras, ' +
                         'in Via Monte Arci per chi proviene da Viale Trieste, in Via Del Redentore per chi proviene da Via Zuddas.');
                 }
@@ -1470,7 +1474,32 @@ async function manualAlert(req, res) {
                         });
 
                         if (telegram) {
-                            await bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id));
+                            if (lamp_id == 1) {
+                                botPublic.sendMessage(TelegramChatIDPublic, 'Attenzione: si avvisano i cittadini che in prossimità della rotatoria di via Caracalla, ' +
+                                    'la Polizia Locale ha diramato un\'allerta di traffico temporanea. Si prega di prestare la massima attenzione. ' +
+                                    'Si suggerisce il percorso alternativo in Via Fonni o Via Porto Rotondo  per chi proviene da Via Porto Botte, ' +
+                                    'in Via Argentina o Via Decio Mure per chi proviene da Via San Fulgenzio o da Via Dell’Argine.');
+                            }
+                            if (lamp_id == 2) {
+                                botPublic.sendMessage(TelegramChatIDPublic, 'Attenzione: si avvisano i cittadini che in prossimità della rotatoria di via Caracalla, ' +
+                                    'la Polizia Locale ha diramato un\'allerta di traffico temporanea. Si prega di prestare la massima attenzione. ' +
+                                    'Si suggerisce il percorso alternativo in Via Fonni o Via Porto Rotondo  per chi proviene da Via Porto Botte, ' +
+                                    'in Via Argentina o Via Decio Mure per chi proviene da Via San Fulgenzio o da Via Dell’Argine.');
+                            }
+                            if (lamp_id == 3) {
+                                botPublic.sendMessage(TelegramChatIDPublic, 'Attenzione: si avvisano i cittadini che in prossimità della rotatoria di via Riu Mortu, ' +
+                                    'la Polizia Locale ha diramato un\'allerta di traffico temporanea. Si prega di prestare la massima attenzione. ' +
+                                    'Si suggerisce il percorso alternativo in Via Deroma o Via Terralba  ' +
+                                    'per chi proviene da Via San Valeriano, in Via Monte Arci per chi proviene da Viale Trieste, ' +
+                                    'in Via Del Redentore per chi proviene da Via Zuddas.');
+                            }
+                            if (lamp_id == 4) {
+                                botPublic.sendMessage(TelegramChatIDPublic, 'Attenzione: si avvisano i cittadini che in prossimità della rotatoria di via Riu Mortu, ' +
+                                    'la Polizia Locale ha diramato un\'allerta di traffico temporanea. Si prega di prestare la massima attenzione. ' +
+                                    'Si suggerisce il percorso alternativo in Via San Silvestro per chi proviene da Via Cabras, ' +
+                                    'in Via Monte Arci per chi proviene da Viale Trieste, in Via Del Redentore per chi proviene da Via Zuddas.');
+                            }
+                            //await bot.sendMessage(telegramChatID, 'Attenzione, rilevato ' + convertAlertType(alert_id));
                         }
 
                     }, 1000);
@@ -2086,8 +2115,8 @@ async function getLastAnomalies(req, res) {
 
         data = await LampStatus.find({}).select('_id date lamp_id alert_id').sort({"date": "desc"}).limit(1000);
 
-        for (const dt of data){
-            switch (dt.lamp_id){
+        for (const dt of data) {
+            switch (dt.lamp_id) {
                 case 1:
                     _.find(lamp1[0].configuration, function (el) {
                         if (el.alert_id == dt.alert_id) {
@@ -2131,7 +2160,7 @@ async function getLastAnomalies(req, res) {
             anomaly_level_3 = 0;
             anomaly_level_4 = 0;
         }
-        const data_limit = data_fix.slice(0,30)
+        const data_limit = data_fix.slice(0, 30)
 
         return res.status(HttpStatus.OK).send({
             data_limit

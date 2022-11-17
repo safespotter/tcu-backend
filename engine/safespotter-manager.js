@@ -581,11 +581,11 @@ async function updateLamppostStatus(req, res) {
             const timestamp_date = Math.floor(date.getTime() / 1000);
 
             //temp fix
-            if (lamp_id == 2 || lamp_id == 3) {
+/*            if (lamp_id == 2 || lamp_id == 3) {
                 return res.status(HttpStatus.BAD_REQUEST).send({
                     error: "temp fix"
                 });
-            }
+            }*/
 
             // //temp fix
             if (req.body.alert_id == 7 || req.body.alert_id == '7') {
@@ -737,7 +737,7 @@ async function getStreetLampStatus(req, res) {
 
         data = await LampStatus.find({
             'lamp_id': lamp_id
-        }).sort({"date": "desc"}).limit(10000);
+        }).sort({"date": "desc"}).limit(1000);
 
         return res.status(HttpStatus.OK).send({
             data

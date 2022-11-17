@@ -580,12 +580,12 @@ async function updateLamppostStatus(req, res) {
             const date = new Date();
             const timestamp_date = Math.floor(date.getTime() / 1000);
 
-            // //temp fix
-            // if (lamp_id == 2) {
-            //     return res.status(HttpStatus.BAD_REQUEST).send({
-            //         error: "temp fix"
-            //     });
-            // }
+            //temp fix
+            if (lamp_id == 2 || lamp_id == 3) {
+                return res.status(HttpStatus.BAD_REQUEST).send({
+                    error: "temp fix"
+                });
+            }
 
             // //temp fix
             if (req.body.alert_id == 7 || req.body.alert_id == '7') {

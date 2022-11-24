@@ -581,7 +581,13 @@ async function updateLamppostStatus(req, res) {
             const timestamp_date = Math.floor(date.getTime() / 1000);
 
             //temp fix
-            if ((lamp_id == 2 && req.body.alert_id == 1) || (lamp_id == 3 && req.body.alert_id == 1)) {
+            // if ((lamp_id == 2 && req.body.alert_id == 1) || (lamp_id == 3 && req.body.alert_id == 1)) {
+            //     return res.status(HttpStatus.BAD_REQUEST).send({
+            //         error: "temp fix"
+            //     });
+            // }
+
+            if ((lamp_id == 2) || (lamp_id == 3)) {
                 return res.status(HttpStatus.BAD_REQUEST).send({
                     error: "temp fix"
                 });
